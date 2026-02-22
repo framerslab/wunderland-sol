@@ -28,10 +28,14 @@ wunderland
 |-----|--------|
 | `↑`/`↓` or `j`/`k` | Navigate actions |
 | `Enter` | Select action |
-| `1`-`7` | Direct shortcut to action |
+| `1` | Setup onboarding |
+| `2` | Open chat |
+| `3` | Start server |
+| `4`-`7` | Skills, Extensions, Models, RAG |
 | `d` | Doctor |
 | `s` | Status |
 | `v` | Voice |
+| `h` | Help |
 | `r` | Refresh |
 | `q` / `Esc` | Quit |
 
@@ -343,6 +347,205 @@ wunderland cron next
 | `*/15 * * * *` | Every 15 minutes |
 | `0 0 * * 1` | Every Monday at midnight |
 | `0 9,17 * * 1-5` | Weekdays at 9 AM and 5 PM |
+
+---
+
+### `wunderland create`
+
+Generate an agent from a natural language description using LLM analysis.
+
+```bash
+wunderland create [description]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--managed` | Use managed hosting mode |
+| `--dir <path>` | Output directory for agent files |
+| `--yes` | Skip confirmations |
+
+---
+
+### `wunderland hitl`
+
+Human-in-the-loop approval monitor for real-time tool approvals and checkpoints.
+
+```bash
+wunderland hitl watch
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--server <url>` | Agent server URL (default: `http://localhost:3777`) |
+| `--secret <token>` | HITL authentication secret (required) |
+
+---
+
+### `wunderland verify-seal`
+
+Verify that `sealed.json` signature and hash match `agent.config.json`.
+
+```bash
+wunderland verify-seal [--dir <path>]
+```
+
+---
+
+### `wunderland extensions`
+
+Manage agent extensions (tools, guardrails, channels).
+
+```bash
+wunderland extensions list
+wunderland extensions info <name>
+wunderland extensions enable <name>
+wunderland extensions disable <name>
+```
+
+---
+
+### `wunderland rag`
+
+RAG memory management — ingest documents, query vectors, manage collections.
+
+```bash
+wunderland rag ingest <file|text>
+wunderland rag query <text>
+wunderland rag collections list|create|delete
+wunderland rag graph local-search|global-search|stats
+wunderland rag health
+wunderland rag audit
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--collection <id>` | Target collection |
+| `--top-k <n>` | Max results (default: 5) |
+| `--graph` | Include GraphRAG context |
+| `--debug` | Show pipeline debug trace |
+| `--format <json\|table>` | Output format |
+
+---
+
+### `wunderland agency`
+
+Multi-agent collective management.
+
+```bash
+wunderland agency list
+wunderland agency create <name>
+wunderland agency status <name>
+wunderland agency add-seat <agency> <agent>
+wunderland agency handoff <from> <to>
+```
+
+---
+
+### `wunderland workflows`
+
+Workflow engine management.
+
+```bash
+wunderland workflows list
+wunderland workflows run <name>
+wunderland workflows status <id>
+wunderland workflows cancel <id>
+```
+
+---
+
+### `wunderland evaluate`
+
+Run evaluation suites against datasets.
+
+```bash
+wunderland evaluate run <dataset>
+wunderland evaluate results <id>
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--judge <model>` | LLM judge model |
+| `--format <json\|table>` | Output format |
+
+---
+
+### `wunderland provenance`
+
+Audit trail and event chain verification with ed25519 signatures.
+
+```bash
+wunderland provenance audit
+wunderland provenance verify [file]
+wunderland provenance demo
+```
+
+---
+
+### `wunderland knowledge`
+
+Knowledge graph operations.
+
+```bash
+wunderland knowledge query <text>
+wunderland knowledge stats
+wunderland knowledge demo
+```
+
+---
+
+### `wunderland marketplace`
+
+Skill, tool, and extension marketplace.
+
+```bash
+wunderland marketplace search <query>
+wunderland marketplace info <id>
+wunderland marketplace install <id>
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--source <type>` | Filter: `skills`, `tools`, `channels`, `providers` |
+| `--format <json\|table>` | Output format |
+
+---
+
+### `wunderland ollama-setup`
+
+One-command offline-first Ollama setup with hardware detection and model recommendations.
+
+```bash
+wunderland ollama-setup [model-name]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--yes` | Non-interactive mode |
+| `--tier <level>` | Force hardware tier: `low`, `mid`, `high` |
+| `--skip-pull` | Configure without downloading models |
+
+---
+
+### `wunderland export-session`
+
+Export chat session to JSON or Markdown.
+
+```bash
+wunderland export-session [--format json|md] [-o <path>]
+```
 
 ---
 

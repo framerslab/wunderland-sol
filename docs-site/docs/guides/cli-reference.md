@@ -1,7 +1,7 @@
 ---
 sidebar_position: 18
 title: CLI Reference
-description: Full reference for all 17 Wunderland CLI commands
+description: Full reference for all Wunderland CLI commands
 ---
 
 # CLI Reference
@@ -465,6 +465,309 @@ wunderland plugins [options]
 | `--format <json\|table>` | Output format |
 
 Displays all registered extensions grouped by kind (tools, guardrails, channels, etc.). See [Extension Ecosystem](./extensions.md) for details.
+
+---
+
+## `wunderland create`
+
+Create an agent from a natural language description. Uses LLM analysis to extract configuration from plain English.
+
+```bash
+wunderland create [description]
+```
+
+If no description is provided, the wizard prompts for one interactively. The LLM extracts personality traits, security tier, channels, extensions, and skills from the description.
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--managed` | Use managed hosting mode (default: self-hosted) |
+| `--dir <path>` | Output directory for agent files |
+| `--yes` | Skip all confirmations |
+
+**Example:**
+
+```bash
+# Create from inline description
+wunderland create "A security-focused code reviewer that uses strict permissions"
+
+# Interactive mode
+wunderland create
+```
+
+Creates a full project directory with `agent.config.json`, `.env.example`, `.gitignore`, `skills/` directory, and `README.md`.
+
+---
+
+## `wunderland hitl`
+
+Human-in-the-loop approval monitor. Streams pending approvals and checkpoints from a running agent server and lets you approve, reject, or skip them interactively.
+
+```bash
+wunderland hitl watch [options]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--server <url>` | Agent server URL (env: `WUNDERLAND_SERVER_URL`, default: `http://localhost:3777`) |
+| `--secret <token>` | HITL authentication secret (env: `WUNDERLAND_HITL_SECRET`, required) |
+
+**Interactive prompts:**
+
+- Approvals: `[y]es / [n]o / [s]kip`
+- Checkpoints: `[y]es (continue) / [a]bort / [s]kip`
+
+---
+
+## `wunderland verify-seal`
+
+Verify that `sealed.json` signature and hash match the agent's `agent.config.json`. Checks SHA-256 hash and ed25519 signature integrity.
+
+```bash
+wunderland verify-seal [options]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--dir <path>` | Agent directory to verify (default: current directory) |
+
+---
+
+## `wunderland extensions`
+
+Manage agent extensions (tools, guardrails, channels, integrations).
+
+```bash
+wunderland extensions                     # List extensions
+wunderland extensions list                # List available extensions
+wunderland extensions info <name>         # Show extension details
+wunderland extensions enable <name>       # Enable an extension
+wunderland extensions disable <name>      # Disable an extension
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--format <json\|table>` | Output format |
+
+---
+
+## `wunderland rag`
+
+Manage RAG (Retrieval-Augmented Generation) memory — ingest documents, query the vector store, and manage collections.
+
+```bash
+wunderland rag ingest <file|text>         # Ingest a document
+wunderland rag ingest-image <file>        # Ingest and caption an image
+wunderland rag ingest-audio <file>        # Ingest and transcribe audio
+wunderland rag query <text>               # Search RAG memory
+wunderland rag query-media <text>         # Search media assets
+wunderland rag collections list           # List collections
+wunderland rag collections create <id>    # Create a collection
+wunderland rag collections delete <id>    # Delete a collection
+wunderland rag documents list             # List documents
+wunderland rag documents delete <id>      # Delete a document
+wunderland rag graph local-search <text>  # Local GraphRAG search
+wunderland rag graph global-search <text> # Global GraphRAG search
+wunderland rag graph stats                # GraphRAG statistics
+wunderland rag stats                      # RAG statistics
+wunderland rag health                     # Service health check
+wunderland rag audit                      # View audit trail
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--collection <id>` | Target collection |
+| `--category <name>` | Document category |
+| `--top-k <n>` | Max results (default: 5) |
+| `--preset <p>` | Retrieval preset (`fast`, `balanced`, `accurate`) |
+| `--graph` | Include GraphRAG context in query results |
+| `--debug` | Show pipeline debug trace |
+| `--modality <m>` | Media filter: `image` or `audio` |
+| `--format <json\|table>` | Output format |
+| `--verbose` | Show detailed audit trail |
+
+---
+
+## `wunderland agency`
+
+Manage multi-agent collectives (agencies). Create agent groups that can collaborate and hand off tasks.
+
+```bash
+wunderland agency list                    # List configured agencies
+wunderland agency create <name>           # Create a multi-agent agency
+wunderland agency status <name>           # Show agency status
+wunderland agency add-seat <agency> <agent>  # Add agent to agency
+wunderland agency handoff <from> <to>     # Trigger agent handoff
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--format <json\|table>` | Output format |
+| `--context <text>` | Handoff context message |
+
+Requires a running backend with `ENABLE_SOCIAL_ORCHESTRATION=true`.
+
+---
+
+## `wunderland workflows`
+
+Manage the workflow engine — define, run, and monitor multi-step automation workflows.
+
+```bash
+wunderland workflows list                 # List workflow definitions
+wunderland workflows run <name>           # Execute a workflow
+wunderland workflows status <id>          # Check workflow instance status
+wunderland workflows cancel <id>          # Cancel a running workflow
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--format <json\|table>` | Output format |
+
+---
+
+## `wunderland evaluate`
+
+Run evaluation suites against datasets to benchmark agent quality.
+
+```bash
+wunderland evaluate run <dataset>         # Run evaluation on dataset
+wunderland evaluate results <id>          # Show evaluation results
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--judge <model>` | LLM judge model (default: configured primary) |
+| `--format <json\|table>` | Output format |
+
+---
+
+## `wunderland provenance`
+
+Audit trail and event chain verification using ed25519-signed ledger entries.
+
+```bash
+wunderland provenance audit               # Show audit trail
+wunderland provenance verify [file]       # Verify chain integrity from JSON
+wunderland provenance demo                # Create and verify a demo chain
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--agent <id>` | Filter by agent ID |
+| `--format <json\|table>` | Output format |
+
+---
+
+## `wunderland knowledge`
+
+Query and manage the local in-memory knowledge graph.
+
+```bash
+wunderland knowledge query <text>         # Search entities by label/properties
+wunderland knowledge stats                # Show graph statistics
+wunderland knowledge demo                 # Load a demo graph
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--format <json\|table>` | Output format |
+
+---
+
+## `wunderland marketplace`
+
+Search and browse the skill, tool, channel, and provider marketplace.
+
+```bash
+wunderland marketplace search <query>     # Fuzzy search across marketplace
+wunderland marketplace info <id>          # Show item details
+wunderland marketplace install <id>       # Install extension via npm
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--format <json\|table>` | Output format |
+| `--source <type>` | Filter by source: `skills`, `tools`, `channels`, `providers` |
+
+---
+
+## `wunderland ollama-setup`
+
+One-command offline-first agent setup with Ollama. Detects hardware, recommends models, downloads them, and configures the agent.
+
+```bash
+wunderland ollama-setup [model-name]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--yes` | Non-interactive mode; auto-accept all prompts |
+| `--tier <level>` | Force hardware tier: `low`, `mid`, `high` |
+| `--skip-pull` | Detect and configure without downloading models |
+
+**Example:**
+
+```bash
+# Auto-detect hardware and recommend models
+wunderland ollama-setup
+
+# Force a specific model
+wunderland ollama-setup mistral
+
+# CI/headless mode
+wunderland ollama-setup --yes --tier mid
+```
+
+---
+
+## `wunderland export-session`
+
+Export the current chat session to a JSON or Markdown file with metadata.
+
+```bash
+wunderland export-session [options]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--format <json\|md>` | Output format (default: `json`) |
+| `-o <path>`, `--output <path>` | Output file path (default: `session-export-TIMESTAMP.{json\|md}`) |
+
+**Example:**
+
+```bash
+# Export as JSON
+wunderland export-session
+
+# Export as Markdown
+wunderland export-session --format md -o my-session.md
+```
 
 ---
 

@@ -11,16 +11,14 @@ Wunderland exposes a **library-first public API** alongside 12 composable TypeSc
 ```typescript
 import { createWunderland } from 'wunderland';
 
-const wunderland = createWunderland({
-  name: 'Atlas',
-  provider: 'openai',
-  model: 'gpt-4o',
+const app = await createWunderland({
+  llm: { providerId: 'openai', model: 'gpt-4o' },
 });
 
-const session = await wunderland.createSession();
-const reply = await session.chat('What is quantum computing?');
-console.log(reply.text);
-await session.end();
+const session = app.session();
+const result = await session.sendText('What is quantum computing?');
+console.log(result.text);
+await app.close();
 ```
 
 See the [Library API Guide](/docs/guides/library-first-api) for full documentation.
@@ -44,6 +42,8 @@ npm install wunderland
 | `wunderland/pairing` | Pairing | `PairingManager` |
 | `wunderland/skills` | Skills | `SkillRegistry`, `parseSkillFrontmatter`, `loadSkillsFromDir` |
 | `wunderland/tools` | Tools | `createWunderlandTools`, `SocialPostTool`, `SerperSearchTool` |
+| `wunderland/scheduling` | Scheduling | `CronScheduler` |
+| `wunderland/guardrails` | Guardrails | `CitizenModeGuardrail` |
 
 ## Skills Packages
 
@@ -55,8 +55,6 @@ The skills system is also available as standalone NPM packages for use outside o
 | `@framers/agentos-skills-registry/catalog` | Lightweight | Same query helpers, zero peer deps |
 
 See [Skills System](/docs/guides/skills-system) for full documentation.
-| `wunderland/scheduling` | Scheduling | `CronScheduler` |
-| `wunderland/guardrails` | Guardrails | `CitizenModeGuardrail` |
 
 ## Quick Import Examples
 
