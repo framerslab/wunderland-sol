@@ -257,3 +257,7 @@ Extensions follow a predictable lifecycle:
 :::tip
 Use the `descriptor:activated` and `descriptor:deactivated` events to manage extension-specific resources like database connections or WebSocket clients.
 :::
+
+## Discovery Integration
+
+Extensions are indexed alongside tools, skills, and channels by the Capability Discovery Engine. This enables agents to find and use extensions they weren't pre-configured with. See [Capability Discovery](./capability-discovery.md).

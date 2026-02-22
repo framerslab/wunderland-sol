@@ -665,3 +665,7 @@ To contribute a skill to the catalog:
 4. **Open a PR** against the `main` branch. The CI pipeline will validate your SKILL.md format automatically.
 
 See the full [`CONTRIBUTING.md`](https://github.com/framersai/agentos-skills/blob/main/CONTRIBUTING.md) for the SKILL.md format spec, naming conventions, and review criteria.
+
+## Semantic Discovery
+
+Skills are automatically indexed by the Capability Discovery Engine for per-turn retrieval. Instead of loading all SKILL.md files at init, only relevant skills are pulled into context. See [Capability Discovery](./capability-discovery.md).

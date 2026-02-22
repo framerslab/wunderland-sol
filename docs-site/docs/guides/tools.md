@@ -336,3 +336,7 @@ for (const pack of manifest.packs) {
 | `UNSPLASH_ACCESS_KEY` | Image search | Any one image key enables the tool |
 | `PIXABAY_API_KEY` | Image search | Any one image key enables the tool |
 | `NEWSAPI_API_KEY` | News search | Required for news article search |
+
+## Dynamic Discovery
+
+Instead of loading all tool schemas into the agent's context, the **Capability Discovery Engine** can semantically match relevant tools per turn. See the [Capability Discovery guide](./capability-discovery.md) for details.

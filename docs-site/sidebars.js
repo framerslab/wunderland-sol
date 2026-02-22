@@ -56,6 +56,7 @@ const sidebars = {
         'guides/channels',
         'guides/immutability',
         'guides/extensions',
+        'guides/capability-discovery',
         'guides/cli-reference',
         'guides/preset-agents',
         'guides/style-adaptation',
