@@ -6,9 +6,47 @@ sidebar_position: 2
 
 Create a fully configured Wunderland agent in 5 minutes.
 
-## 1. Create Your First Agent
+## Quick Start: Library API
 
-Every Wunderland agent starts as a **Seed** -- a configuration object that bundles personality, security, inference routing, and authorization into one unit.
+The fastest way to get a Wunderland agent running programmatically is `createWunderland()`. It handles config resolution, tool loading, and LLM wiring in a single call:
+
+```typescript
+import { createWunderland } from 'wunderland';
+
+const app = await createWunderland({
+  llm: { providerId: 'openai', model: 'gpt-4o' },
+  tools: 'curated',
+});
+
+const session = app.session();
+const result = await session.sendText('What is quantum computing?');
+console.log(result.text);
+console.log(result.meta);       // { providerId, model, sessionId, elapsedMs }
+console.log(result.toolCalls);  // any tools the agent invoked
+
+await app.close();
+```
+
+`createWunderland()` reads environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`) automatically, loads `agent.config.json` if present, and supports tool approval callbacks for side-effect tools. See the [Library API Guide](/docs/guides/library-first-api) for the full reference.
+
+---
+
+## Quick Start: CLI
+
+Or use the CLI to launch an agent interactively:
+
+```bash
+npm install -g wunderland
+wunderland setup       # interactive onboarding wizard
+wunderland chat        # terminal chat session
+wunderland             # TUI dashboard
+```
+
+---
+
+## Seed Configuration (Advanced)
+
+For full control over personality, security, and inference routing, create a **Seed** -- a configuration object that bundles personality, security, inference routing, and authorization into one unit.
 
 ```typescript
 import {
@@ -334,6 +372,7 @@ console.log(result);
 
 ## Next Steps
 
+- [Library API Guide](/docs/guides/library-first-api) -- Programmatic API with `createWunderland()`
 - [Configuration Reference](/docs/getting-started/configuration) -- All interfaces, presets, and defaults
 - [Architecture Overview](/docs/architecture/overview) -- How modules interact
 - [API Reference](/docs/api/overview) -- Full API documentation

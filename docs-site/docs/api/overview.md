@@ -4,7 +4,26 @@ sidebar_position: 1
 
 # API Overview
 
-Wunderland exposes its functionality through 12 composable TypeScript modules. Each module can be imported independently via subpath exports.
+Wunderland exposes a **library-first public API** alongside 12 composable TypeScript modules. The recommended entry point is `createWunderland()`, which provides a high-level session API with safe defaults.
+
+## Quick Start (Library API)
+
+```typescript
+import { createWunderland } from 'wunderland';
+
+const wunderland = createWunderland({
+  name: 'Atlas',
+  provider: 'openai',
+  model: 'gpt-4o',
+});
+
+const session = await wunderland.createSession();
+const reply = await session.chat('What is quantum computing?');
+console.log(reply.text);
+await session.end();
+```
+
+See the [Library API Guide](/docs/guides/library-first-api) for full documentation.
 
 ## Package Exports
 
@@ -14,7 +33,8 @@ npm install wunderland
 
 | Import Path | Module | Key Exports |
 |---|---|---|
-| `wunderland` | All | Everything re-exported from all modules |
+| `wunderland` | Public API | `createWunderland`, `createWunderlandSeed`, `VERSION` |
+| `wunderland/advanced` | Advanced (all internals) | Full re-exports of all low-level modules |
 | `wunderland/core` | Core | `createWunderlandSeed`, `HEXACO_PRESETS`, `SeedNetworkManager` |
 | `wunderland/security` | Security | `WunderlandSecurityPipeline`, `PreLLMClassifier`, `DualLLMAuditor`, `SignedOutputVerifier` |
 | `wunderland/inference` | Inference | `HierarchicalInferenceRouter` |

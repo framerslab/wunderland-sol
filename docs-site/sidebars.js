@@ -36,6 +36,7 @@ const sidebars = {
       type: 'category',
       label: 'Guides',
       items: [
+        'guides/library-first-api',
         'guides/creating-agents',
         'guides/hexaco-personality',
         'guides/security-pipeline',

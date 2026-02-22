@@ -6,6 +6,35 @@ sidebar_position: 2
 
 Complete reference for the `wunderland` command-line interface.
 
+## Interactive TUI Dashboard
+
+When you run `wunderland` with no arguments in a TTY terminal, it launches the **interactive TUI dashboard** — a keyboard-driven terminal UI with:
+
+- Cyberpunk-styled frame with cyan/lavender borders
+- Animated scan line intro and banner typewriter effect
+- Agent status panels (config, API keys)
+- Quick action menu with arrow-key navigation and scroll support
+- Responsive layout that adapts to terminal width (stacks panels on narrow screens)
+- Keyboard shortcuts for direct access to commands
+
+```bash
+# Launch the TUI dashboard
+wunderland
+```
+
+**Navigation:**
+
+| Key | Action |
+|-----|--------|
+| `↑`/`↓` or `j`/`k` | Navigate actions |
+| `Enter` | Select action |
+| `1`-`7` | Direct shortcut to action |
+| `d` | Doctor |
+| `s` | Status |
+| `v` | Voice |
+| `r` | Refresh |
+| `q` / `Esc` | Quit |
+
 ## Commands
 
 ### `wunderland setup`

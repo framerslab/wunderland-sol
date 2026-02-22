@@ -13,6 +13,39 @@ npm install -g wunderland
 wunderland --help
 ```
 
+## Interactive TUI Dashboard
+
+When you run `wunderland` with no arguments in a TTY terminal, it launches an **interactive TUI dashboard** -- a keyboard-driven terminal interface with:
+
+- Cyberpunk-styled frame with solid Unicode borders (`║`, `═`)
+- Animated scan-line intro and banner typewriter effect
+- Agent status panels (config, API keys, active channels)
+- Quick action menu with arrow-key navigation and scroll support
+- Responsive layout that adapts to terminal width (panels stack vertically on narrow screens)
+- Voice configuration view with provider status
+
+```bash
+# Launch the TUI dashboard
+wunderland
+```
+
+**Navigation:**
+
+| Key | Action |
+|-----|--------|
+| `↑`/`↓` or `j`/`k` | Navigate actions |
+| `Enter` | Select action |
+| `1`-`7` | Direct shortcut to action |
+| `d` | Doctor |
+| `s` | Status |
+| `v` | Voice view |
+| `r` | Refresh |
+| `q` / `Esc` | Quit |
+
+The TUI dashboard auto-detects terminal dimensions and renders a width-adaptive tagline, side-by-side or stacked panels, and condensed footer keybindings on narrow screens.
+
+---
+
 ## Global Options
 
 These flags are accepted by every command:
@@ -26,6 +59,7 @@ These flags are accepted by every command:
 | `--no-color` | | Disable colored output (also: `NO_COLOR` env) |
 | `--dry-run` | | Preview changes without writing to disk |
 | `--config <path>` | | Override the config directory path |
+| `--export-png <path>` | | Export command output as a styled PNG screenshot |
 
 ---
 
@@ -124,6 +158,11 @@ wunderland chat --model llama3
 ```
 
 Type your messages directly in the terminal. Press `Ctrl+C` to exit.
+
+The chat interface features a cyberpunk-styled frame matching the TUI dashboard aesthetic:
+- Framed header showing agent name, model, and security tier
+- Lavender-bordered boxes around assistant replies
+- REPL commands: `/clear`, `/system <prompt>`, `/model <name>`, `/tools`, `/help`, `/exit`
 
 ---
 
@@ -426,6 +465,47 @@ wunderland plugins [options]
 | `--format <json\|table>` | Output format |
 
 Displays all registered extensions grouped by kind (tools, guardrails, channels, etc.). See [Extension Ecosystem](./extensions.md) for details.
+
+---
+
+## PNG Screenshot Export
+
+Any command supports `--export-png <path>` to capture its terminal output as a styled PNG image. The export pipeline:
+
+1. Captures all ANSI-colored terminal output
+2. Converts ANSI escape codes to HTML with the cyberpunk color theme
+3. Renders the HTML to a PNG using headless Chromium (via Playwright)
+
+```bash
+# Export help screen as PNG
+wunderland --help --export-png help.png
+
+# Export doctor output as PNG
+wunderland doctor --export-png doctor-status.png
+
+# Export status as PNG
+wunderland status --export-png status.png
+```
+
+The exported screenshots use a dark background with the same cyan/lavender/magenta color palette as the TUI dashboard.
+
+---
+
+## Voice Wizard
+
+The `wunderland voice setup` command includes an enhanced configuration wizard:
+
+```bash
+wunderland voice setup
+```
+
+The wizard walks through:
+1. **Provider selection** -- Choose from Twilio, Telnyx, or Plivo
+2. **Credential entry** -- API keys, auth tokens, phone numbers
+3. **Voice preference** -- Select TTS voice and test synthesis
+4. **Verification** -- Test the connection and confirm setup
+
+Voice configuration integrates with `DynamicVoiceProfile`, which maps HEXACO personality traits to TTS parameters (speed, pitch, expressiveness). See [Voice: TTS, STT, and Voice Cloning](./voice-tts-stt.md) for the full reference.
 
 ---
 
