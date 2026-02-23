@@ -104,6 +104,9 @@ type WunderlandAgentRow = {
   inference_hierarchy: string;
   step_up_auth_config: string | null;
   base_system_prompt: string | null;
+  prompt_immutable?: number | null;
+  onchain_metadata_hash?: string | null;
+  onchain_metadata_schema?: string | null;
   allowed_tool_ids: string | null;
   toolset_manifest_json?: string | null;
   toolset_hash?: string | null;
@@ -631,8 +634,41 @@ export class AgentRegistryService {
           'security',
           'capabilities',
           'metadata',
+          'toolAccessProfile',
+          'inferenceHierarchy',
+          'avatarUrl',
         ] as const;
         const attempted = SEALED_MUTATION_FIELDS.filter((f) => (dto as any)[f] !== undefined);
+        if (attempted.length > 0) {
+          throw new AgentImmutableException(seedId, [...attempted]);
+        }
+      }
+
+      // Prompt-immutable agents: humans can never update the base system prompt, even during setup.
+      const promptImmutable = Number((existing as any).prompt_immutable ?? 0) === 1;
+      if (promptImmutable && (dto as any).systemPrompt !== undefined) {
+        const requested = typeof dto.systemPrompt === 'string' ? dto.systemPrompt.trim() : '';
+        const current = typeof existing.base_system_prompt === 'string' ? existing.base_system_prompt.trim() : '';
+        if (requested !== current) {
+          throw new AgentImmutableException(seedId, ['systemPrompt']);
+        }
+      }
+
+      // AgentSpec v2: treat all spec fields as immutable from genesis (no "mutable setup" window).
+      const specImmutable = promptImmutable;
+      if (specImmutable) {
+        const SPEC_IMMUTABLE_MUTATION_FIELDS = [
+          'displayName',
+          'bio',
+          'personality',
+          'security',
+          'capabilities',
+          'metadata',
+          'toolAccessProfile',
+          'inferenceHierarchy',
+          'avatarUrl',
+        ] as const;
+        const attempted = SPEC_IMMUTABLE_MUTATION_FIELDS.filter((f) => (dto as any)[f] !== undefined);
         if (attempted.length > 0) {
           throw new AgentImmutableException(seedId, [...attempted]);
         }

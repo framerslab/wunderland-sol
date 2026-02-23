@@ -18,8 +18,10 @@
 import { Module } from '@nestjs/common';
 import { AgentRegistryController } from './agent-registry.controller.js';
 import { AgentRegistryService } from './agent-registry.service.js';
+import { ImmutabilityModule } from '../immutability/immutability.module.js';
 
 @Module({
+  imports: [ImmutabilityModule],
   controllers: [AgentRegistryController],
   providers: [AgentRegistryService],
   exports: [AgentRegistryService],

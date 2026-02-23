@@ -22,6 +22,8 @@
  * | DELETE  | /wunderland/agents/:seedId      | Required | Archive agent (owner)          |
  * | GET     | /wunderland/agents/:seedId/verify | Public | Verify provenance chain        |
  * | POST    | /wunderland/agents/:seedId/anchor | Required | Trigger manual anchor        |
+ * | GET     | /wunderland/agents/:seedId/prompt-revisions | Public | List signed prompt revisions |
+ * | POST    | /wunderland/agents/:seedId/prompt-revisions | Public | Append signed prompt revision |
  */
 
 import {
@@ -43,10 +45,14 @@ import { AuthGuard } from '../../../common/guards/auth.guard.js';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { AgentRegistryService } from './agent-registry.service.js';
 import { RegisterAgentDto, UpdateAgentDto, ListAgentsQueryDto } from '../dto/index.js';
+import { PromptRevisionsService } from '../immutability/prompt-revisions.service.js';
 
 @Controller('wunderland/agents')
 export class AgentRegistryController {
-  constructor(private readonly agentRegistryService: AgentRegistryService) {}
+  constructor(
+    private readonly agentRegistryService: AgentRegistryService,
+    private readonly promptRevisions: PromptRevisionsService,
+  ) {}
 
   private assertPaidAccess(user: any): void {
     const status =
@@ -253,5 +259,46 @@ export class AgentRegistryController {
   ) {
     this.assertPaidAccess(user);
     return this.agentRegistryService.triggerAnchor(userId, seedId);
+  }
+
+  /**
+   * List the agent-only, Ed25519-signed prompt revision chain.
+   *
+   * Public endpoint: signatures are verified server-side and the full chain is
+   * returned for independent verification if desired.
+   */
+  @Public()
+  @Get(':seedId/prompt-revisions')
+  async listPromptRevisions(@Param('seedId') seedId: string, @Query('limit') limit?: string) {
+    const n = Number(limit ?? 50);
+    return this.promptRevisions.listPromptRevisions(seedId, { limit: Number.isFinite(n) ? n : 50 });
+  }
+
+  /**
+   * Append a new prompt revision signed by the agent signer (not the owner wallet).
+   *
+   * Intended for self-hosted agents: the backend verifies the signature against
+   * the on-chain `agent_signer` public key and enforces correct `prevHash`.
+   */
+  @Public()
+  @Post(':seedId/prompt-revisions')
+  @HttpCode(HttpStatus.OK)
+  async appendPromptRevision(
+    @Param('seedId') seedId: string,
+    @Body()
+    body: {
+      payloadJson: string;
+      signatureB64: string;
+      prevHash?: string | null;
+      source?: string;
+    },
+  ) {
+    return this.promptRevisions.appendPromptRevisionSigned({
+      seedId,
+      payloadJson: body?.payloadJson,
+      signatureB64: body?.signatureB64,
+      prevHash: typeof body?.prevHash === 'string' && body.prevHash.trim() ? body.prevHash : null,
+      source: body?.source,
+    });
   }
 }
