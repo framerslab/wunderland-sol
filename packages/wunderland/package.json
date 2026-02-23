@@ -90,6 +90,18 @@
       "import": "./dist/marketplace/index.js",
       "types": "./dist/marketplace/index.d.ts"
     },
+    "./advanced/core": {
+      "import": "./dist/core/index.js",
+      "types": "./dist/core/index.d.ts"
+    },
+    "./advanced/security": {
+      "import": "./dist/security/index.js",
+      "types": "./dist/security/index.d.ts"
+    },
+    "./advanced/social": {
+      "import": "./dist/social/index.js",
+      "types": "./dist/social/index.d.ts"
+    },
     "./presets": {
       "import": "./dist/core/PresetLoader.js",
       "types": "./dist/core/PresetLoader.d.ts"
