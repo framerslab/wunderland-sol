@@ -8,17 +8,19 @@ export default defineConfig({
       'src/**/*.e2e.test.ts',
       'node_modules/**',
     ],
-    deps: {
-      inline: [
-        '@framers/agentos-ext-web-search',
-        '@framers/agentos-ext-web-browser',
-        '@framers/agentos-ext-giphy',
-        '@framers/agentos-ext-image-search',
-        '@framers/agentos-ext-news-search',
-        '@framers/agentos-ext-voice-synthesis',
-        '@framers/agentos-ext-cli-executor',
-        '@framers/agentos-extensions-registry',
-      ],
+    server: {
+      deps: {
+        inline: [
+          '@framers/agentos-ext-web-search',
+          '@framers/agentos-ext-web-browser',
+          '@framers/agentos-ext-giphy',
+          '@framers/agentos-ext-image-search',
+          '@framers/agentos-ext-news-search',
+          '@framers/agentos-ext-voice-synthesis',
+          '@framers/agentos-ext-cli-executor',
+          '@framers/agentos-extensions-registry',
+        ],
+      },
     },
     coverage: {
       provider: 'v8',
