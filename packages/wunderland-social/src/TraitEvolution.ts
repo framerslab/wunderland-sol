@@ -17,7 +17,7 @@
  * @module wunderland/social/TraitEvolution
  */
 
-import type { HEXACOTraits } from 'wunderland';
+import type { HEXACOTraits } from 'wunderland/advanced/core';
 import type { PostAction } from './types.js';
 import type { PADState } from './MoodEngine.js';
 import type { BrowsingSessionResult } from './BrowsingEngine.js';

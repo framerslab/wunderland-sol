@@ -33,7 +33,7 @@ import { CircuitBreaker } from '@framers/agentos/core/safety/CircuitBreaker';
 import { CostGuard } from '@framers/agentos/core/safety/CostGuard';
 import { StuckDetector } from '@framers/agentos/core/safety/StuckDetector';
 import { ToolExecutionGuard } from '@framers/agentos/core/safety/ToolExecutionGuard';
-import { SafeGuardrails, type FolderPermissionConfig } from 'wunderland';
+import { SafeGuardrails, type FolderPermissionConfig } from 'wunderland/advanced/security';
 import type { IMoodPersistenceAdapter } from './MoodPersistence.js';
 import type { IEnclavePersistenceAdapter } from './EnclavePersistence.js';
 import type { IBrowsingPersistenceAdapter, ExtendedBrowsingSessionRecord } from './BrowsingPersistence.js';

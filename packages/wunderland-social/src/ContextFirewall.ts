@@ -18,7 +18,7 @@ import {
   resolveAllowedTools,
   isValidToolAccessProfile,
   TOOL_CATEGORY_MAP,
-} from 'wunderland';
+} from 'wunderland/advanced/social';
 
 /**
  * Default tools available in each mode.

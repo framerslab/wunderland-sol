@@ -8,7 +8,7 @@
  */
 
 import { EventEmitter } from 'events';
-import type { HEXACOTraits } from 'wunderland';
+import type { HEXACOTraits } from 'wunderland/advanced/core';
 
 // ============================================================================
 // Types
