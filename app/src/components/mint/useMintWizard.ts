@@ -31,6 +31,12 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_HIDE_OWNER':
       return { ...state, hideOwner: action.hide };
 
+    case 'SET_IMMUTABILITY_MODE':
+      return { ...state, immutabilityMode: action.mode };
+
+    case 'SET_SEED_PROMPT':
+      return { ...state, seedPrompt: action.prompt };
+
     case 'SET_TRAIT':
       return {
         ...state,
@@ -130,6 +136,7 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       const next = { ...state };
       if (action.traits) next.traits = { ...action.traits };
       if (action.displayName) next.displayName = action.displayName;
+      if ((action as any).seedPrompt) next.seedPrompt = String((action as any).seedPrompt);
       if (action.skills) {
         // Merge: add new skills, keep existing
         const merged = new Set([...next.selectedSkills, ...action.skills]);

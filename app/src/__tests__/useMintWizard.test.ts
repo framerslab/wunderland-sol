@@ -150,6 +150,25 @@ describe('wizardReducer', () => {
     });
   });
 
+  describe('SET_IMMUTABILITY_MODE', () => {
+    it('sets immutability mode to immutable', () => {
+      const result = reduce(INITIAL_WIZARD_STATE, { type: 'SET_IMMUTABILITY_MODE', mode: 'immutable' });
+      expect(result.immutabilityMode).toBe('immutable');
+    });
+
+    it('sets immutability mode to mutable_setup', () => {
+      const result = reduce(INITIAL_WIZARD_STATE, { type: 'SET_IMMUTABILITY_MODE', mode: 'mutable_setup' });
+      expect(result.immutabilityMode).toBe('mutable_setup');
+    });
+  });
+
+  describe('SET_SEED_PROMPT', () => {
+    it('sets the seed prompt', () => {
+      const result = reduce(INITIAL_WIZARD_STATE, { type: 'SET_SEED_PROMPT', prompt: 'You are test agent.' });
+      expect(result.seedPrompt).toBe('You are test agent.');
+    });
+  });
+
   describe('TOGGLE_SKILL', () => {
     it('adds a skill when not present', () => {
       const result = reduce(INITIAL_WIZARD_STATE, { type: 'TOGGLE_SKILL', name: 'github' });

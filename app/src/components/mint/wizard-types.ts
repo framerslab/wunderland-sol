@@ -55,6 +55,10 @@ export interface AgentPreset {
   suggestedChannels: string[];
 }
 
+// ── Immutability modes ─────────────────────────────────────────────────────
+
+export type ImmutabilityMode = 'immutable' | 'mutable_setup';
+
 // ── Wizard steps ───────────────────────────────────────────────────────────
 
 export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6;
@@ -98,6 +102,8 @@ export interface WizardState {
   displayName: string;
   selectedPreset: AgentPreset | null;
   hideOwner: boolean; // UI-level: hide owner wallet from web profile (on-chain data still public)
+  immutabilityMode: ImmutabilityMode;
+  seedPrompt: string;
 
   // Step 2: Personality
   traits: TraitsState;
@@ -133,6 +139,8 @@ export type WizardAction =
   | { type: 'CLEAR_PRESET' }
   | { type: 'SET_DISPLAY_NAME'; name: string }
   | { type: 'SET_HIDE_OWNER'; hide: boolean }
+  | { type: 'SET_IMMUTABILITY_MODE'; mode: ImmutabilityMode }
+  | { type: 'SET_SEED_PROMPT'; prompt: string }
   | { type: 'SET_TRAIT'; key: keyof TraitsState; value: number }
   | { type: 'SET_TRAITS'; traits: TraitsState }
   | { type: 'TOGGLE_SKILL'; name: string }
@@ -158,6 +166,11 @@ export const INITIAL_WIZARD_STATE: WizardState = {
   displayName: 'New Agent',
   selectedPreset: null,
   hideOwner: false,
+  immutabilityMode: 'immutable',
+  seedPrompt:
+    'You are an autonomous AI agent in the Wunderland network. ' +
+    'Your base prompt is immutable once minted (verifiable via on-chain metadata hash). ' +
+    'Adapt to circumstances by appending signed prompt revisions as needed, without revealing secrets.',
   traits: DEFAULT_TRAITS,
   selectedSkills: [],
   selectedChannels: [],
@@ -180,8 +193,11 @@ export const INITIAL_WIZARD_STATE: WizardState = {
 export function isStepValid(state: WizardState, step: WizardStep): boolean {
   switch (step) {
     case 1:
-      return state.displayName.trim().length > 0 &&
-        new TextEncoder().encode(state.displayName.trim()).length <= 32;
+      return (
+        state.displayName.trim().length > 0 &&
+        new TextEncoder().encode(state.displayName.trim()).length <= 32 &&
+        state.seedPrompt.trim().length > 0
+      );
     case 2:
       return true; // defaults are always valid
     case 3:

@@ -14,6 +14,7 @@ interface StepReviewProps {
   maxReached: boolean;
   configReady: boolean;
   mintFeeSol: number | null;
+  metadataHashHex: string;
   explorerClusterParam: string;
 }
 
@@ -48,6 +49,7 @@ export default function StepReview({
   maxReached,
   configReady,
   mintFeeSol,
+  metadataHashHex,
   explorerClusterParam,
 }: StepReviewProps) {
   const provider = state.selectedProvider
@@ -124,8 +126,8 @@ export default function StepReview({
 
         <div className="p-3 rounded-lg bg-[rgba(153,69,255,0.04)] border border-[rgba(153,69,255,0.12)]">
           <p className="text-sm text-[var(--text-tertiary)] leading-relaxed">
-            Before sealing, you can adjust skills, channels, and provider settings via the dashboard.
-            After sealing, only credential rotation is allowed.
+            Your on-chain identity is immutable forever. If you minted in immutable mode, your AgentSpec is committed via{' '}
+            <code className="text-[var(--text-secondary)]">metadata_hash</code> and cannot be edited by humans.
           </p>
         </div>
       </div>
@@ -137,9 +139,18 @@ export default function StepReview({
       {/* Sealing reminder */}
       <div className="p-3 rounded-lg bg-[rgba(0,245,255,0.04)] border border-[rgba(0,245,255,0.15)]">
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-          On-chain identity is <strong className="text-[var(--text-primary)]">immutable from mint</strong>.
-          Off-chain config (skills, channels) locks at seal.
-          API keys remain <strong className="text-[var(--text-primary)]">rotatable forever</strong>.
+          {state.immutabilityMode === 'immutable' ? (
+            <>
+              You are minting an <strong className="text-[var(--text-primary)]">immutable agent</strong>.
+              The seed prompt and spec are committed on-chain via <code className="text-[var(--text-secondary)]">metadata_hash</code>.
+              Humans can never edit the base prompt after mint. Only the agent signer can append signed prompt revisions over time.
+            </>
+          ) : (
+            <>
+              You are minting in <strong className="text-[var(--text-primary)]">legacy mutable mode</strong>.
+              Your on-chain identity is immutable, but the seed prompt is not committed on-chain and is not publicly verifiable.
+            </>
+          )}
         </p>
       </div>
 
@@ -153,6 +164,12 @@ export default function StepReview({
         )}
         <div className="text-sm text-[var(--text-tertiary)] mt-1">
           Owner wallet: {state.hideOwner ? 'Hidden from profile' : 'Visible on profile'}
+        </div>
+        <div className="mt-2 text-[11px] text-[var(--text-tertiary)]">
+          Seed prompt ({state.immutabilityMode === 'immutable' ? 'committed' : 'not committed'}):
+        </div>
+        <div className="mt-1 text-[11px] font-mono text-[var(--text-secondary)] whitespace-pre-wrap line-clamp-4">
+          {state.seedPrompt.trim() || '—'}
         </div>
       </SummaryCard>
 
@@ -201,10 +218,29 @@ export default function StepReview({
             </div>
           )}
           {state.selectedSkills.length === 0 && state.selectedChannels.length === 0 && !provider && (
-            <div className="text-sm text-[var(--text-tertiary)]">None selected (can configure later)</div>
+            <div className="text-sm text-[var(--text-tertiary)]">
+              {state.immutabilityMode === 'immutable'
+                ? 'None selected (spec is immutable after mint)'
+                : 'None selected (can configure later)'}
+            </div>
           )}
         </div>
       </SummaryCard>
+
+      {/* Commitment hash */}
+      <div className="glass rounded-xl p-3">
+        <div className="text-xs font-mono uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-2">
+          On-Chain Commitment
+        </div>
+        <div className="text-[11px] text-[var(--text-tertiary)] leading-relaxed">
+          <div>
+            metadata_hash (SHA-256 of canonical {state.immutabilityMode === 'immutable' ? 'AgentSpec' : 'metadata'} JSON)
+          </div>
+          <div className="mt-1 font-mono text-[10px] text-[var(--neon-cyan)] break-all">
+            {metadataHashHex || '—'}
+          </div>
+        </div>
+      </div>
 
       {/* Credentials */}
       <SummaryCard label={STEP_LABELS[4]} step={4} onEdit={onEditStep}>

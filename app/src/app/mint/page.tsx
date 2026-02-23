@@ -37,7 +37,7 @@ import {
 
 // Wizard infrastructure
 import { useMintWizard } from '@/components/mint/useMintWizard';
-import { TRAIT_KEYS, type WizardStep } from '@/components/mint/wizard-types';
+import { TRAIT_KEYS, isStepValid, type WizardStep } from '@/components/mint/wizard-types';
 import WizardStepper from '@/components/mint/WizardStepper';
 import StepIdentity from '@/components/mint/StepIdentity';
 import StepPersonality from '@/components/mint/StepPersonality';
@@ -144,20 +144,54 @@ export default function MintPage() {
     const owner = publicKey?.toBase58();
     setMetadataJson(
       JSON.stringify(
-        {
-          schema: 'wunderland.agent-metadata.v1',
-          displayName: wizard.displayName,
-          traits: wizard.traits,
-          createdAt: new Date().toISOString(),
-          createdBy: owner || 'wunderland.sh',
-          hideOwner: wizard.hideOwner,
-          notes: 'Pin these bytes to IPFS as a raw block for trustless retrieval.',
-        },
+        wizard.immutabilityMode === 'immutable'
+          ? {
+              schema: 'wunderland.agent-spec.v2',
+              identity: {
+                displayName: wizard.displayName,
+                hideOwner: wizard.hideOwner,
+              },
+              prompt: {
+                seedPrompt: wizard.seedPrompt,
+              },
+              personality: {
+                traits: wizard.traits,
+              },
+              capabilities: {
+                skills: [...wizard.selectedSkills].sort((a, b) => a.localeCompare(b)),
+                channels: [...wizard.selectedChannels].sort((a, b) => a.localeCompare(b)),
+              },
+              inference: {
+                providerId: wizard.selectedProvider,
+              },
+              createdAt: new Date().toISOString(),
+              createdBy: owner || 'wunderland.sh',
+              notes: 'Pin these bytes to IPFS as a raw block for trustless retrieval.',
+            }
+          : {
+              schema: 'wunderland.agent-metadata.v1',
+              displayName: wizard.displayName,
+              traits: wizard.traits,
+              createdAt: new Date().toISOString(),
+              createdBy: owner || 'wunderland.sh',
+              hideOwner: wizard.hideOwner,
+              notes: 'Legacy mode: metadata is not a committed AgentSpec; do not treat this as immutable.',
+            },
         null,
         2,
       ),
     );
-  }, [wizard.displayName, wizard.traits, wizard.hideOwner, publicKey]);
+  }, [
+    wizard.displayName,
+    wizard.traits,
+    wizard.hideOwner,
+    wizard.seedPrompt,
+    wizard.immutabilityMode,
+    wizard.selectedSkills,
+    wizard.selectedChannels,
+    wizard.selectedProvider,
+    publicKey,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -272,6 +306,7 @@ export default function MintPage() {
       programId: WUNDERLAND_PROGRAM_ID.toBase58(),
       agentPda,
       agentSigner,
+      metadataHash: metadataHashHex || null,
     });
   };
 
@@ -295,6 +330,8 @@ export default function MintPage() {
           ownerWallet: publicKey.toBase58(),
           agentIdentityPda: agentPda,
           signatureB64,
+          metadataJson,
+          seedPrompt: wizard.seedPrompt,
           agentSignerSecretKeyJson: keypairToSecretKeyJson(wizard.generatedSigner.secretKey),
         }),
       });
@@ -495,6 +532,7 @@ export default function MintPage() {
   const goToStep = (step: WizardStep) => dispatch({ type: 'SET_STEP', step });
 
   const nextStep = () => {
+    if (!isStepValid(wizard, wizard.step)) return;
     if (wizard.step < 6) goToStep((wizard.step + 1) as WizardStep);
   };
 
@@ -921,6 +959,7 @@ export default function MintPage() {
               maxReached={maxReached}
               configReady={configReady}
               mintFeeSol={mintFeeSol}
+              metadataHashHex={metadataHashHex}
               explorerClusterParam={explorerClusterParam()}
             />
           )}
@@ -940,7 +979,8 @@ export default function MintPage() {
             <button
               type="button"
               onClick={nextStep}
-              className="px-6 py-3 rounded-lg text-sm font-mono uppercase bg-[rgba(0,245,255,0.08)] text-[var(--text-primary)] border border-[rgba(0,245,255,0.2)] hover:bg-[rgba(0,245,255,0.14)] transition-all"
+              disabled={!isStepValid(wizard, wizard.step)}
+              className="px-6 py-3 rounded-lg text-sm font-mono uppercase bg-[rgba(0,245,255,0.08)] text-[var(--text-primary)] border border-[rgba(0,245,255,0.2)] hover:bg-[rgba(0,245,255,0.14)] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[rgba(0,245,255,0.08)]"
             >
               {wizard.step === 5 ? 'Review' : 'Next'}
             </button>

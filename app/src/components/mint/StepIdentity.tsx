@@ -24,6 +24,8 @@ export default function StepIdentity({ state, dispatch, onQuickMint }: StepIdent
   const nameBytes = new TextEncoder().encode(state.displayName.trim()).length;
   const nameTooLong = nameBytes > 32;
 
+  const promptBytes = new TextEncoder().encode(state.seedPrompt).length;
+
   return (
     <div className="grid gap-4">
       {/* NL Describe Panel — AI suggestions above preset selector */}
@@ -67,6 +69,82 @@ export default function StepIdentity({ state, dispatch, onQuickMint }: StepIdent
         </div>
         <div className={`mt-1 text-[10px] font-mono ${nameTooLong ? 'text-[var(--neon-red)]' : 'text-[var(--text-tertiary)]'}`}>
           {nameBytes}/32 UTF-8 bytes{nameTooLong ? ' (too long!)' : ''}
+        </div>
+      </div>
+
+      {/* Immutability mode */}
+      <div className="glass rounded-xl p-4">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <div className="text-xs font-mono uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+              Immutability
+            </div>
+            <p className="text-sm text-[var(--text-tertiary)] mt-1 leading-relaxed">
+              {state.immutabilityMode === 'immutable'
+                ? 'Your AgentSpec (seed prompt + selected skills/channels/provider) is committed on-chain (via metadata_hash) and can never be edited by humans after mint.'
+                : 'Legacy mode: your seed prompt is NOT committed on-chain. It is not publicly verifiable and can drift over time.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'SET_IMMUTABILITY_MODE', mode: 'immutable' })}
+              className={`px-3 py-2 rounded-lg text-[10px] font-mono uppercase border transition-all ${
+                state.immutabilityMode === 'immutable'
+                  ? 'bg-[rgba(16,255,176,0.10)] text-[var(--neon-green)] border-[rgba(16,255,176,0.25)]'
+                  : 'bg-[var(--bg-glass)] text-[var(--text-tertiary)] border-[var(--border-glass)] hover:text-[var(--text-secondary)]'
+              }`}
+            >
+              Immutable
+            </button>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'SET_IMMUTABILITY_MODE', mode: 'mutable_setup' })}
+              className={`px-3 py-2 rounded-lg text-[10px] font-mono uppercase border transition-all ${
+                state.immutabilityMode === 'mutable_setup'
+                  ? 'bg-[rgba(255,50,50,0.08)] text-[var(--neon-red)] border-[rgba(255,50,50,0.20)]'
+                  : 'bg-[var(--bg-glass)] text-[var(--text-tertiary)] border-[var(--border-glass)] hover:text-[var(--text-secondary)]'
+              }`}
+            >
+              Mutable
+            </button>
+          </div>
+        </div>
+
+        {state.immutabilityMode === 'immutable' && (
+          <div className="mt-3 p-3 rounded-lg bg-[rgba(0,245,255,0.04)] border border-[rgba(0,245,255,0.15)]">
+            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              Only the <strong className="text-[var(--text-primary)]">agent signer</strong> can append signed prompt revisions over time.
+              The original seed prompt stays frozen forever.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Seed prompt */}
+      <div>
+        <label htmlFor="seedPrompt" className="text-xs font-mono uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+          Seed Prompt
+        </label>
+        <textarea
+          id="seedPrompt"
+          value={state.seedPrompt}
+          onChange={(e) => dispatch({ type: 'SET_SEED_PROMPT', prompt: e.target.value })}
+          rows={7}
+          className="search-input-glow w-full px-4 py-3 mt-2 rounded-lg bg-[var(--bg-glass)] border border-[var(--border-glass)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] text-sm focus:outline-none focus:border-[rgba(0,245,255,0.4)] transition-all duration-300 font-mono"
+          placeholder={
+            state.immutabilityMode === 'immutable'
+              ? "Describe your agent's immutable base prompt..."
+              : "Describe your agent's base prompt..."
+          }
+        />
+        <div className="mt-1 flex items-center justify-between gap-3 text-[10px] font-mono text-[var(--text-tertiary)]">
+          <span>{promptBytes.toLocaleString()} bytes</span>
+          <span>
+            {state.immutabilityMode === 'immutable'
+              ? 'Committed on-chain via metadata_hash'
+              : 'Off-chain only (not verifiable)'}
+          </span>
         </div>
       </div>
 
@@ -143,7 +221,10 @@ export default function StepIdentity({ state, dispatch, onQuickMint }: StepIdent
             <div>
               <div className="text-xs font-semibold text-[var(--neon-green)]">Quick Mint</div>
               <p className="text-sm text-[var(--text-tertiary)] mt-1">
-                Use preset defaults and skip to signer generation. You can customize skills, channels, and API keys later.
+                Use preset defaults and skip to signer generation.
+                {state.immutabilityMode === 'immutable'
+                  ? ' In immutable mode, your committed spec is fixed at mint — review carefully before signing.'
+                  : ' In mutable mode, you can still adjust off-chain config later.'}
               </p>
             </div>
             <button

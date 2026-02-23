@@ -44,10 +44,9 @@ export default function CredentialForm({
       {/* Sealing info banner */}
       <div className="p-3 rounded-lg bg-[rgba(0,245,255,0.04)] border border-[rgba(0,245,255,0.15)] mb-4">
         <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
-          During setup, API keys can be added, rotated, or removed freely. After your agent is sealed,
-          existing keys can still be <strong className="text-[var(--text-primary)]">rotated</strong> for
-          operational security, but creating or deleting credential entries is locked. Everything else
-          (name, personality, skills, channels) is frozen permanently when you seal.
+          API keys are <strong className="text-[var(--text-primary)]">never stored on-chain</strong>.
+          They are encrypted at rest (AES-256-GCM) and can be added or rotated later for operational security.
+          Your committed agent spec (including seed prompt, if you chose immutable mode) is verified separately via the on-chain <code className="text-[var(--text-primary)]">metadata_hash</code>.
         </p>
       </div>
 

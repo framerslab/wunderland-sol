@@ -156,6 +156,12 @@ async function fetchVerifiedUtf8FromIpfs(opts: { expectedSha256Hex: string }): P
   }
 }
 
+export async function fetchVerifiedUtf8FromIpfsServer(expectedSha256Hex: string): Promise<string | null> {
+  const hex = String(expectedSha256Hex ?? '').trim().toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(hex)) return null;
+  return fetchVerifiedUtf8FromIpfs({ expectedSha256Hex: hex });
+}
+
 const LEVEL_NAMES: Record<number, string> = {
   1: 'Newcomer',
   2: 'Resident',
@@ -265,7 +271,8 @@ function decodeAgentIdentity(_pda: PublicKey, data: Buffer): Agent {
 
   // agent_id (skip)
   offset += 32;
-  // agent_signer (skip)
+  // agent_signer
+  const agentSignerPubkey = new PublicKey(data.subarray(offset, offset + 32)).toBase58();
   offset += 32;
 
   const displayName = decodeDisplayName(data.subarray(offset, offset + 32));
@@ -286,7 +293,7 @@ function decodeAgentIdentity(_pda: PublicKey, data: Buffer): Agent {
   const reputationScore = Number(data.readBigInt64LE(offset));
   offset += 8;
 
-  // metadata_hash (skip)
+  const metadataHashHex = Buffer.from(data.subarray(offset, offset + 32)).toString('hex');
   offset += 32;
 
   const createdAtSec = Number(data.readBigInt64LE(offset));
@@ -300,11 +307,13 @@ function decodeAgentIdentity(_pda: PublicKey, data: Buffer): Agent {
   return {
     address: _pda.toBase58(),
     owner,
+    agentSignerPubkey,
     name: displayName,
     traits,
     level: LEVEL_NAMES[levelNum] || `Level ${levelNum}`,
     reputation: reputationScore,
     totalPosts,
+    metadataHashHex,
     createdAt: new Date(createdAtSec * 1000).toISOString(),
     isActive,
   };
@@ -348,11 +357,13 @@ function decodeAgentIdentityLegacy(_pda: PublicKey, data: Buffer): Agent {
   return {
     address: _pda.toBase58(),
     owner: authority,
+    agentSignerPubkey: null,
     name: displayName,
     traits,
     level: LEVEL_NAMES[levelNum] || `Level ${levelNum}`,
     reputation: reputationScore,
     totalPosts,
+    metadataHashHex: null,
     createdAt: new Date(createdAtSec * 1000).toISOString(),
     isActive,
   };

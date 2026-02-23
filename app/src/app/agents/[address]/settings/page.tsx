@@ -15,12 +15,15 @@ import {
   buildExecuteRecoverAgentSignerIx,
   buildRequestRecoverAgentSignerIx,
   buildWithdrawFromVaultIx,
+  bytesToHex,
+  canonicalizeJsonString,
   decodeAgentSignerRecovery,
   deriveRecoveryPda,
   deriveVaultPda,
   downloadJson,
   keypairToSecretKeyJson,
   lamportsToSol,
+  sha256Utf8,
 } from '@/lib/wunderland-program';
 
 const LLM_PROVIDERS = [
@@ -132,6 +135,15 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
   const [onboardSignerPubkey, setOnboardSignerPubkey] = useState<string>('');
   const onboardFileRef = useRef<HTMLInputElement | null>(null);
 
+  // On-chain metadata commitment (AgentIdentity.metadata_hash → IPFS raw block)
+  const [metadataLoading, setMetadataLoading] = useState(false);
+  const [metadataError, setMetadataError] = useState<string | null>(null);
+  const [metadataJson, setMetadataJson] = useState<string | null>(null);
+  const [metadataHashHex, setMetadataHashHex] = useState<string | null>(null);
+  const [metadataSchema, setMetadataSchema] = useState<string | null>(null);
+  const [committedSeedPrompt, setCommittedSeedPrompt] = useState<string | null>(null);
+  const [legacySeedPrompt, setLegacySeedPrompt] = useState<string>('');
+
   // On-chain safety controls (deactivate + signer recovery)
   const [chainBusy, setChainBusy] = useState<string | null>(null);
   const [chainError, setChainError] = useState<string | null>(null);
@@ -230,7 +242,7 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
     return btoa(binary);
   };
 
-  const buildManagedHostingMessage = (agentPda: string, agentSigner: string): string => {
+  const buildManagedHostingMessage = (agentPda: string, agentSigner: string, metadataHash: string | null): string => {
     return JSON.stringify({
       v: 1,
       intent: 'wunderland_onboard_managed_agent_v1',
@@ -238,6 +250,7 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
       programId: WUNDERLAND_PROGRAM_ID.toBase58(),
       agentPda,
       agentSigner,
+      metadataHash,
     });
   };
 
@@ -274,6 +287,51 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
   useEffect(() => {
     if (isOwner) void loadHostingStatus();
   }, [isOwner, loadHostingStatus]);
+
+  const loadCommittedMetadata = useCallback(async () => {
+    if (!address) return { ok: false as const, error: 'Missing address' };
+    setMetadataLoading(true);
+    setMetadataError(null);
+    try {
+      const res = await fetch(`/api/agents/${encodeURIComponent(address)}/metadata`, {
+        cache: 'no-store',
+      });
+      const json = (await res.json().catch(() => ({}))) as any;
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || `Failed to load metadata (HTTP ${res.status})`);
+      }
+      const nextJson = typeof json.metadataJson === 'string' ? json.metadataJson : null;
+      const nextHash = typeof json.metadataHashHex === 'string' ? json.metadataHashHex : null;
+      const nextSchema = typeof json.schema === 'string' ? json.schema : null;
+      const nextSeedPrompt = typeof json.seedPrompt === 'string' ? json.seedPrompt : null;
+
+      setMetadataJson(nextJson);
+      setMetadataHashHex(nextHash);
+      setMetadataSchema(nextSchema);
+      setCommittedSeedPrompt(nextSeedPrompt);
+
+      if (!nextJson || !nextHash) {
+        return { ok: false as const, error: 'Metadata JSON missing from response' };
+      }
+
+      return {
+        ok: true as const,
+        metadataJson: nextJson,
+        metadataHashHex: nextHash,
+        schema: nextSchema,
+        seedPrompt: nextSeedPrompt,
+      };
+    } catch (err) {
+      setMetadataError(err instanceof Error ? err.message : 'Failed to load metadata');
+      setMetadataJson(null);
+      setMetadataHashHex(null);
+      setMetadataSchema(null);
+      setCommittedSeedPrompt(null);
+      return { ok: false as const, error: err instanceof Error ? err.message : 'Failed to load metadata' };
+    } finally {
+      setMetadataLoading(false);
+    }
+  }, [address]);
 
   const openOnboardImport = () => {
     setOnboardError(null);
@@ -330,7 +388,43 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
       const kp = Keypair.fromSecretKey(Uint8Array.from(onboardSecretKeyJson));
       const agentSigner = kp.publicKey.toBase58();
 
-      const message = buildManagedHostingMessage(address, agentSigner);
+      // Best-effort: pull committed metadata bytes from IPFS (so onboarding is hash-bound and verifiable).
+      let resolvedMetadataJson = metadataJson;
+      let resolvedMetadataHashHex = metadataHashHex;
+      let resolvedSchema = metadataSchema;
+
+      if (!resolvedMetadataJson && agent?.metadataHashHex) {
+        const loaded = await loadCommittedMetadata();
+        if (loaded.ok) {
+          resolvedMetadataJson = loaded.metadataJson;
+          resolvedMetadataHashHex = loaded.metadataHashHex;
+          resolvedSchema = loaded.schema;
+        }
+      }
+
+      const requiresLegacySeedPrompt = resolvedSchema !== 'wunderland.agent-spec.v2';
+      const seedPromptToSend = requiresLegacySeedPrompt ? legacySeedPrompt.trim() : undefined;
+      if (requiresLegacySeedPrompt && !seedPromptToSend) {
+        throw new Error('Seed prompt is required for legacy agents (prompt not committed on-chain).');
+      }
+
+      const metadataHashForMessage = (() => {
+        if (!resolvedMetadataJson) return null;
+        if (resolvedMetadataHashHex) return resolvedMetadataHashHex;
+        return null;
+      })();
+
+      // If we have metadata bytes but not the hash, compute it client-side.
+      const computedHash =
+        resolvedMetadataJson && !metadataHashForMessage
+          ? bytesToHex(await sha256Utf8(canonicalizeJsonString(resolvedMetadataJson)))
+          : null;
+
+      const message = buildManagedHostingMessage(
+        address,
+        agentSigner,
+        metadataHashForMessage ?? computedHash ?? null,
+      );
       const signatureBytes = await signMessage(new TextEncoder().encode(message));
       const signatureB64 = toBase64(signatureBytes);
 
@@ -341,6 +435,8 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
           ownerWallet: publicKey.toBase58(),
           agentIdentityPda: address,
           signatureB64,
+          metadataJson: resolvedMetadataJson ?? undefined,
+          seedPrompt: seedPromptToSend,
           agentSignerSecretKeyJson: onboardSecretKeyJson,
         }),
       });
@@ -777,7 +873,13 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
                 <button
                   type="button"
                   onClick={() => void onboardManagedHosting()}
-                  disabled={onboardBusy || !onboardSecretKeyJson || !signMessage || !agent?.isActive}
+                  disabled={
+                    onboardBusy ||
+                    !onboardSecretKeyJson ||
+                    !signMessage ||
+                    !agent?.isActive ||
+                    (!agent?.metadataHashHex && legacySeedPrompt.trim().length === 0)
+                  }
                   className="px-4 py-2 rounded-lg text-[10px] font-mono uppercase
                     bg-[rgba(0,255,255,0.10)] border border-[rgba(0,255,255,0.20)]
                     text-[var(--neon-cyan)] hover:shadow-[0_0_20px_rgba(0,255,255,0.25)]
@@ -792,6 +894,81 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
                   imported signer {onboardSignerPubkey}
                 </div>
               )}
+
+              <div className="p-4 rounded-xl bg-black/20 border border-white/5">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">
+                      Metadata Commitment
+                    </div>
+                    <div className="mt-1 text-[11px] text-[var(--text-secondary)]">
+                      For immutable agents, the seed prompt lives in the committed AgentSpec (pinned as an IPFS raw block and verified by <code className="font-mono">metadata_hash</code>).
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void loadCommittedMetadata()}
+                    disabled={metadataLoading || !agent?.metadataHashHex}
+                    className="px-3 py-2 rounded text-[10px] font-mono uppercase
+                      bg-[var(--bg-glass)] border border-[var(--border-glass)]
+                      text-[var(--text-secondary)] hover:text-[var(--text-primary)]
+                      transition-all disabled:opacity-40"
+                  >
+                    {metadataLoading ? 'Loading…' : 'Load from IPFS'}
+                  </button>
+                </div>
+
+                <div className="mt-3 grid gap-2">
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-black/30 border border-white/5">
+                    <span className="text-[10px] text-white/60 font-mono">metadata_hash</span>
+                    <span className="text-[10px] text-white/50 font-mono break-all">
+                      {agent.metadataHashHex ? agent.metadataHashHex : '—'}
+                    </span>
+                  </div>
+
+                  {metadataSchema && (
+                    <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-black/30 border border-white/5">
+                      <span className="text-[10px] text-white/60 font-mono">schema</span>
+                      <span className="text-[10px] text-white/50 font-mono break-all">{metadataSchema}</span>
+                    </div>
+                  )}
+
+                  {metadataSchema === 'wunderland.agent-spec.v2' && committedSeedPrompt && (
+                    <div className="p-2 rounded-lg bg-[rgba(0,255,100,0.05)] border border-[rgba(0,255,100,0.12)]">
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--neon-green)]">
+                        Seed prompt (committed)
+                      </div>
+                      <div className="mt-1 text-[11px] text-white/70 whitespace-pre-wrap">
+                        {committedSeedPrompt}
+                      </div>
+                    </div>
+                  )}
+
+                  {metadataSchema !== 'wunderland.agent-spec.v2' && (
+                    <div className="grid gap-1.5">
+                      <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-tertiary)]">
+                        Seed prompt (legacy)
+                      </div>
+                      <textarea
+                        value={legacySeedPrompt}
+                        onChange={(e) => setLegacySeedPrompt(e.target.value)}
+                        rows={4}
+                        placeholder="Required for legacy agents (prompt not committed on-chain)…"
+                        className="w-full rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-[11px] text-white/80 font-mono focus:outline-none focus:ring-2 focus:ring-[rgba(0,255,255,0.25)]"
+                      />
+                      <div className="text-[10px] text-white/40">
+                        This value is used only to initialize hosted runtime; it is not stored on-chain.
+                      </div>
+                    </div>
+                  )}
+
+                  {metadataError && (
+                    <div className="text-[11px] text-[var(--neon-red)]">
+                      {metadataError}
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {!agent?.isActive && (
                 <div className="text-[11px] text-[var(--neon-red)]">

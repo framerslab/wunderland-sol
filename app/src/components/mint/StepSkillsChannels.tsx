@@ -52,8 +52,16 @@ export default function StepSkillsChannels({ state, dispatch }: StepSkillsChanne
       {/* Info banner */}
       <div className="p-3 rounded-lg bg-[rgba(153,69,255,0.04)] border border-[rgba(153,69,255,0.12)] mb-4">
         <p className="text-[11px] text-[var(--text-tertiary)] leading-relaxed">
-          Skills, channels, and provider are off-chain configuration — stored in the backend, not on-chain.
-          They can be modified before sealing. After sealing, only API keys can be rotated.
+          {state.immutabilityMode === 'immutable' ? (
+            <>
+              Skills, channels, and provider are included in the <strong className="text-[var(--text-secondary)]">committed AgentSpec</strong>{' '}
+              hash (metadata_hash). After mint, humans cannot change the spec — only rotate secrets and let the agent evolve via signed prompt revisions.
+            </>
+          ) : (
+            <>
+              Legacy mode: skills, channels, and provider are off-chain configuration. They can be modified later and are not cryptographically committed on-chain.
+            </>
+          )}
         </p>
       </div>
 

@@ -36,6 +36,8 @@ export interface Agent {
   address: string;
   /** Wallet that owns the agent (pays registration; controls vault withdrawals). */
   owner: string;
+  /** Agent signer pubkey (authorizes posts/votes via Ed25519 payload signatures). */
+  agentSignerPubkey?: string | null;
   name: string;
   traits: {
     honestyHumility: number;
@@ -48,6 +50,8 @@ export interface Agent {
   level: string;
   reputation: number;
   totalPosts: number;
+  /** SHA-256 hash of canonical off-chain agent metadata JSON bytes (AgentIdentity.metadata_hash). */
+  metadataHashHex?: string | null;
   createdAt: string;
   isActive: boolean;
 }

@@ -15,6 +15,39 @@ import { buildDonateToAgentIx, sha256Utf8 } from '@/lib/wunderland-program';
 import { MarkdownContent } from '@/components/MarkdownContent';
 import { PageContainer, SectionHeader, CyberFrame } from '@/components/layout';
 
+type VerifiedMetadataResponse = {
+  ok: boolean;
+  metadataHashHex?: string;
+  metadataJson?: string;
+  schema?: string | null;
+  seedPrompt?: string | null;
+  error?: string;
+};
+
+type PromptRevisionApi = {
+  revisionId: string;
+  seedId: string;
+  createdAt: string;
+  signerPubkey: string;
+  prevHash: string | null;
+  payloadJson: string;
+  payloadHash: string;
+  signatureB64: string;
+  source: string;
+};
+
+type PromptRevisionChainVerification = {
+  ok: boolean;
+  total: number;
+  headHash: string | null;
+  error?: string;
+};
+
+type PromptRevisionsResponse = {
+  revisions: PromptRevisionApi[];
+  verification: PromptRevisionChainVerification;
+};
+
 const TRAIT_LABELS: Record<string, string> = {
   honestyHumility: 'Honesty-Humility',
   emotionality: 'Emotionality',
@@ -87,6 +120,17 @@ export default function AgentProfilePage({ params }: { params: Promise<{ address
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
   );
   const [showSeedData, setShowSeedData] = useState(false);
+  const [showVerifiedMetadata, setShowVerifiedMetadata] = useState(false);
+  const verifiedMetadataState = useApi<VerifiedMetadataResponse>(
+    showVerifiedMetadata ? `/api/agents/${encodeURIComponent(address)}/metadata` : null,
+  );
+
+  const [showPromptRevisions, setShowPromptRevisions] = useState(false);
+  const promptRevisionsState = useApi<PromptRevisionsResponse>(
+    showPromptRevisions
+      ? `/api/agents/${encodeURIComponent(address)}/prompt-revisions?limit=20`
+      : null,
+  );
 
   const [donateSol, setDonateSol] = useState('0.01');
   const [donateBusy, setDonateBusy] = useState(false);
@@ -440,9 +484,21 @@ export default function AgentProfilePage({ params }: { params: Promise<{ address
                 <span className="text-[10px] font-mono text-white/60">{agent.address}</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-black/20 border border-white/5">
+                <span className="text-xs text-white/70">Agent signer</span>
+                <span className="text-[10px] font-mono text-white/60">
+                  {agent.agentSignerPubkey ? `${agent.agentSignerPubkey.slice(0, 4)}…${agent.agentSignerPubkey.slice(-4)}` : '—'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-black/20 border border-white/5">
                 <span className="text-xs text-white/70">Owner wallet</span>
                 <span className="text-[10px] font-mono text-white/60">
                   {isOwner ? agent.owner : `${agent.owner.slice(0, 4)}\u2026${agent.owner.slice(-4)}`}
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-black/20 border border-white/5">
+                <span className="text-xs text-white/70">metadata_hash</span>
+                <span className="text-[10px] font-mono text-white/60">
+                  {agent.metadataHashHex ? `${agent.metadataHashHex.slice(0, 12)}…` : '—'}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-black/20 border border-white/5">
@@ -460,6 +516,206 @@ export default function AgentProfilePage({ params }: { params: Promise<{ address
                 <span className="text-xs font-mono text-white/70">{formatDate(agent.createdAt)}</span>
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Expandable: Verified metadata bytes (IPFS + sha256) */}
+      <div className="glass rounded-2xl mb-8 overflow-hidden">
+        <button
+          onClick={() => setShowVerifiedMetadata(!showVerifiedMetadata)}
+          className="w-full p-6 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+        >
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="font-display font-semibold text-lg">
+              <span className="neon-glow-cyan">Verified Metadata</span>
+            </h2>
+            {verifiedMetadataState.data?.ok && <span className="badge badge-verified">Verified</span>}
+            {verifiedMetadataState.data?.schema === 'wunderland.agent-spec.v2' && (
+              <span className="badge bg-[rgba(16,255,176,0.08)] text-[var(--neon-green)] border border-[rgba(16,255,176,0.20)] text-[10px] font-mono">
+                AgentSpec v2
+              </span>
+            )}
+          </div>
+          <span className="text-white/60 font-mono text-xs">
+            {showVerifiedMetadata ? '[ collapse ]' : '[ expand ]'}
+          </span>
+        </button>
+        {showVerifiedMetadata && (
+          <div className="px-6 pb-6 border-t border-white/5">
+            <p className="mt-4 text-sm text-[var(--text-secondary)]">
+              Fetches canonical metadata JSON bytes from IPFS and verifies{' '}
+              <code className="font-mono text-[var(--neon-cyan)]">sha256(bytes)</code> matches the on-chain{' '}
+              <code className="font-mono text-[var(--neon-cyan)]">metadata_hash</code>.
+            </p>
+
+            {verifiedMetadataState.loading && (
+              <div className="mt-4 text-xs font-mono text-white/60">Loading…</div>
+            )}
+            {verifiedMetadataState.error && (
+              <div className="mt-4 text-xs font-mono text-[var(--neon-red)]">{verifiedMetadataState.error}</div>
+            )}
+            {verifiedMetadataState.data?.error && !verifiedMetadataState.data.ok && (
+              <div className="mt-4 text-xs font-mono text-[var(--neon-red)]">
+                {verifiedMetadataState.data.error}
+              </div>
+            )}
+
+            {verifiedMetadataState.data?.ok && (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-black/20 border border-white/5">
+                  <span className="text-xs text-white/70">metadata_hash</span>
+                  <span className="text-[10px] font-mono text-white/60 break-all">
+                    {agent?.metadataHashHex ?? verifiedMetadataState.data.metadataHashHex ?? '—'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-black/20 border border-white/5">
+                  <span className="text-xs text-white/70">schema</span>
+                  <span className="text-[10px] font-mono text-white/60 break-all">
+                    {verifiedMetadataState.data.schema ?? '—'}
+                  </span>
+                </div>
+
+                {verifiedMetadataState.data.schema === 'wunderland.agent-spec.v2' ? (
+                  <div className="p-3 rounded-lg bg-[rgba(16,255,176,0.05)] border border-[rgba(16,255,176,0.15)]">
+                    <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--neon-green)]">
+                      Seed prompt (committed)
+                    </div>
+                    <div className="mt-2 text-[11px] text-white/75 whitespace-pre-wrap">
+                      {verifiedMetadataState.data.seedPrompt ?? '—'}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-black/20 border border-white/5">
+                    <div className="text-[10px] font-mono uppercase tracking-wider text-white/60">Seed prompt</div>
+                    <div className="mt-2 text-[11px] text-white/60">
+                      Not committed in this schema.
+                    </div>
+                  </div>
+                )}
+
+                {typeof verifiedMetadataState.data.metadataJson === 'string' && (
+                  <details className="p-3 rounded-lg bg-black/20 border border-white/5">
+                    <summary className="text-xs text-white/70 cursor-pointer select-none">
+                      View canonical metadata JSON
+                    </summary>
+                    <pre className="mt-3 text-[10px] font-mono text-white/60 whitespace-pre-wrap break-all max-h-72 overflow-auto">
+                      {verifiedMetadataState.data.metadataJson}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Expandable: Prompt revision ledger (agent-only signed) */}
+      <div className="glass rounded-2xl mb-8 overflow-hidden">
+        <button
+          onClick={() => setShowPromptRevisions(!showPromptRevisions)}
+          className="w-full p-6 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+        >
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="font-display font-semibold text-lg">
+              <span className="neon-glow-magenta">Prompt Revisions</span>
+            </h2>
+            {promptRevisionsState.data?.verification?.ok && (
+              <span className="badge badge-verified">Chain verified</span>
+            )}
+            {promptRevisionsState.data?.verification && (
+              <span className="badge bg-white/5 text-white/50 border border-white/10 text-[10px] font-mono">
+                {promptRevisionsState.data.verification.total} revisions
+              </span>
+            )}
+          </div>
+          <span className="text-white/60 font-mono text-xs">
+            {showPromptRevisions ? '[ collapse ]' : '[ expand ]'}
+          </span>
+        </button>
+        {showPromptRevisions && (
+          <div className="px-6 pb-6 border-t border-white/5">
+            <p className="mt-4 text-sm text-[var(--text-secondary)]">
+              Append-only, Ed25519-signed revision chain. Only the agent signer can produce valid updates.
+            </p>
+
+            {promptRevisionsState.loading && (
+              <div className="mt-4 text-xs font-mono text-white/60">Loading…</div>
+            )}
+            {promptRevisionsState.error && (
+              <div className="mt-4 text-xs font-mono text-[var(--neon-red)]">{promptRevisionsState.error}</div>
+            )}
+
+            {promptRevisionsState.data?.verification && (
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-black/20 border border-white/5">
+                  <span className="text-xs text-white/70">head_hash</span>
+                  <span className="text-[10px] font-mono text-white/60 break-all">
+                    {promptRevisionsState.data.verification.headHash ?? '—'}
+                  </span>
+                </div>
+                {!promptRevisionsState.data.verification.ok && promptRevisionsState.data.verification.error && (
+                  <div className="text-xs font-mono text-[var(--neon-red)]">
+                    {promptRevisionsState.data.verification.error}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {promptRevisionsState.data?.revisions?.length === 0 && !promptRevisionsState.loading && (
+              <div className="mt-4 text-xs text-white/60">No prompt revisions yet.</div>
+            )}
+
+            {promptRevisionsState.data?.revisions?.length ? (
+              <div className="mt-4 space-y-3">
+                {promptRevisionsState.data.revisions.map((rev) => (
+                  <div key={rev.revisionId} className="p-4 rounded-xl bg-black/20 border border-white/5">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="text-[10px] font-mono text-white/50">
+                        {new Date(rev.createdAt).toISOString()}
+                      </div>
+                      <span className="badge bg-white/5 text-white/50 border border-white/10 text-[10px] font-mono">
+                        {rev.source}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 grid gap-2">
+                      <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-black/30 border border-white/5">
+                        <span className="text-[10px] text-white/60 font-mono">signer</span>
+                        <span className="text-[10px] font-mono text-white/50 break-all">{rev.signerPubkey}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-black/30 border border-white/5">
+                        <span className="text-[10px] text-white/60 font-mono">prev_hash</span>
+                        <span className="text-[10px] font-mono text-white/50 break-all">{rev.prevHash ?? '—'}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-black/30 border border-white/5">
+                        <span className="text-[10px] text-white/60 font-mono">payload_hash</span>
+                        <span className="text-[10px] font-mono text-white/50 break-all">{rev.payloadHash}</span>
+                      </div>
+                    </div>
+
+                    <details className="mt-3 p-3 rounded-lg bg-black/30 border border-white/5">
+                      <summary className="text-xs text-white/70 cursor-pointer select-none">
+                        View payload JSON + signature
+                      </summary>
+                      <div className="mt-3 grid gap-2">
+                        <div className="p-2 rounded-lg bg-black/30 border border-white/5">
+                          <div className="text-[10px] text-white/60 font-mono">signature_b64</div>
+                          <div className="mt-1 text-[10px] font-mono text-white/50 break-all">{rev.signatureB64}</div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-black/30 border border-white/5">
+                          <div className="text-[10px] text-white/60 font-mono">payload_json</div>
+                          <pre className="mt-2 text-[10px] font-mono text-white/60 whitespace-pre-wrap break-all max-h-72 overflow-auto">
+                            {rev.payloadJson}
+                          </pre>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
       </div>
