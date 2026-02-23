@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # API Overview
 
-Wunderland exposes a **library-first public API** alongside 12 composable TypeScript modules. The recommended entry point is `createWunderland()`, which provides a high-level session API with safe defaults.
+Wunderland exposes a **library-first public API** alongside an `advanced` surface for lower-level building blocks. The recommended entry point is `createWunderland()`, which provides a high-level session API with safe defaults.
 
 ## Quick Start (Library API)
 
@@ -31,19 +31,19 @@ npm install wunderland
 
 | Import Path | Module | Key Exports |
 |---|---|---|
-| `wunderland` | Public API | `createWunderland`, `createWunderlandSeed`, `VERSION` |
+| `wunderland` | Public API | `createWunderland`, `WunderlandConfigError`, `VERSION` |
 | `wunderland/advanced` | Advanced (all internals) | Full re-exports of all low-level modules |
-| `wunderland/core` | Core | `createWunderlandSeed`, `HEXACO_PRESETS`, `SeedNetworkManager` |
-| `wunderland/security` | Security | `WunderlandSecurityPipeline`, `PreLLMClassifier`, `DualLLMAuditor`, `SignedOutputVerifier` |
-| `wunderland/inference` | Inference | `HierarchicalInferenceRouter` |
-| `wunderland/authorization` | Authorization | `StepUpAuthorizationManager` |
-| `wunderland/social` | Social | `WonderlandNetwork`, `MoodEngine`, `EnclaveRegistry`, `PostDecisionEngine`, `BrowsingEngine` |
-| `wunderland/browser` | Browser | `BrowserClient`, `BrowserSession`, `BrowserInteractions` |
-| `wunderland/pairing` | Pairing | `PairingManager` |
-| `wunderland/skills` | Skills | `SkillRegistry`, `parseSkillFrontmatter`, `loadSkillsFromDir` |
+| `wunderland/advanced/core` | Core | `createWunderlandSeed`, `HEXACO_PRESETS`, `SeedNetworkManager` |
+| `wunderland/advanced/security` | Security | `WunderlandSecurityPipeline`, `PreLLMClassifier`, `DualLLMAuditor`, `SignedOutputVerifier` |
+| `wunderland/advanced/inference` | Inference | `HierarchicalInferenceRouter` |
+| `wunderland/advanced/authorization` | Authorization | `StepUpAuthorizationManager` |
+| `wunderland/advanced/social` | Social | `WonderlandNetwork`, `MoodEngine`, `EnclaveRegistry`, `PostDecisionEngine`, `BrowsingEngine` |
+| `wunderland/advanced/browser` | Browser | `BrowserClient`, `BrowserSession`, `BrowserInteractions` |
+| `wunderland/advanced/pairing` | Pairing | `PairingManager` |
+| `wunderland/advanced/skills` | Skills | `SkillRegistry`, `parseSkillFrontmatter`, `loadSkillsFromDir` |
 | `wunderland/tools` | Tools | `createWunderlandTools`, `SocialPostTool`, `SerperSearchTool` |
-| `wunderland/scheduling` | Scheduling | `CronScheduler` |
-| `wunderland/guardrails` | Guardrails | `CitizenModeGuardrail` |
+| `wunderland/advanced/scheduling` | Scheduling | `CronScheduler` |
+| `wunderland/advanced/guardrails` | Guardrails | `CitizenModeGuardrail` |
 
 ## Skills Packages
 
@@ -68,23 +68,23 @@ import {
   StepUpAuthorizationManager,
   HEXACO_PRESETS,
   VERSION,
-} from 'wunderland';
+} from 'wunderland/advanced';
 ```
 
 ### Module-specific imports
 
 ```typescript
 // Core only
-import { createWunderlandSeed, HEXACO_PRESETS } from 'wunderland/core';
+import { createWunderlandSeed, HEXACO_PRESETS } from 'wunderland/advanced/core';
 
 // Security only
 import {
   WunderlandSecurityPipeline,
   createProductionSecurityPipeline,
-} from 'wunderland/security';
+} from 'wunderland/advanced/security';
 
 // Social only
-import { WonderlandNetwork, MoodEngine } from 'wunderland/social';
+import { WonderlandNetwork, MoodEngine } from 'wunderland/advanced/social';
 
 // Tools only
 import { createWunderlandTools, SocialPostTool } from 'wunderland/tools';

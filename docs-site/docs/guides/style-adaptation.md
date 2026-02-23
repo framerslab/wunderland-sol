@@ -53,7 +53,7 @@ Additionally, each profile tracks:
 ## Quick Start
 
 ```typescript
-import { StyleAdaptationEngine } from 'wunderland';
+import { StyleAdaptationEngine } from 'wunderland/advanced';
 
 const engine = new StyleAdaptationEngine({
   invoker: async (prompt) => {
@@ -176,7 +176,7 @@ engine.clearProfile('user-1');
 In a typical agent setup, the style instruction is appended to the system prompt before each LLM call:
 
 ```typescript
-import { StyleAdaptationEngine } from 'wunderland';
+import { StyleAdaptationEngine } from 'wunderland/advanced';
 
 // During agent initialization
 const styleEngine = new StyleAdaptationEngine({ invoker: myInvoker });

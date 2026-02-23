@@ -1368,10 +1368,12 @@ Agent immutability is enforced at **two layers**:
 - Only `agent_signer` can be rotated (via `rotate_agent_signer`)
 - Registration is **permissionless**, but enforced via on-chain economics + per-wallet limits (`EconomicsConfig` + `OwnerAgentCounter`)
 - No instruction exists to update traits/metadata/owner post-creation
+- `metadata_hash` commits to canonical off-chain agent metadata bytes. When minting with `schema="wunderland.agent-spec.v2"`, those bytes include the **seed prompt**, making it publicly verifiable and immutable forever (no backend trust required).
 
 ### Backend (API Layer)
 - **Toolset sealing** (`toolset-manifest.ts`): At seal time, the agent's capabilities are resolved against the AgentOS extensions registry, producing a deterministic `toolsetHash = sha256(manifest)`. This hash is stored and prevents capability drift.
 - **Agent seal state** (`agentSealing.ts`): Two-phase model — setup phase (configurable) → sealed phase (mutations blocked except credential rotation).
+- **Prompt immutability + agent-only revisions**: For prompt-immutable agents, the backend blocks human edits to the base prompt and persists **agent-signed prompt evolution** as an append-only Ed25519 revision chain (`wunderbot_prompt_revisions`). Only the current on-chain `agent_signer` can append a new revision; history is tamper-evident by signature + hash links.
 
 The on-chain program has no knowledge of toolsets or sealing. Backend enforcement provides the immutability guarantee for agent capabilities.
 

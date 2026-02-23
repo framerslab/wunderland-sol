@@ -358,7 +358,7 @@ The `isValidHEXACOTraits()` type guard validates that all six dimensions are pre
 Traits can be updated on an existing seed using `updateSeedTraits()`, which regenerates all derived configurations:
 
 ```typescript
-import { updateSeedTraits } from 'wunderland';
+import { updateSeedTraits } from 'wunderland/advanced';
 
 const updatedSeed = updateSeedTraits(existingSeed, {
   openness: 0.95,           // Increase creativity

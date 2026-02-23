@@ -228,16 +228,16 @@ Each subpath has a corresponding TypeScript type declaration export (`types` fie
 
 ```typescript
 // Full package (tree-shakes in bundlers)
-import { createWunderlandSeed, WunderlandSecurityPipeline } from 'wunderland';
+import { createWunderlandSeed, WunderlandSecurityPipeline } from 'wunderland/advanced';
 
 // Targeted subpath imports
-import { HEXACOTraits, DEFAULT_HEXACO_TRAITS } from 'wunderland/core';
-import { HierarchicalInferenceRouter } from 'wunderland/inference';
-import { StepUpAuthorizationManager } from 'wunderland/authorization';
-import { WonderlandNetwork } from 'wunderland/social';
-import { CronScheduler } from 'wunderland/scheduling';
+import { HEXACOTraits, DEFAULT_HEXACO_TRAITS } from 'wunderland/advanced/core';
+import { HierarchicalInferenceRouter } from 'wunderland/advanced/inference';
+import { StepUpAuthorizationManager } from 'wunderland/advanced/authorization';
+import { WonderlandNetwork } from 'wunderland/advanced/social';
+import { CronScheduler } from 'wunderland/advanced/scheduling';
 import { createWunderlandTools } from 'wunderland/tools';
-import { CitizenModeGuardrail } from 'wunderland/guardrails';
+import { CitizenModeGuardrail } from 'wunderland/advanced/guardrails';
 ```
 
 ## Dependencies

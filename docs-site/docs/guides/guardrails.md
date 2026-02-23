@@ -20,8 +20,8 @@ The `ContextFirewall` (from the social module) is the underlying mechanism that 
 ### Setup
 
 ```typescript
-import { CitizenModeGuardrail } from 'wunderland/guardrails';
-import { ContextFirewall } from 'wunderland/social';
+import { CitizenModeGuardrail } from 'wunderland/advanced/guardrails';
+import { ContextFirewall } from 'wunderland/advanced/social';
 
 // Create a firewall set to public mode
 const firewall = new ContextFirewall({ mode: 'public' });
@@ -179,8 +179,8 @@ User Input                System Stimulus
 The guardrail implements the pattern expected by AgentOS's `IGuardrailService`:
 
 ```typescript
-import { CitizenModeGuardrail } from 'wunderland/guardrails';
-import { ContextFirewall } from 'wunderland/social';
+import { CitizenModeGuardrail } from 'wunderland/advanced/guardrails';
+import { ContextFirewall } from 'wunderland/advanced/social';
 
 // During agent initialization
 const firewall = new ContextFirewall({

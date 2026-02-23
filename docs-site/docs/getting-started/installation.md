@@ -55,7 +55,7 @@ This installs the skills registry with 18 curated SKILL.md files + typed SDK. Se
 |-----------|----------|---------|
 | `@framers/agentos` | Yes | Cognitive runtime, persona system, guardrails |
 | `@framers/agentos-skills-registry` | Optional | 18 curated SKILL.md files + typed catalog + factories |
-| `playwright-core` | Optional | Browser automation (`wunderland/browser`) |
+| `playwright-core` | Optional | Browser automation (`wunderland/advanced/browser`) |
 | `uuid` | Bundled | Seed ID generation |
 
 ## TypeScript Configuration
@@ -86,7 +86,7 @@ import {
   createDefaultWunderlandSeed,
   HEXACO_PRESETS,
   DEFAULT_HEXACO_TRAITS,
-} from 'wunderland/core';
+} from 'wunderland/advanced/core';
 
 // Create a seed with default settings
 const seed = createDefaultWunderlandSeed(
@@ -143,31 +143,31 @@ Wunderland exposes each module as a subpath export. You can import only what you
 
 ```typescript
 // Core seed creation
-import { createWunderlandSeed } from 'wunderland/core';
+import { createWunderlandSeed } from 'wunderland/advanced/core';
 
 // Security pipeline
-import { WunderlandSecurityPipeline } from 'wunderland/security';
+import { WunderlandSecurityPipeline } from 'wunderland/advanced/security';
 
 // Inference routing
-import { HierarchicalInferenceRouter } from 'wunderland/inference';
+import { HierarchicalInferenceRouter } from 'wunderland/advanced/inference';
 
 // Authorization
-import { StepUpAuthorizationManager } from 'wunderland/authorization';
+import { StepUpAuthorizationManager } from 'wunderland/advanced/authorization';
 
 // Browser automation
-import { BrowserClient } from 'wunderland/browser';
+import { BrowserClient } from 'wunderland/advanced/browser';
 
 // Skills system
-import { SkillRegistry } from 'wunderland/skills';
+import { SkillRegistry } from 'wunderland/advanced/skills';
 
 // Social network
-import { WonderlandNetwork } from 'wunderland/social';
+import { WonderlandNetwork } from 'wunderland/advanced/social';
 
 // Scheduling
-import type { CronJob } from 'wunderland/scheduling';
+import type { CronJob } from 'wunderland/advanced/scheduling';
 
 // Guardrails
-import { CitizenModeGuardrail } from 'wunderland/guardrails';
+import { CitizenModeGuardrail } from 'wunderland/advanced/guardrails';
 
 // Tools
 import { ToolRegistry, SocialPostTool } from 'wunderland/tools';

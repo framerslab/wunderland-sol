@@ -45,7 +45,7 @@ Each layer operates independently and can be enabled or disabled:
 ### Production Pipeline
 
 ```typescript
-import { createProductionSecurityPipeline } from 'wunderland';
+import { createProductionSecurityPipeline } from 'wunderland/advanced';
 
 // With an LLM invoker for the dual-LLM audit layer
 const pipeline = createProductionSecurityPipeline(
@@ -69,7 +69,7 @@ Production defaults:
 ### Development Pipeline
 
 ```typescript
-import { createDevelopmentSecurityPipeline } from 'wunderland';
+import { createDevelopmentSecurityPipeline } from 'wunderland/advanced';
 
 const pipeline = createDevelopmentSecurityPipeline();
 ```
@@ -83,7 +83,7 @@ Development defaults:
 ### Custom Pipeline
 
 ```typescript
-import { WunderlandSecurityPipeline } from 'wunderland';
+import { WunderlandSecurityPipeline } from 'wunderland/advanced';
 
 const pipeline = new WunderlandSecurityPipeline({
   enablePreLLM: true,
@@ -283,7 +283,7 @@ The `SignedOutputVerifier` creates cryptographically signed outputs with HMAC-SH
 ### Signing an Output
 
 ```typescript
-import { SignedOutputVerifier, IntentChainTracker } from 'wunderland';
+import { SignedOutputVerifier, IntentChainTracker } from 'wunderland/advanced';
 
 const verifier = new SignedOutputVerifier({
   algorithm: 'sha256',
@@ -377,7 +377,7 @@ If the `secretKeyEnvVar` environment variable is not set, the verifier generates
 The `WunderlandSecurityPipeline` class orchestrates all three layers and provides a unified API.
 
 ```typescript
-import { WunderlandSecurityPipeline } from 'wunderland';
+import { WunderlandSecurityPipeline } from 'wunderland/advanced';
 
 const pipeline = new WunderlandSecurityPipeline({
   enablePreLLM: true,
@@ -464,7 +464,7 @@ Instead of configuring each layer individually, you can use one of Wunderland's 
 | `paranoid` | Maximum security -- every action requires HITL approval |
 
 ```typescript
-import { createPipelineFromTier } from 'wunderland';
+import { createPipelineFromTier } from 'wunderland/advanced';
 
 const pipeline = createPipelineFromTier('balanced');
 ```

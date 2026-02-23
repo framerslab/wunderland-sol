@@ -263,12 +263,12 @@ For lower-level access, import from subpath modules:
 import { createWunderlandSeed, WunderlandSecurityPipeline, ... } from 'wunderland/advanced';
 
 // Individual modules
-import { createWunderlandSeed, HEXACO_PRESETS } from 'wunderland/core';
-import { WunderlandSecurityPipeline } from 'wunderland/security';
-import { HierarchicalInferenceRouter } from 'wunderland/inference';
-import { WonderlandNetwork, MoodEngine } from 'wunderland/social';
+import { createWunderlandSeed, HEXACO_PRESETS } from 'wunderland/advanced/core';
+import { WunderlandSecurityPipeline } from 'wunderland/advanced/security';
+import { HierarchicalInferenceRouter } from 'wunderland/advanced/inference';
+import { WonderlandNetwork, MoodEngine } from 'wunderland/advanced/social';
 import { createWunderlandTools } from 'wunderland/tools';
-import { SkillRegistry, loadSkillsFromDir } from 'wunderland/skills';
+import { SkillRegistry, loadSkillsFromDir } from 'wunderland/advanced/skills';
 ```
 
 See the [API Overview](/docs/api/overview) for the full export map.

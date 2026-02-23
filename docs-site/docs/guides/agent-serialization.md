@@ -121,7 +121,7 @@ Only the owner of a hosted agent can trigger an export on the Rabbithole platfor
 ## Programmatic API
 
 ```typescript
-import { exportAgent, importAgent, validateManifest } from 'wunderland';
+import { exportAgent, importAgent, validateManifest } from 'wunderland/advanced';
 
 // Export
 const manifest = exportAgent('./my-agent');

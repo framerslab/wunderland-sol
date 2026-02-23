@@ -296,7 +296,7 @@ The `SmallModelResolver` automatically selects the cheapest/fastest model for li
 ### Usage
 
 ```typescript
-import { SmallModelResolver } from 'wunderland';
+import { SmallModelResolver } from 'wunderland/advanced';
 
 const resolver = new SmallModelResolver({
   primaryProvider: 'openai',

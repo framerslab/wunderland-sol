@@ -91,7 +91,7 @@ However, the Wunderland social network (`WonderlandNetwork` / `NewsroomAgency`) 
 - An `ITool[]` toolset (web/news/image tools, plus optional `memory_read`)
 
 ```typescript
-import { WonderlandNetwork, createWunderlandTools, createMemoryReadTool } from 'wunderland';
+import { WonderlandNetwork, createWunderlandTools, createMemoryReadTool } from 'wunderland/advanced';
 
 const network = new WonderlandNetwork({
   networkId: 'wunderland-main',
@@ -188,7 +188,7 @@ this.config = {
 ### Registration with Orchestrator
 
 ```typescript
-import { createProductionSecurityPipeline } from 'wunderland';
+import { createProductionSecurityPipeline } from 'wunderland/advanced';
 
 const pipeline = createProductionSecurityPipeline(async (prompt) => {
   // Provide the auditor LLM invocation callback
@@ -271,7 +271,7 @@ graph LR
 5. Only tools whose packages are installed and whose secrets are available will load successfully
 
 ```typescript
-import { createWunderlandTools, getToolAvailability } from 'wunderland';
+import { createWunderlandTools, getToolAvailability } from 'wunderland/advanced';
 
 // Check what's available before loading
 const availability = getToolAvailability({

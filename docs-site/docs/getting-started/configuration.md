@@ -27,7 +27,7 @@ You create one via `createWunderlandSeed()`:
 import {
   createWunderlandSeed,
   type WunderlandSeedConfig,
-} from 'wunderland/core';
+} from 'wunderland/advanced/core';
 ```
 
 ## WunderlandSeedConfig
@@ -56,7 +56,7 @@ interface WunderlandSeedConfig {
 import {
   createDefaultWunderlandSeed,
   updateSeedTraits,
-} from 'wunderland/core';
+} from 'wunderland/advanced/core';
 
 // Quick creation with all defaults
 const seed = createDefaultWunderlandSeed(
@@ -117,7 +117,7 @@ Five built-in presets for common agent archetypes:
 Column key: **H** = honesty_humility, **E** = emotionality, **X** = extraversion, **A** = agreeableness, **C** = conscientiousness, **O** = openness.
 
 ```typescript
-import { HEXACO_PRESETS } from 'wunderland/core';
+import { HEXACO_PRESETS } from 'wunderland/advanced/core';
 
 const seed = createWunderlandSeed({
   // ...
@@ -152,7 +152,7 @@ HEXACO traits influence three derived systems:
 ### Validation helpers
 
 ```typescript
-import { isValidHEXACOTraits, normalizeHEXACOTraits } from 'wunderland/core';
+import { isValidHEXACOTraits, normalizeHEXACOTraits } from 'wunderland/advanced/core';
 
 // Type guard -- checks all 6 fields are numbers in [0, 1]
 isValidHEXACOTraits({ honesty_humility: 0.8, /* ... */ }); // true
@@ -239,7 +239,7 @@ interface OutputSigningConfig {
 import {
   createProductionSecurityPipeline,
   createDevelopmentSecurityPipeline,
-} from 'wunderland/security';
+} from 'wunderland/advanced/security';
 
 // Production: all 3 layers, riskThreshold 0.7, streaming audit
 const prod = createProductionSecurityPipeline(auditorInvoker);
@@ -490,11 +490,11 @@ const seed = createWunderlandSeed({
 
 | Constant | Import Path | Description |
 |----------|------------|-------------|
-| `DEFAULT_HEXACO_TRAITS` | `wunderland/core` | Balanced personality (H:0.8 E:0.5 X:0.6 A:0.7 C:0.8 O:0.7) |
-| `DEFAULT_SECURITY_PROFILE` | `wunderland/core` | All 3 security layers enabled, risk threshold 0.7 |
-| `DEFAULT_INFERENCE_HIERARCHY` | `wunderland/core` | Ollama local models (llama3.2:3b router, dolphin-llama3:8b primary) |
-| `DEFAULT_STEP_UP_AUTH_CONFIG` | `wunderland/core` | Tier 1 default, financial/system at Tier 3, 5-min timeout |
-| `DEFAULT_INJECTION_PATTERNS` | `wunderland/security` | 8 built-in patterns (injection, jailbreak, DAN, SQL, etc.) |
+| `DEFAULT_HEXACO_TRAITS` | `wunderland/advanced/core` | Balanced personality (H:0.8 E:0.5 X:0.6 A:0.7 C:0.8 O:0.7) |
+| `DEFAULT_SECURITY_PROFILE` | `wunderland/advanced/core` | All 3 security layers enabled, risk threshold 0.7 |
+| `DEFAULT_INFERENCE_HIERARCHY` | `wunderland/advanced/core` | Ollama local models (llama3.2:3b router, dolphin-llama3:8b primary) |
+| `DEFAULT_STEP_UP_AUTH_CONFIG` | `wunderland/advanced/core` | Tier 1 default, financial/system at Tier 3, 5-min timeout |
+| `DEFAULT_INJECTION_PATTERNS` | `wunderland/advanced/security` | 8 built-in patterns (injection, jailbreak, DAN, SQL, etc.) |
 
 ## Next Steps
 

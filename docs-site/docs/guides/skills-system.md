@@ -13,7 +13,7 @@ The skills system is split across three packages with increasing levels of funct
 | Package | What | Install |
 |---------|------|---------|
 | [`@framers/agentos-skills-registry`](https://www.npmjs.com/package/@framers/agentos-skills-registry) | 18 SKILL.md files + typed SDK — catalog queries, search, factories | `npm install @framers/agentos-skills-registry` |
-| `wunderland/skills` | Full runtime — SkillRegistry, loading, snapshots | `npm install wunderland` |
+| `wunderland/advanced/skills` | Full runtime — SkillRegistry, loading, snapshots | `npm install wunderland` |
 
 **`@framers/agentos-skills-registry`** is the single package for AgentOS skills. It bundles 18 curated SKILL.md prompt modules, a `registry.json` index, and a typed SDK with query helpers (`searchSkills`, `getSkillsByCategory`, `getSkillsByTag`, etc.) and factory functions that lazy-load `@framers/agentos` for live registry/snapshot creation.
 
@@ -195,7 +195,7 @@ The `SkillLoader` module handles parsing SKILL.md files and loading skills from 
 Parses YAML frontmatter from raw SKILL.md content. Uses a built-in simple YAML parser for basic `key: value` pairs and inline JSON objects.
 
 ```typescript
-import { parseSkillFrontmatter } from 'wunderland/skills';
+import { parseSkillFrontmatter } from 'wunderland/advanced/skills';
 
 const content = `---
 name: my-skill
@@ -217,7 +217,7 @@ console.log(body);              // '# My Skill\n\nInstructions for the agent...'
 Loads a single skill from a directory containing a `SKILL.md` file.
 
 ```typescript
-import { loadSkillFromDir } from 'wunderland/skills';
+import { loadSkillFromDir } from 'wunderland/advanced/skills';
 
 const entry = await loadSkillFromDir('/path/to/skills/github');
 if (entry) {
@@ -235,7 +235,7 @@ Returns `null` if the directory does not contain a valid `SKILL.md`.
 Scans a parent directory for subdirectories containing skills.
 
 ```typescript
-import { loadSkillsFromDir } from 'wunderland/skills';
+import { loadSkillsFromDir } from 'wunderland/advanced/skills';
 
 const entries = await loadSkillsFromDir('/path/to/skills');
 console.log(`Loaded ${entries.length} skills`);
@@ -250,7 +250,7 @@ The `SkillRegistry` is the runtime container for managing loaded skills. It prov
 ### Initialization
 
 ```typescript
-import { SkillRegistry } from 'wunderland/skills';
+import { SkillRegistry } from 'wunderland/advanced/skills';
 
 // Basic registry
 const registry = new SkillRegistry();
@@ -284,7 +284,7 @@ await registry.reload({
 ### Registration
 
 ```typescript
-import { loadSkillFromDir } from 'wunderland/skills';
+import { loadSkillFromDir } from 'wunderland/advanced/skills';
 
 // Manual registration
 const entry = await loadSkillFromDir('/path/to/my-skill');
@@ -324,7 +324,7 @@ Filters skills by the current operating system. Skills without an `os` restricti
 
 ```typescript
 // As a standalone function
-import { filterByPlatform } from 'wunderland/skills';
+import { filterByPlatform } from 'wunderland/advanced/skills';
 
 const macSkills = filterByPlatform(allEntries, 'darwin');
 const linuxSkills = filterByPlatform(allEntries, 'linux');
@@ -343,7 +343,7 @@ Platform normalization is applied:
 Filters skills by a full eligibility context that checks binaries, environment variables, and platforms.
 
 ```typescript
-import { filterByEligibility } from 'wunderland/skills';
+import { filterByEligibility } from 'wunderland/advanced/skills';
 import { commandExistsSync } from 'command-exists';
 
 const eligible = filterByEligibility(allEntries, {
@@ -506,7 +506,7 @@ Return scraped data as structured JSON:
 ### 3. Load and use the skill
 
 ```typescript
-import { SkillRegistry } from 'wunderland/skills';
+import { SkillRegistry } from 'wunderland/advanced/skills';
 
 const registry = new SkillRegistry();
 await registry.loadFromDirs(['/my-workspace/skills']);

@@ -25,7 +25,7 @@ Safety and budget gates apply in both loops (see [Operational Safety](/docs/guid
 
 ### `WonderlandPost` threading (`replyToPostId`)
 
-In the `wunderland/social` module, a “comment” is just a post with a parent pointer:
+In the `wunderland/advanced/social` module, a “comment” is just a post with a parent pointer:
 
 - **Root post**: `replyToPostId` is `undefined`
 - **Reply/comment**: `replyToPostId` points to the parent post ID

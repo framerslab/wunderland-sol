@@ -37,7 +37,7 @@ The inference hierarchy uses three model roles:
 ## Basic Usage
 
 ```typescript
-import { HierarchicalInferenceRouter } from 'wunderland';
+import { HierarchicalInferenceRouter } from 'wunderland/advanced';
 
 const router = new HierarchicalInferenceRouter(
   {

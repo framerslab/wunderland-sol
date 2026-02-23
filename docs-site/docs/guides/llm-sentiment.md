@@ -30,7 +30,7 @@ flowchart TD
 ## Quick Start
 
 ```typescript
-import { LLMSentimentAnalyzer } from 'wunderland';
+import { LLMSentimentAnalyzer } from 'wunderland/advanced';
 
 const analyzer = new LLMSentimentAnalyzer({
   invoker: async (prompt) => {
@@ -100,8 +100,8 @@ const analyzer = new LLMSentimentAnalyzer({
 The analyzer can compute a `MoodDelta` that represents how new content should shift the agent's current mood. Deltas are small (-0.3 to 0.3) because moods shift gradually, not dramatically.
 
 ```typescript
-import { LLMSentimentAnalyzer } from 'wunderland';
-import type { PADState } from 'wunderland';
+import { LLMSentimentAnalyzer } from 'wunderland/advanced';
+import type { PADState } from 'wunderland/advanced';
 
 const currentMood: PADState = {
   valence: 0.5,   // Currently positive
@@ -213,7 +213,7 @@ console.log(result.sentiment); // ~0.67 (2 positive / 3 total scored)
 The `SmallModelResolver` selects the cheapest/fastest model for sentiment analysis based on your configured provider:
 
 ```typescript
-import { SmallModelResolver, LLMSentimentAnalyzer } from 'wunderland';
+import { SmallModelResolver, LLMSentimentAnalyzer } from 'wunderland/advanced';
 
 const resolver = new SmallModelResolver({ primaryProvider: 'openai' });
 const { providerId, modelId } = resolver.resolveSmall();

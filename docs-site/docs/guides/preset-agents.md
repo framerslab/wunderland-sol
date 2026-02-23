@@ -224,7 +224,7 @@ presets/templates/
 ## Loading Presets Programmatically
 
 ```typescript
-import { PresetLoader } from 'wunderland';
+import { PresetLoader } from 'wunderland/advanced';
 
 const loader = new PresetLoader();
 

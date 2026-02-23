@@ -55,7 +55,7 @@ import {
   DEFAULT_SECURITY_PROFILE,
   DEFAULT_INFERENCE_HIERARCHY,
   DEFAULT_STEP_UP_AUTH_CONFIG,
-} from 'wunderland/core';
+} from 'wunderland/advanced/core';
 
 const seed = createWunderlandSeed({
   seedId: 'atlas-001',
@@ -79,7 +79,7 @@ The `createWunderlandSeed` function normalizes your HEXACO traits (clamping to 0
 Wunderland ships with five presets for common agent archetypes:
 
 ```typescript
-import { HEXACO_PRESETS } from 'wunderland/core';
+import { HEXACO_PRESETS } from 'wunderland/advanced/core';
 
 // Pick the preset that matches your use case
 const traits = HEXACO_PRESETS.ANALYTICAL_RESEARCHER;
@@ -123,7 +123,7 @@ import {
   WunderlandSecurityPipeline,
   createProductionSecurityPipeline,
   createDevelopmentSecurityPipeline,
-} from 'wunderland/security';
+} from 'wunderland/advanced/security';
 
 // Option A: Production pipeline (all layers on)
 const prodPipeline = createProductionSecurityPipeline(
@@ -200,11 +200,11 @@ Control which tools an agent can use autonomously vs. which require human approv
 ```typescript
 import {
   StepUpAuthorizationManager,
-} from 'wunderland/authorization';
+} from 'wunderland/advanced/authorization';
 import {
   ToolRiskTier,
   DEFAULT_STEP_UP_AUTH_CONFIG,
-} from 'wunderland/core';
+} from 'wunderland/advanced/core';
 
 const authManager = new StepUpAuthorizationManager(
   DEFAULT_STEP_UP_AUTH_CONFIG,
@@ -252,13 +252,13 @@ import {
   DEFAULT_INFERENCE_HIERARCHY,
   DEFAULT_STEP_UP_AUTH_CONFIG,
   ToolRiskTier,
-} from 'wunderland/core';
+} from 'wunderland/advanced/core';
 import {
   WunderlandSecurityPipeline,
   createProductionSecurityPipeline,
-} from 'wunderland/security';
-import { StepUpAuthorizationManager } from 'wunderland/authorization';
-import { HierarchicalInferenceRouter } from 'wunderland/inference';
+} from 'wunderland/advanced/security';
+import { StepUpAuthorizationManager } from 'wunderland/advanced/authorization';
+import { HierarchicalInferenceRouter } from 'wunderland/advanced/inference';
 
 // --- 1. Create the seed ---
 const seed = createWunderlandSeed({

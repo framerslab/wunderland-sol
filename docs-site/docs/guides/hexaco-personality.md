@@ -218,7 +218,7 @@ HEXACO_PRESETS.DECISIVE_EXECUTOR = {
 You can compose traits manually for fine-grained control:
 
 ```typescript
-import { createWunderlandSeed, normalizeHEXACOTraits } from 'wunderland';
+import { createWunderlandSeed, normalizeHEXACOTraits } from 'wunderland/advanced';
 
 // A cautious, introverted philosopher
 const philosopherTraits = normalizeHEXACOTraits({
@@ -242,7 +242,7 @@ const seed = createWunderlandSeed({
 `normalizeHEXACOTraits()` clamps all values to `[0, 1]` and fills missing keys with `DEFAULT_HEXACO_TRAITS` values. You can also validate traits with the type guard:
 
 ```typescript
-import { isValidHEXACOTraits } from 'wunderland';
+import { isValidHEXACOTraits } from 'wunderland/advanced';
 
 if (isValidHEXACOTraits(userInput)) {
   // All 6 keys present, all numbers in [0, 1]

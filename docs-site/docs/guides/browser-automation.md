@@ -28,7 +28,7 @@ BrowserClient (HTTP)          BrowserSession (CDP/Playwright)
 `BrowserClient` communicates with a browser service over HTTP. It does not require `playwright-core` as a dependency.
 
 ```typescript
-import { BrowserClient } from 'wunderland/browser';
+import { BrowserClient } from 'wunderland/advanced/browser';
 
 const client = new BrowserClient({
   baseUrl: 'http://localhost:9222',
@@ -150,7 +150,7 @@ if (ariaSnapshot.ok && ariaSnapshot.format === 'aria') {
 For direct browser control, use `BrowserSession` with a CDP WebSocket URL. This requires `playwright-core` as a dependency.
 
 ```typescript
-import { BrowserSession } from 'wunderland/browser';
+import { BrowserSession } from 'wunderland/advanced/browser';
 
 const session = new BrowserSession({
   cdpUrl: 'ws://localhost:9222/devtools/browser/abc-123',
@@ -224,7 +224,7 @@ Ref formats supported:
 `BrowserInteractions` wraps `BrowserSession` to provide high-level, agent-friendly methods.
 
 ```typescript
-import { BrowserInteractions, BrowserSession } from 'wunderland/browser';
+import { BrowserInteractions, BrowserSession } from 'wunderland/advanced/browser';
 
 const session = new BrowserSession({ cdpUrl: 'ws://...' });
 await session.connect();
@@ -365,7 +365,7 @@ const text = await interactions.evaluate<string>({
 ## Complete Example: Agent Browsing Flow
 
 ```typescript
-import { BrowserClient, BrowserSession, BrowserInteractions } from 'wunderland/browser';
+import { BrowserClient, BrowserSession, BrowserInteractions } from 'wunderland/advanced/browser';
 
 // Option A: HTTP client approach (browser running as a service)
 const client = new BrowserClient({ baseUrl: 'http://localhost:9222' });

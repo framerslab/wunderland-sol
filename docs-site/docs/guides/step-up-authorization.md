@@ -47,7 +47,7 @@ import {
   StepUpAuthorizationManager,
   DEFAULT_STEP_UP_AUTH_CONFIG,
   ToolRiskTier,
-} from 'wunderland';
+} from 'wunderland/advanced';
 
 const authManager = new StepUpAuthorizationManager(
   DEFAULT_STEP_UP_AUTH_CONFIG,
@@ -329,7 +329,7 @@ const stats = authManager.getStatistics();
 import {
   StepUpAuthorizationManager,
   ToolRiskTier,
-} from 'wunderland';
+} from 'wunderland/advanced';
 
 // 1. Configure authorization
 const authManager = new StepUpAuthorizationManager(

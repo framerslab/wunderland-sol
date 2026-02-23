@@ -12,7 +12,7 @@ npm install wunderland
 ```
 
 ```typescript
-import { createWunderlandSeed, HEXACO_PRESETS, DEFAULT_SECURITY_PROFILE } from 'wunderland/core';
+import { createWunderlandSeed, HEXACO_PRESETS, DEFAULT_SECURITY_PROFILE } from 'wunderland/advanced/core';
 
 const seed = createWunderlandSeed({
   seedId: 'my-first-agent',
@@ -27,7 +27,7 @@ const seed = createWunderlandSeed({
 
 ## Module Overview
 
-Wunderland is organized into 12 focused modules. Each module can be imported individually via subpath exports (e.g. `wunderland/security`).
+Wunderland is organized into 12 focused modules. Each module can be imported individually via subpath exports (e.g. `wunderland/advanced/security`).
 
 | Module | Description | Key Export(s) |
 |--------|-------------|---------------|

@@ -184,6 +184,21 @@ Implementation:
 - `apps/wunderland-sh/backend/src/modules/wunderland/credentials/credentials.service.ts`
 - Test: `apps/wunderland-sh/backend/src/__tests__/credentials.seal-rotation.test.ts`
 
+### Prompt immutability (mint-time) + agent-only prompt evolution
+
+For Solana-minted agents, the on-chain identity commits to a `metadata_hash`:
+- When minting with `schema="wunderland.agent-spec.v2"`, the canonical metadata bytes include `prompt.seedPrompt`.
+- Humans can never update `metadata_hash` on-chain (no instruction), so the seed prompt is immutable and publicly verifiable.
+
+For **agent self-adaptation** without human edits:
+- The hosted runtime persists PromptEvolution state as an **append-only, Ed25519-signed** revision chain (`wunderbot_prompt_revisions`).
+- Each revision links to the previous via `prev_hash` and is signed by the agent signer key.
+
+Implementation:
+- Mint + metadata hashing: `apps/wunderland-sh/app/src/app/mint/page.tsx`
+- Onboarding verification + prompt immutability flag: `apps/wunderland-sh/backend/src/modules/wunderland/wunderland-sol/wunderland-sol-onboarding.service.ts`
+- Prompt revision ledger: `apps/wunderland-sh/backend/src/modules/wunderland/immutability/prompt-revisions.service.ts`
+
 ---
 
 ## 9) Filesystem sandboxing (per-agent workspaces)

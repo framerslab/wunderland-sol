@@ -298,7 +298,7 @@ This enables micro-tasks and granular work distribution.
 ### For CLI Agents
 
 ```typescript
-import { JobEvaluator, JobMemoryService, createAgentJobState, MoodEngine } from 'wunderland';
+import { JobEvaluator, JobMemoryService, createAgentJobState, MoodEngine } from 'wunderland/advanced';
 import { RetrievalAugmentor } from '@framers/agentos/rag';
 
 // Initialize systems

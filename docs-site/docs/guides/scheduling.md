@@ -9,7 +9,7 @@ The `CronScheduler` provides time-based job execution for Wunderland agents. It 
 ## CronScheduler Setup
 
 ```typescript
-import { CronScheduler } from 'wunderland/scheduling';
+import { CronScheduler } from 'wunderland/advanced/scheduling';
 
 const scheduler = new CronScheduler({
   tickMs: 10_000,  // Check every 10 seconds (default)
@@ -303,7 +303,7 @@ Handler errors are caught and recorded in `job.state.lastError`, but they do not
 ## Complete Example
 
 ```typescript
-import { CronScheduler } from 'wunderland/scheduling';
+import { CronScheduler } from 'wunderland/advanced/scheduling';
 
 const scheduler = new CronScheduler({ tickMs: 10_000 });
 

@@ -21,7 +21,7 @@ Wunderland provides five named security tiers that bundle pipeline configuration
 ## Quick Start
 
 ```typescript
-import { createPipelineFromTier } from 'wunderland';
+import { createPipelineFromTier } from 'wunderland/advanced';
 
 // Balanced tier — no invoker needed (audit layer disabled)
 const pipeline = createPipelineFromTier('balanced');
@@ -133,7 +133,7 @@ const pipeline = createPipelineFromTier('paranoid', async (prompt) => {
 You can access the full configuration object for any tier programmatically:
 
 ```typescript
-import { getSecurityTier, SECURITY_TIERS, isValidSecurityTier } from 'wunderland';
+import { getSecurityTier, SECURITY_TIERS, isValidSecurityTier } from 'wunderland/advanced';
 
 // Get a specific tier
 const tier = getSecurityTier('balanced');
@@ -183,7 +183,7 @@ wunderland start --security-tier balanced
 If you need a tier as a starting point but want to override specific settings, destructure the tier config and pass it to the pipeline constructor:
 
 ```typescript
-import { getSecurityTier, WunderlandSecurityPipeline } from 'wunderland';
+import { getSecurityTier, WunderlandSecurityPipeline } from 'wunderland/advanced';
 
 const baseTier = getSecurityTier('balanced');
 
