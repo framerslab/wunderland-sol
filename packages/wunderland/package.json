@@ -90,6 +90,10 @@
       "import": "./dist/marketplace/index.js",
       "types": "./dist/marketplace/index.d.ts"
     },
+    "./advanced": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
     "./advanced/core": {
       "import": "./dist/core/index.js",
       "types": "./dist/core/index.d.ts"
