@@ -216,6 +216,57 @@ Benchmarked on a full Wunderland agent catalog (45 capabilities):
 
 The warm path uses a per-session embedding cache. The index builds once during agent startup and persists for the session lifetime. For agents with fewer than 10 capabilities, the overhead of discovery exceeds the token savings -- the engine disables itself automatically in that case.
 
+## Library API Examples
+
+### Load skills + extensions with discovery
+
+```ts
+import { createWunderland } from 'wunderland';
+
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  tools: 'curated',
+  skills: ['github', 'web-search', 'coding-agent'],
+  extensions: {
+    tools: ['web-search', 'web-browser', 'giphy'],
+    voice: ['voice-synthesis'],
+  },
+  // discovery is enabled by default — auto-indexes all tools + skills
+});
+```
+
+### Load everything at once
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  tools: 'curated',
+  skills: 'all',  // all 18 curated skills
+  extensions: {
+    tools: ['web-search', 'web-browser', 'news-search', 'image-search', 'giphy', 'cli-executor'],
+    voice: ['voice-synthesis'],
+  },
+});
+```
+
+### Use a preset (auto-configures everything)
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  preset: 'research-assistant',  // auto-loads recommended tools, skills, extensions
+});
+```
+
+### Check what discovery indexed
+
+```ts
+const diag = app.diagnostics();
+console.log(diag.tools.names);   // ['web_search', 'giphy_search', ...]
+console.log(diag.skills.names);  // ['github', 'web-search', ...]
+console.log(diag.discovery);     // { initialized: true, capabilityCount: 25, graphEdges: 42, ... }
+```
+
 ## Related Guides
 
 - [Skills System](./skills-system.md) -- curated skills that feed into discovery

@@ -299,3 +299,61 @@ relationships:
 This enables the discovery engine to find your extension via semantic search and boost related capabilities. The `relationships` field tells the graph re-ranker which other capabilities tend to be useful alongside this one.
 
 See [Capability Discovery](./capability-discovery.md) for the full discovery system, tier budgets, and graph configuration.
+
+## Library API: Loading Extensions
+
+### Load extensions by name
+
+```ts
+import { createWunderland } from 'wunderland';
+
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  extensions: {
+    tools: ['web-search', 'web-browser', 'giphy'],
+    voice: ['voice-synthesis'],
+  },
+});
+```
+
+Extension tools are added to the agent's tool map and indexed by discovery automatically.
+
+### Combine extensions with curated tools
+
+Extensions merge with the `tools` option -- they don't replace it:
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  tools: 'curated',
+  extensions: { tools: ['cli-executor', 'news-search'] },
+});
+```
+
+### Use a preset to auto-load extensions
+
+Presets include `suggestedExtensions` that load automatically:
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  preset: 'research-assistant',
+  extensions: { tools: ['cli-executor'] },  // adds to preset's defaults
+});
+```
+
+### Load all available extensions
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  tools: 'curated',
+  skills: 'all',
+  extensions: {
+    tools: ['web-search', 'web-browser', 'news-search', 'image-search', 'giphy', 'cli-executor'],
+    voice: ['voice-synthesis'],
+  },
+});
+```
+
+Extensions require their respective API keys in environment variables (e.g., `SERPER_API_KEY` for web-search, `GIPHY_API_KEY` for giphy). Missing keys cause graceful degradation -- the extension is skipped with a warning.

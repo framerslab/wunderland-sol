@@ -695,3 +695,68 @@ Skills and tools are indexed into the **same** discovery graph. When a skill ref
 Skills added to `@framers/agentos-skills-registry` or loaded from a skills directory are indexed automatically -- no discovery configuration needed. The next time an agent starts, new skills appear in the index.
 
 See [Capability Discovery](./capability-discovery.md) for tier budgets, graph re-ranking, the `discover_capabilities` meta-tool, and how tools/skills/extensions/channels all feed into the unified discovery system.
+
+## Library API: Loading Skills
+
+### Load skills by name
+
+```ts
+import { createWunderland } from 'wunderland';
+
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  skills: ['github', 'web-search', 'coding-agent'],
+});
+```
+
+Skill prompts are injected into the system prompt and indexed by the discovery engine.
+
+### Load all curated skills
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  skills: 'all',  // loads all 18 curated skills
+});
+```
+
+### Load from directories + curated names
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  skills: {
+    names: ['github', 'coding-agent'],    // from curated registry
+    dirs: ['./my-custom-skills'],          // scan local SKILL.md directories
+    includeDefaults: true,                 // also scan ./skills/, ~/.codex/skills/
+  },
+});
+```
+
+### Use a preset to auto-load skills
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  preset: 'research-assistant',
+  skills: ['github'],  // adds to the preset's suggested skills
+});
+```
+
+### Skills + extensions + discovery together
+
+```ts
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  tools: 'curated',
+  skills: 'all',
+  extensions: {
+    tools: ['web-search', 'web-browser', 'news-search', 'giphy'],
+    voice: ['voice-synthesis'],
+  },
+});
+
+const diag = app.diagnostics();
+console.log('Skills loaded:', diag.skills.names);
+console.log('Discovery indexed:', diag.discovery?.capabilityCount, 'capabilities');
+```
