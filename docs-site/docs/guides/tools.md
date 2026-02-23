@@ -339,4 +339,37 @@ for (const pack of manifest.packs) {
 
 ## Dynamic Discovery
 
-Instead of loading all tool schemas into the agent's context, the **Capability Discovery Engine** can semantically match relevant tools per turn. See the [Capability Discovery guide](./capability-discovery.md) for details.
+Instead of loading all tool schemas into the agent's context (~800 tokens per tool × 10+ tools = ~8,000+ tokens), the Capability Discovery Engine semantically matches relevant tools per turn.
+
+### How Tools Are Indexed
+
+Every tool loaded via `createWunderlandTools()` becomes a `CapabilityDescriptor` with:
+
+- **Kind**: `tool`
+- **ID**: `tool:<tool_name>` (e.g., `tool:web_search`, `tool:giphy_search`)
+- **Description**: from the tool's `description` field
+- **Input schema**: from the tool's `inputSchema` (used for Tier 2 full-detail context)
+
+Tools are indexed automatically when passed to `WunderlandDiscoveryManager.initialize()` via `toolMap`. Adding a new tool extension or API key makes it available to discovery on next agent start -- no configuration changes needed.
+
+### Discovery at Runtime
+
+Each turn, the engine:
+
+1. Embeds the user message
+2. Finds the top-K tools by cosine similarity
+3. Re-ranks using graph edges (preset co-occurrence, skill dependencies)
+4. Allocates token budget across tiers: Brief (~40 tokens/tool) → Standard (~150) → Full (~400)
+
+The agent can also call the `discover_capabilities` meta-tool mid-conversation to search for tools it wasn't initially shown.
+
+### Tools vs Skills
+
+Tools and skills are indexed into the **same** discovery graph but serve different purposes:
+
+- **Tools** provide callable actions (the JSON schema the LLM uses to generate function calls)
+- **Skills** provide behavioral guidance (when to use a tool, rate limits, output formatting, multi-step workflows)
+
+When a skill references a required tool, the graph creates a `DEPENDS_ON` edge. Searching for "search the web" finds both `tool:web_search` and `skill:web-search`, with the skill boosted by its graph connection. **You don't need a skill for every tool** -- most tools work well with just their schema.
+
+See [Capability Discovery](./capability-discovery.md) for full configuration, the relationship between all capability types, and best practices.

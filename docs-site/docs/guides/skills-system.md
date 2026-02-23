@@ -668,4 +668,30 @@ See the full [`CONTRIBUTING.md`](https://github.com/framersai/agentos-skills/blo
 
 ## Semantic Discovery
 
-Skills are automatically indexed by the Capability Discovery Engine for per-turn retrieval. Instead of loading all SKILL.md files at init, only relevant skills are pulled into context. See [Capability Discovery](./capability-discovery.md).
+Instead of loading all 18 SKILL.md files into every LLM call (~4,000 tokens), the Capability Discovery Engine indexes skills as `CapabilityDescriptor` entries and retrieves only relevant ones per turn.
+
+### How Skills Are Indexed
+
+Each skill loaded via `SkillRegistry` becomes a descriptor with:
+
+- **Kind**: `skill`
+- **ID**: `skill:<name>` (e.g., `skill:github`, `skill:web-search`)
+- **Description**: from SKILL.md frontmatter
+- **Tags**: from `metadata.openclaw.requires`, category, and frontmatter fields
+- **Content**: the full SKILL.md body (used for Tier 2 full-detail context)
+
+### Skills vs Tools in Discovery
+
+Skills and tools are indexed into the **same** discovery graph. When a skill references a required tool (e.g., `web-search` skill requires the `web_search` tool), the graph creates a `DEPENDS_ON` edge between them. This means:
+
+- Searching for "search the web" finds both the `web_search` tool AND the `web-search` skill
+- The skill gets boosted because it's graph-connected to the matching tool
+- The agent sees both the tool schema (how to call it) and the skill instructions (when and why to use it)
+
+**You do not need a skill for every tool.** Many tools work fine with just their name, description, and input schema. Skills add value when a tool needs behavioral guidelines -- rate limiting, output formatting, multi-step workflows, or platform-specific instructions.
+
+### Automatic Indexing
+
+Skills added to `@framers/agentos-skills-registry` or loaded from a skills directory are indexed automatically -- no discovery configuration needed. The next time an agent starts, new skills appear in the index.
+
+See [Capability Discovery](./capability-discovery.md) for tier budgets, graph re-ranking, the `discover_capabilities` meta-tool, and how tools/skills/extensions/channels all feed into the unified discovery system.

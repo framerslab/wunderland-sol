@@ -260,4 +260,42 @@ Use the `descriptor:activated` and `descriptor:deactivated` events to manage ext
 
 ## Discovery Integration
 
-Extensions are indexed alongside tools, skills, and channels by the Capability Discovery Engine. This enables agents to find and use extensions they weren't pre-configured with. See [Capability Discovery](./capability-discovery.md).
+Extensions are automatically indexed by the Capability Discovery Engine when loaded into the agent's tool map. Each tool extension becomes a `CapabilityDescriptor` with:
+
+- **Kind**: `tool`
+- **ID**: `tool:<extension_name>` (e.g., `tool:web_search`, `tool:giphy_search`)
+- **Tags**: derived from the extension's category and metadata
+- **Relationships**: `DEPENDS_ON` edges for required secrets, `COMPOSED_WITH` edges from preset co-occurrence data
+
+When a user message arrives, the discovery engine finds the most relevant extensions by semantic similarity and graph re-ranking, then injects only those into the LLM context. Extensions you aren't pre-configured with can still be discovered if they're in the global catalog.
+
+### Extensions vs Skills
+
+Extensions and skills are **separate systems** that both feed into discovery:
+
+| | Extensions | Skills |
+|---|---|---|
+| **What** | Runtime code (tools, guardrails, workflows) | Prompt-level `SKILL.md` teaching when/how to use tools |
+| **Loaded as** | `ITool` instances via `createCuratedManifest()` | Prompt text via `SkillRegistry.buildSnapshot()` |
+| **Discovery kind** | `tool` | `skill` |
+| **ID format** | `tool:<name>` | `skill:<name>` |
+| **Required?** | Yes -- provides the callable action | No -- many tools work fine without a corresponding skill |
+
+A skill might reference a tool (e.g., the `web-search` skill teaches how to use the `web_search` tool extension), creating a `DEPENDS_ON` edge in the capability graph. This means searching for either surfaces both.
+
+### Adding Discovery Metadata to Custom Extensions
+
+For custom extensions not in the curated registry, add a `CAPABILITY.yaml` in `~/.wunderland/capabilities/<name>/`:
+
+```yaml
+name: my-custom-tool
+description: Short description for semantic search
+category: business-tools
+tags: [api, internal]
+relationships:
+  - credential-vault
+```
+
+This enables the discovery engine to find your extension via semantic search and boost related capabilities. The `relationships` field tells the graph re-ranker which other capabilities tend to be useful alongside this one.
+
+See [Capability Discovery](./capability-discovery.md) for the full discovery system, tier budgets, and graph configuration.

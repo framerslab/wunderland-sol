@@ -34,6 +34,55 @@ When a user message arrives, the engine runs a three-stage pipeline:
 
 The agent can promote a brief-tier capability to full detail mid-conversation by calling the `discover_capabilities` meta-tool.
 
+## Tools, Skills, Extensions & Channels
+
+The discovery engine indexes four kinds of capability into a unified `CapabilityDescriptor` model. Each gets a kind-prefixed ID (e.g., `tool:web_search`, `skill:github`) and lives in the same index and graph:
+
+```mermaid
+graph TD
+    TOOLS["Tools (ITool instances)"] -->|auto-indexed| INDEX[CapabilityIndex]
+    SKILLS["Skills (SKILL.md files)"] -->|auto-indexed| INDEX
+    MANIFESTS["CAPABILITY.yaml files"] -->|scanned on init| INDEX
+    CHANNELS["Channel adapters"] -->|indexed if passed| INDEX
+    EXTS["Extension descriptors"] -->|indexed if passed| INDEX
+    INDEX --> GRAPH[CapabilityGraph]
+    PRESETS["8 Agent Presets"] -->|co-occurrence edges| GRAPH
+    GRAPH --> ASSEMBLER[CapabilityContextAssembler]
+    ASSEMBLER --> TIERS["Tier 0 + Tier 1 + Tier 2"]
+```
+
+### What's Automatic vs Manual
+
+| Source | Auto-indexed? | How |
+|--------|:---:|---|
+| Tools (`ITool`) | Yes | From `toolMap` passed to `WunderlandDiscoveryManager.initialize()` |
+| Skills (`SKILL.md`) | Yes | From `skillEntries` passed to `initialize()` |
+| `CAPABILITY.yaml` manifests | Yes | Scanned from `~/.wunderland/capabilities/` and `./.wunderland/capabilities/` |
+| Preset co-occurrences | Yes | Auto-derived from the 8 agent presets at startup |
+| Extension descriptors | Manual | Must be passed as `CapabilityIndexSources.extensions` |
+| Channel adapters | Manual | Must be passed as `CapabilityIndexSources.channels` |
+
+When you add a new skill to `@framers/agentos-skills-registry` or a new tool extension package, it will be picked up automatically the next time an agent starts -- no configuration changes needed. Custom capabilities defined via `CAPABILITY.yaml` in `~/.wunderland/capabilities/` are also scanned automatically on startup.
+
+## Skills vs Extensions
+
+Skills and extensions are **separate systems** that both feed into the discovery graph:
+
+- **Skills** are prompt-level `SKILL.md` files that teach an agent _when_ and _how_ to use tools. They become `CapabilityDescriptor` entries with `kind: 'skill'` and ID format `skill:<name>` (e.g., `skill:github`, `skill:web-search`).
+
+- **Extensions** are runtime code packages (12 kinds: tools, guardrails, workflows, etc.). Tool extensions become `CapabilityDescriptor` entries with `kind: 'tool'` and ID format `tool:<name>` (e.g., `tool:web_search`, `tool:giphy_search`).
+
+Both live in the same discovery index and graph. Skills provide behavioral guidance ("search for recent results, cite sources"); tools provide callable actions ("execute a web search with these parameters"). **You do not need a skill for every tool** -- many tools work fine with just their schema and description.
+
+When a skill references a required tool (e.g., the `web-search` skill depends on the `web_search` tool), the graph creates a `DEPENDS_ON` edge between them. This means searching for "search the web" finds both the tool schema and the skill instructions, with the skill boosted by its graph connection to the matching tool.
+
+### Best Practices
+
+- **Use skills** when a tool needs behavioral guidelines beyond its schema -- rate limiting, output formatting, multi-step workflows, or platform-specific instructions.
+- **Skip skills** for tools with clear, self-documenting schemas -- the tool's name, description, and input schema are often sufficient.
+- **Use `CAPABILITY.yaml`** for custom or internal tools that aren't in the curated registry -- this makes them discoverable without writing a full extension package.
+- **Set `relationships`** in `CAPABILITY.yaml` to connect capabilities that are commonly used together -- the graph re-ranker will boost them as a group.
+
 ## For Agent Creators
 
 ### Configuring Discovery in Presets

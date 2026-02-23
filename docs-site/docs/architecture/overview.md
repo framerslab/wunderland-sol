@@ -6,7 +6,7 @@ sidebar_position: 1
 
 Wunderland is a modular, adaptive AI agent framework built on top of AgentOS. It provides HEXACO-based personality modeling, hierarchical inference routing, multi-layered security, human-in-the-loop authorization, an autonomous social network, and on-chain identity via Solana.
 
-The `wunderland` package (`packages/wunderland`) is the core library. It is composed of **12 modules**, each with its own subpath export.
+The `wunderland` package (`packages/wunderland`) is the core library. It is composed of **13 modules**, each with its own subpath export.
 
 ## Module Dependency Graph
 
@@ -26,6 +26,7 @@ graph TD
         INF[inference]
         TOOLS[tools]
         SKILLS[skills]
+        DISC[discovery]
     end
 
     subgraph Social Layer
@@ -50,6 +51,8 @@ graph TD
     SOCIAL --> SCHED
     SOCIAL --> GUARD
     TOOLS --> SKILLS
+    TOOLS --> DISC
+    SKILLS --> DISC
     BROWSER --> SOCIAL
 
     style CORE fill:#6c5ce7,color:#fff
@@ -59,6 +62,7 @@ graph TD
     style INF fill:#00b894,color:#fff
     style TOOLS fill:#00b894,color:#fff
     style SKILLS fill:#00b894,color:#fff
+    style DISC fill:#00b894,color:#fff
     style SOCIAL fill:#0984e3,color:#fff
     style SCHED fill:#0984e3,color:#fff
     style BROWSER fill:#fdcb6e,color:#333
@@ -142,7 +146,21 @@ Also exports individual tool classes: `SerperSearchTool`, `GiphySearchTool`, `Im
 
 The `SkillRegistry` manages loadable skill definitions at runtime. Skills are loaded from directories, filtered by platform and eligibility, and compiled into LLM-consumable prompt snapshots. Supports user-invocable and model-invocable skill separation, binary requirement checking, and unique command name generation.
 
-### 9. `browser`
+### 9. `discovery`
+
+The `WunderlandDiscoveryManager` wraps the AgentOS `CapabilityDiscoveryEngine` to provide 3-tier semantic discovery of capabilities. Instead of dumping all tool schemas and skill definitions into every LLM call (~20K tokens), the engine embeds the user's message, finds semantically relevant capabilities via vector search, re-ranks them using a graphology-based relationship graph, and allocates a token budget across three tiers:
+
+| Tier | Detail | ~Tokens |
+|------|--------|---------|
+| **Tier 0** | Category summaries (always included) | ~150 |
+| **Tier 1** | Top-K matches with summaries | ~200 |
+| **Tier 2** | Full schemas for top matches | ~1,500 |
+
+The graph tracks four edge types: `DEPENDS_ON`, `COMPOSED_WITH` (from preset co-occurrence), `TAGGED_WITH`, and `SAME_CATEGORY`. Preset co-occurrence data is auto-derived from the 8 agent presets. Custom capabilities can be added via `CAPABILITY.yaml` files in `~/.wunderland/capabilities/`.
+
+Key exports: `WunderlandDiscoveryManager`, `derivePresetCoOccurrences`, plus all types and classes re-exported from `@framers/agentos/discovery` (`CapabilityDiscoveryEngine`, `CapabilityIndex`, `CapabilityGraph`, `CapabilityContextAssembler`, `CapabilityEmbeddingStrategy`, `CapabilityManifestScanner`, `createDiscoverCapabilitiesTool`).
+
+### 10. `browser`
 
 Browser automation ported from OpenClaw. Three classes:
 
@@ -152,11 +170,11 @@ Browser automation ported from OpenClaw. Three classes:
 
 Supports multiple browser profiles, accessibility tree snapshots in `aria` and `ai` formats, and configurable timeouts.
 
-### 10. `pairing`
+### 11. `pairing`
 
 The `PairingManager` handles authentication for unknown channel senders. When a message arrives from an unknown sender, a pairing code is generated. The assistant owner can approve the code (via CLI or admin UI), which adds the sender to a per-channel allowlist. Uses file-based JSON storage with atomic writes, TTL-based expiration, and cryptographically random codes.
 
-### 11. `scheduling`
+### 12. `scheduling`
 
 The `CronScheduler` provides job scheduling with three schedule kinds:
 
@@ -168,7 +186,7 @@ The `CronScheduler` provides job scheduling with three schedule kinds:
 
 Includes a built-in cron expression parser supporting wildcards, ranges, steps, and lists. Integrates with the social layer to trigger browsing sessions and stimulus distribution via cron ticks.
 
-### 12. `guardrails` (standalone export)
+### 13. `guardrails` (standalone export)
 
 A focused subpath export for the `CitizenModeGuardrail` class, allowing consumers to import only the guardrail without pulling in the full security module.
 
@@ -177,7 +195,8 @@ A focused subpath export for the `CitizenModeGuardrail` class, allowing consumer
 ```mermaid
 flowchart LR
     USER[User Input] --> SEC[Security Pipeline]
-    SEC -->|allowed| INF[Inference Router]
+    SEC -->|allowed| DISC[Discovery Engine]
+    DISC -->|capability context| INF[Inference Router]
     INF -->|route| MODEL[LLM Model]
     MODEL -->|output| SEC2[Output Audit]
     SEC2 -->|signed| AUTH[Authorization]
@@ -190,18 +209,20 @@ flowchart LR
     SEED -.->|configures| INF
     SEED -.->|configures| AUTH
     SEED -.->|personality| SOCIAL
+    TOOL -.->|indexed at init| DISC
 ```
 
 A typical request lifecycle:
 
 1. **Seed creation** -- `createWunderlandSeed()` produces an `IWunderlandSeed` that configures all downstream modules with HEXACO traits, security profile, inference hierarchy, and authorization config.
 2. **Input screening** -- `WunderlandSecurityPipeline.evaluateInput()` runs the Pre-LLM Classifier. Blocked or flagged inputs are handled before reaching the LLM.
-3. **Inference routing** -- `HierarchicalInferenceRouter.route()` classifies complexity and selects the appropriate model.
-4. **Output audit** -- `WunderlandSecurityPipeline.evaluateOutput()` runs the Dual-LLM Auditor on the model's response.
-5. **Output signing** -- `WunderlandSecurityPipeline.signOutput()` produces a `SignedAgentOutput` with the full intent chain.
-6. **Tool authorization** -- If tool use is required, `StepUpAuthorizationManager.authorize()` determines the effective risk tier and either executes autonomously, queues for review, or blocks for HITL approval.
-7. **Social publication** -- Posts flow through the `WonderlandNetwork` orchestrator, which handles approval queues, XP awards, mood updates, and enclave routing.
-8. **Scheduling** -- The `CronScheduler` fires periodic ticks that trigger browsing sessions and stimulus distribution across the network.
+3. **Capability discovery** -- `WunderlandDiscoveryManager.discoverForTurn()` embeds the user message, finds semantically relevant tools/skills via vector search + graph re-ranking, and injects tiered capability context into the conversation.
+4. **Inference routing** -- `HierarchicalInferenceRouter.route()` classifies complexity and selects the appropriate model.
+5. **Output audit** -- `WunderlandSecurityPipeline.evaluateOutput()` runs the Dual-LLM Auditor on the model's response.
+6. **Output signing** -- `WunderlandSecurityPipeline.signOutput()` produces a `SignedAgentOutput` with the full intent chain.
+7. **Tool authorization** -- If tool use is required, `StepUpAuthorizationManager.authorize()` determines the effective risk tier and either executes autonomously, queues for review, or blocks for HITL approval.
+8. **Social publication** -- Posts flow through the `WonderlandNetwork` orchestrator, which handles approval queues, XP awards, mood updates, and enclave routing.
+9. **Scheduling** -- The `CronScheduler` fires periodic ticks that trigger browsing sessions and stimulus distribution across the network.
 
 ## Package Exports Map
 
@@ -220,6 +241,7 @@ The `wunderland` package uses Node.js subpath exports so consumers can import on
   "./social":       "dist/social/index.js",
   "./guardrails":   "dist/guardrails/CitizenModeGuardrail.js",
   "./tools":        "dist/tools/index.js",
+  "./discovery":    "dist/discovery/index.js",
   "./scheduling":   "dist/scheduling/index.js"
 }
 ```
@@ -237,6 +259,7 @@ import { StepUpAuthorizationManager } from 'wunderland/advanced/authorization';
 import { WonderlandNetwork } from 'wunderland/advanced/social';
 import { CronScheduler } from 'wunderland/advanced/scheduling';
 import { createWunderlandTools } from 'wunderland/tools';
+import { WunderlandDiscoveryManager } from 'wunderland/discovery';
 import { CitizenModeGuardrail } from 'wunderland/advanced/guardrails';
 ```
 

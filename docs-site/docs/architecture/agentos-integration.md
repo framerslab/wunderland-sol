@@ -392,3 +392,84 @@ Skills support:
 - **Eligibility checks** -- Verify required binaries exist
 - **User vs. model invocation** -- Some skills are user-only, others can be triggered by the LLM
 - **Command specification** -- Generate unique slash-command names for user invocation
+
+## Capability Discovery Integration
+
+The `WunderlandDiscoveryManager` wraps the AgentOS `CapabilityDiscoveryEngine` to replace static capability dumps with per-turn semantic search. It auto-resolves embedding providers from the LLM config and injects tiered context before each inference call.
+
+```mermaid
+graph TD
+    TOOLS[Tools - ITool instances] -->|auto-indexed| INDEX[CapabilityIndex]
+    SKILLS[Skills - SKILL.md entries] -->|auto-indexed| INDEX
+    SCANNER[CapabilityManifestScanner] -->|CAPABILITY.yaml files| INDEX
+    INDEX --> GRAPH[CapabilityGraph]
+    PRESETS[Preset Co-occurrences] -->|COMPOSED_WITH edges| GRAPH
+    GRAPH --> ASSEMBLER[CapabilityContextAssembler]
+    ASSEMBLER --> T0[Tier 0: Category summaries]
+    ASSEMBLER --> T1[Tier 1: Top-K summaries]
+    ASSEMBLER --> T2[Tier 2: Full schemas]
+
+    style INDEX fill:#00b894,color:#fff
+    style GRAPH fill:#00b894,color:#fff
+    style ASSEMBLER fill:#00b894,color:#fff
+```
+
+### How It Wires In
+
+At agent startup, `WunderlandDiscoveryManager.initialize()` receives the loaded tool map and skill entries, builds the capability index and graph, and optionally registers the `discover_capabilities` meta-tool:
+
+```typescript
+import { WunderlandDiscoveryManager } from 'wunderland/discovery';
+
+const discoveryManager = new WunderlandDiscoveryManager({
+  enabled: true,
+  registerMetaTool: true,
+});
+
+await discoveryManager.initialize({
+  toolMap,                                          // from createWunderlandTools()
+  skillEntries: snapshot.resolvedSkills,             // from SkillRegistry
+  llmConfig: { providerId: 'openai', apiKey: '...' },
+});
+
+// Register the meta-tool so the agent can self-discover mid-conversation
+const metaTool = discoveryManager.getMetaTool();
+if (metaTool) toolMap.set(metaTool.name, metaTool);
+```
+
+Per-turn, the engine injects capability context into the conversation:
+
+```typescript
+const result = await discoveryManager.discoverForTurn(userMessage);
+if (result) {
+  // result.tier0: category summaries (~150 tokens, always present)
+  // result.tier1: top-K matches with summaries (~200 tokens)
+  // result.tier2: full schemas for top matches (~1,500 tokens)
+  // Inject as a transient system message before the user message
+}
+```
+
+### Embedding Provider Resolution
+
+The manager auto-resolves embedding providers from the LLM config:
+
+| LLM Provider | Embedding Model | Source |
+|-------------|----------------|--------|
+| `openai` | `text-embedding-3-small` | Direct OpenAI API |
+| `openrouter` | `openai/text-embedding-3-small` | Via OpenRouter |
+| `anthropic` / `groq` | `text-embedding-3-small` | Falls back to `OPENAI_API_KEY` |
+| `ollama` | `nomic-embed-text` | Local Ollama instance |
+
+If no embedding provider is available, discovery degrades gracefully -- the agent falls back to static capability loading with no error.
+
+### Relationship to AgentOS Discovery
+
+Wunderland's `WunderlandDiscoveryManager` is a thin orchestration layer over AgentOS primitives:
+
+| Wunderland | AgentOS |
+|-----------|---------|
+| `WunderlandDiscoveryManager` | `CapabilityDiscoveryEngine` |
+| `derivePresetCoOccurrences()` | `PresetCoOccurrence[]` input |
+| Auto embedding resolution | `EmbeddingManager` + `InMemoryVectorStore` |
+| Per-turn context injection | `CapabilityContextAssembler` |
+| Meta-tool registration | `createDiscoverCapabilitiesTool()` |
