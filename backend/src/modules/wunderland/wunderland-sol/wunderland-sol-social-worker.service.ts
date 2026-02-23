@@ -25,12 +25,14 @@ type SolAgentTraits = {
 type DecodedSolAgent = {
   agentPda: string;
   ownerWallet: string;
+  agentSignerPubkey: string | null;
   displayName: string;
   traits: SolAgentTraits;
   levelNum: number;
   levelLabel: string;
   totalPosts: number;
   reputation: number;
+  metadataHashHex: string | null;
   createdAtSec: number | null;
   isActive: boolean;
 };
@@ -172,7 +174,8 @@ function decodeAgentIdentityCurrent(data: Buffer, web3: any, agentPda: string): 
 
   // agent_id (skip)
   offset += 32;
-  // agent_signer (skip)
+
+  const agentSignerPubkey = new web3.PublicKey(data.subarray(offset, offset + 32)).toBase58();
   offset += 32;
 
   const displayName = decodeDisplayName(data.subarray(offset, offset + 32));
@@ -193,7 +196,7 @@ function decodeAgentIdentityCurrent(data: Buffer, web3: any, agentPda: string): 
   const reputation = Number(data.readBigInt64LE(offset));
   offset += 8;
 
-  // metadata_hash (skip)
+  const metadataHashHex = Buffer.from(data.subarray(offset, offset + 32)).toString('hex');
   offset += 32;
 
   const createdAtSec = Number(data.readBigInt64LE(offset));
@@ -207,12 +210,14 @@ function decodeAgentIdentityCurrent(data: Buffer, web3: any, agentPda: string): 
   return {
     agentPda,
     ownerWallet: owner,
+    agentSignerPubkey,
     displayName: displayName || 'Unknown',
     traits,
     levelNum,
     levelLabel: LEVEL_NAMES[levelNum] || `Level ${levelNum}`,
     totalPosts,
     reputation,
+    metadataHashHex,
     createdAtSec: Number.isFinite(createdAtSec) ? createdAtSec : null,
     isActive,
   };
@@ -256,12 +261,14 @@ function decodeAgentIdentityLegacy(data: Buffer, web3: any, agentPda: string): D
   return {
     agentPda,
     ownerWallet: authority,
+    agentSignerPubkey: null,
     displayName: displayName || 'Unknown',
     traits,
     levelNum,
     levelLabel: LEVEL_NAMES[levelNum] || `Level ${levelNum}`,
     totalPosts,
     reputation,
+    metadataHashHex: null,
     createdAtSec: Number.isFinite(createdAtSec) ? createdAtSec : null,
     isActive,
   };
@@ -519,29 +526,33 @@ export class WunderlandSolSocialWorkerService implements OnModuleInit, OnModuleD
         const decoded = decodeAgentIdentityWithFallback(acc.account.data as Buffer, web3, pda);
         await this.db.run(
           `INSERT INTO wunderland_sol_agents (
-            agent_pda, owner_wallet, display_name, traits_json, level_num, level_label,
-            total_posts, reputation, created_at_sec, is_active, indexed_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            agent_pda, owner_wallet, agent_signer_pubkey, display_name, traits_json, level_num, level_label,
+            total_posts, reputation, metadata_hash_hex, created_at_sec, is_active, indexed_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(agent_pda) DO UPDATE SET
             owner_wallet = excluded.owner_wallet,
+            agent_signer_pubkey = excluded.agent_signer_pubkey,
             display_name = excluded.display_name,
             traits_json = excluded.traits_json,
             level_num = excluded.level_num,
             level_label = excluded.level_label,
             total_posts = excluded.total_posts,
             reputation = excluded.reputation,
+            metadata_hash_hex = excluded.metadata_hash_hex,
             created_at_sec = excluded.created_at_sec,
             is_active = excluded.is_active,
             indexed_at = excluded.indexed_at`,
           [
             decoded.agentPda,
             decoded.ownerWallet,
+            decoded.agentSignerPubkey,
             decoded.displayName,
             JSON.stringify(decoded.traits),
             decoded.levelNum,
             decoded.levelLabel,
             decoded.totalPosts,
             decoded.reputation,
+            decoded.metadataHashHex,
             decoded.createdAtSec,
             decoded.isActive ? 1 : 0,
             now,
@@ -755,4 +766,3 @@ export class WunderlandSolSocialWorkerService implements OnModuleInit, OnModuleD
     return promise;
   }
 }
-

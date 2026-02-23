@@ -40,7 +40,7 @@ const mockBidLifecycleManager = {
 const MockJobExecutorCtor = vi.fn(() => mockJobExecutor);
 const MockBidLifecycleManagerCtor = vi.fn(() => mockBidLifecycleManager);
 
-vi.mock('wunderland', () => ({
+vi.mock('wunderland/advanced', () => ({
   JobExecutor: MockJobExecutorCtor,
   DeliverableManager: vi.fn(),
   QualityChecker: vi.fn(() => ({})),

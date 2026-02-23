@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowJs": false,
@@ -24,19 +24,38 @@
     "noImplicitOverride": true,
     "resolveJsonModule": true,
     "importHelpers": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "baseUrl": "./",
     "paths": {
-      "@prisma/client": ["../packages/agentos/dist/stubs/prismaClient.d.ts"],
-      "@framers/agentos/*": ["../../../packages/agentos/src/*"],
-      "@framers/agentos": ["../../../packages/agentos/src/index.ts"],
-      "@framers/sql-storage-adapter": ["../../../packages/sql-storage-adapter/src/index.ts"],
-      "@framers/sql-storage-adapter/*": ["../../../packages/sql-storage-adapter/src/*"],
-      "@framers/shared": ["../packages/shared/src/index.ts"],
-      "@framers/shared/*": ["../packages/shared/src/*"]
+      "@prisma/client": [
+        "../packages/agentos/dist/stubs/prismaClient.d.ts"
+      ],
+      "@framers/agentos/*": [
+        "../../../packages/agentos/src/*"
+      ],
+      "@framers/agentos": [
+        "../../../packages/agentos/src/index.ts"
+      ],
+      "@framers/sql-storage-adapter": [
+        "../../../packages/sql-storage-adapter/src/index.ts"
+      ],
+      "@framers/sql-storage-adapter/*": [
+        "../../../packages/sql-storage-adapter/src/*"
+      ],
+      "@framers/shared": [
+        "../packages/shared/src/index.ts"
+      ],
+      "@framers/shared/*": [
+        "../packages/shared/src/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.d.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.d.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist",

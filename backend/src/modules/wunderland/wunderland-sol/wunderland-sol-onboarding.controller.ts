@@ -33,6 +33,8 @@ export class WunderlandSolOnboardingController {
     ownerWallet: string;
     agentIdentityPda: string;
     signatureB64: string;
+    metadataJson?: string;
+    seedPrompt?: string;
     agentSignerSecretKeyJson: number[];
   }) {
     const auth = await populateOptionalAuthContext(req);

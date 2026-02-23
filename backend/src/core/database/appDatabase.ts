@@ -174,6 +174,9 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
 	      inference_hierarchy TEXT NOT NULL,
 		      step_up_auth_config TEXT,
 		      base_system_prompt TEXT,
+          prompt_immutable INTEGER DEFAULT 0,
+          onchain_metadata_hash TEXT,
+          onchain_metadata_schema TEXT,
 		      allowed_tool_ids TEXT,
 		      toolset_manifest_json TEXT,
 		      toolset_hash TEXT,
@@ -268,6 +271,28 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
 	  await db.exec(
 	    'CREATE INDEX IF NOT EXISTS idx_wunderland_sol_agent_signers_owner ON wunderland_sol_agent_signers(owner_wallet);'
 	  );
+
+    // Agent-only prompt revision ledger (append-only, Ed25519-signed).
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS wunderbot_prompt_revisions (
+        revision_id TEXT PRIMARY KEY,
+        seed_id TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        signer_pubkey TEXT NOT NULL,
+        prev_hash TEXT,
+        payload_json TEXT NOT NULL,
+        payload_hash TEXT NOT NULL,
+        signature_b64 TEXT NOT NULL,
+        source TEXT NOT NULL DEFAULT 'managed',
+        FOREIGN KEY (seed_id) REFERENCES wunderbots(seed_id) ON DELETE CASCADE
+      );
+    `);
+    await db.exec(
+      'CREATE INDEX IF NOT EXISTS idx_wunderbot_prompt_revisions_seed ON wunderbot_prompt_revisions(seed_id, created_at DESC);'
+    );
+    await db.exec(
+      'CREATE INDEX IF NOT EXISTS idx_wunderbot_prompt_revisions_hash ON wunderbot_prompt_revisions(seed_id, payload_hash);'
+    );
 
   // Citizen profiles — public identity + XP leveling system
 	  await db.exec(`
@@ -1022,12 +1047,14 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
     CREATE TABLE IF NOT EXISTS wunderland_sol_agents (
       agent_pda TEXT PRIMARY KEY,
       owner_wallet TEXT NOT NULL,
+      agent_signer_pubkey TEXT,
       display_name TEXT NOT NULL,
       traits_json TEXT NOT NULL,
       level_num INTEGER NOT NULL,
       level_label TEXT NOT NULL,
       total_posts INTEGER NOT NULL DEFAULT 0,
       reputation INTEGER NOT NULL DEFAULT 0,
+      metadata_hash_hex TEXT,
       created_at_sec INTEGER,
       is_active INTEGER NOT NULL DEFAULT 1,
       indexed_at INTEGER NOT NULL
@@ -1550,6 +1577,46 @@ export const initializeAppDatabase = async (): Promise<void> => {
         adapter.kind === 'postgres'
           ? 'ALTER TABLE wunderbots ADD COLUMN evolved_prompt_adaptations TEXT'
           : 'ALTER TABLE wunderbots ADD COLUMN evolved_prompt_adaptations TEXT;'
+      );
+      await ensureColumnExists(
+        adapter,
+        'wunderbots',
+        'prompt_immutable',
+        adapter.kind === 'postgres'
+          ? 'ALTER TABLE wunderbots ADD COLUMN prompt_immutable INTEGER DEFAULT 0'
+          : 'ALTER TABLE wunderbots ADD COLUMN prompt_immutable INTEGER DEFAULT 0;'
+      );
+      await ensureColumnExists(
+        adapter,
+        'wunderbots',
+        'onchain_metadata_hash',
+        adapter.kind === 'postgres'
+          ? 'ALTER TABLE wunderbots ADD COLUMN onchain_metadata_hash TEXT'
+          : 'ALTER TABLE wunderbots ADD COLUMN onchain_metadata_hash TEXT;'
+      );
+      await ensureColumnExists(
+        adapter,
+        'wunderbots',
+        'onchain_metadata_schema',
+        adapter.kind === 'postgres'
+          ? 'ALTER TABLE wunderbots ADD COLUMN onchain_metadata_schema TEXT'
+          : 'ALTER TABLE wunderbots ADD COLUMN onchain_metadata_schema TEXT;'
+      );
+      await ensureColumnExists(
+        adapter,
+        'wunderland_sol_agents',
+        'agent_signer_pubkey',
+        adapter.kind === 'postgres'
+          ? 'ALTER TABLE wunderland_sol_agents ADD COLUMN agent_signer_pubkey TEXT'
+          : 'ALTER TABLE wunderland_sol_agents ADD COLUMN agent_signer_pubkey TEXT;'
+      );
+      await ensureColumnExists(
+        adapter,
+        'wunderland_sol_agents',
+        'metadata_hash_hex',
+        adapter.kind === 'postgres'
+          ? 'ALTER TABLE wunderland_sol_agents ADD COLUMN metadata_hash_hex TEXT'
+          : 'ALTER TABLE wunderland_sol_agents ADD COLUMN metadata_hash_hex TEXT;'
       );
       await ensureColumnExists(
         adapter,

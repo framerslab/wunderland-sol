@@ -24,7 +24,54 @@ function sha256HexUtf8(text: string): string {
   return createHash('sha256').update(text, 'utf8').digest('hex');
 }
 
-function buildOnboardMessage(opts: { agentPda: string; agentSigner: string; programId: string; cluster: string }): string {
+function stableSortJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stableSortJson);
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const key of Object.keys(record).sort((a, b) => a.localeCompare(b))) {
+      out[key] = stableSortJson(record[key]);
+    }
+    return out;
+  }
+  if (typeof value === 'bigint') return value.toString();
+  return value;
+}
+
+function canonicalizeJsonString(raw: string): { canonical: string; parsed: unknown } | null {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    const canonical = JSON.stringify(stableSortJson(parsed));
+    return { canonical, parsed };
+  } catch {
+    return null;
+  }
+}
+
+function buildOnboardMessage(opts: {
+  agentPda: string;
+  agentSigner: string;
+  programId: string;
+  cluster: string;
+  metadataHash: string | null;
+}): string {
+  return JSON.stringify({
+    v: 1,
+    intent: ONBOARD_INTENT,
+    cluster: opts.cluster,
+    programId: opts.programId,
+    agentPda: opts.agentPda,
+    agentSigner: opts.agentSigner,
+    metadataHash: opts.metadataHash,
+  });
+}
+
+function buildOnboardMessageLegacy(opts: {
+  agentPda: string;
+  agentSigner: string;
+  programId: string;
+  cluster: string;
+}): string {
   return JSON.stringify({
     v: 1,
     intent: ONBOARD_INTENT,
@@ -69,6 +116,7 @@ type DecodedAgentIdentity = {
   ownerWallet: string;
   agentSigner: string;
   displayName: string;
+  metadataHashHex: string;
   hexaco: {
     honesty_humility: number;
     emotionality: number;
@@ -108,8 +156,14 @@ function decodeAgentIdentityAccount(data: Buffer): DecodedAgentIdentity {
   ];
   off += 12;
 
-  // Skip citizen_level(1) + xp(8) + total_entries(4) + reputation(8) + metadata_hash(32) + created_at(8) + updated_at(8)
-  off += 1 + 8 + 4 + 8 + 32 + 8 + 8;
+  // Skip citizen_level(1) + xp(8) + total_entries(4) + reputation(8)
+  off += 1 + 8 + 4 + 8;
+
+  const metadataHashHex = Buffer.from(data.subarray(off, off + 32)).toString('hex');
+  off += 32;
+
+  // Skip created_at(8) + updated_at(8)
+  off += 8 + 8;
 
   const isActive = data.readUInt8(off) === 1;
 
@@ -123,7 +177,7 @@ function decodeAgentIdentityAccount(data: Buffer): DecodedAgentIdentity {
     openness: toFloat(traitsRaw[5] ?? 500),
   };
 
-  return { ownerWallet: owner, agentSigner: signer, displayName, hexaco, isActive };
+  return { ownerWallet: owner, agentSigner: signer, displayName, metadataHashHex, hexaco, isActive };
 }
 
 function getOnChainConfig(): { rpcUrl: string; rpcUrls: string[]; programId: string; cluster: string } {
@@ -179,6 +233,8 @@ export type OnboardManagedAgentParams = {
   ownerWallet: string;
   agentIdentityPda: string;
   signatureB64: string;
+  metadataJson?: string;
+  seedPrompt?: string;
   agentSignerSecretKeyJson: number[];
 };
 
@@ -203,6 +259,24 @@ export class WunderlandSolOnboardingService {
     const signatureB64 = typeof params.signatureB64 === 'string' ? params.signatureB64.trim() : '';
     if (!signatureB64) return { ok: false, error: 'Missing signatureB64' };
 
+    const metadataJsonRaw = typeof params.metadataJson === 'string' ? params.metadataJson.trim() : '';
+    const parsedMetadata = metadataJsonRaw ? canonicalizeJsonString(metadataJsonRaw) : null;
+    if (metadataJsonRaw && !parsedMetadata) {
+      return { ok: false, error: 'metadataJson must be valid JSON' };
+    }
+    const metadataHashHex = parsedMetadata ? sha256HexUtf8(parsedMetadata.canonical) : null;
+    const metadataSchemaRaw = (parsedMetadata?.parsed as any)?.schema;
+    const metadataSchema =
+      typeof metadataSchemaRaw === 'string' && metadataSchemaRaw.trim() ? metadataSchemaRaw.trim() : null;
+
+    const specSeedPromptRaw = (parsedMetadata?.parsed as any)?.prompt?.seedPrompt;
+    const specSeedPrompt =
+      typeof specSeedPromptRaw === 'string' && specSeedPromptRaw.trim()
+        ? specSeedPromptRaw.trim()
+        : null;
+
+    const legacySeedPromptRaw = typeof params.seedPrompt === 'string' ? params.seedPrompt.trim() : '';
+
     const secretKey = params.agentSignerSecretKeyJson;
     if (!Array.isArray(secretKey) || secretKey.length !== 64) {
       return { ok: false, error: 'agentSignerSecretKeyJson must be a 64-byte secret key array' };
@@ -224,6 +298,7 @@ export class WunderlandSolOnboardingService {
       agentSigner: agentSignerKeypair.publicKey.toBase58(),
       programId,
       cluster,
+      metadataHash: metadataHashHex,
     });
 
     let signatureOk = false;
@@ -233,9 +308,22 @@ export class WunderlandSolOnboardingService {
       signatureOk = false;
     }
 
-    if (!signatureOk) {
-      return { ok: false, error: 'Invalid wallet signature' };
+    if (!signatureOk && !metadataHashHex) {
+      // Back-compat: older clients signed the onboarding message without `metadataHash`.
+      const legacyMessage = buildOnboardMessageLegacy({
+        agentPda: agentIdentityPda,
+        agentSigner: agentSignerKeypair.publicKey.toBase58(),
+        programId,
+        cluster,
+      });
+      try {
+        signatureOk = verifyWalletSignatureBase64({ wallet: ownerWallet, message: legacyMessage, signatureB64 });
+      } catch {
+        signatureOk = false;
+      }
     }
+
+    if (!signatureOk) return { ok: false, error: 'Invalid wallet signature' };
 
     // Verify on-chain AgentIdentity ownership + signer match.
     const connection = new Connection(rpcUrl, 'confirmed');
@@ -261,9 +349,31 @@ export class WunderlandSolOnboardingService {
     if (decoded.agentSigner !== agentSignerPubkey) {
       return { ok: false, error: 'Agent signer does not match on-chain AgentIdentity.agent_signer' };
     }
+    const onChainMetadataHash = String(decoded.metadataHashHex ?? '').trim().toLowerCase();
+    const hasOnChainMetadataHash = onChainMetadataHash.length === 64 && onChainMetadataHash !== '0'.repeat(64);
+    if (hasOnChainMetadataHash && !metadataHashHex) {
+      return { ok: false, error: 'metadataJson is required (on-chain metadata_hash is set)' };
+    }
+    if (metadataHashHex && decoded.metadataHashHex.toLowerCase() !== metadataHashHex.toLowerCase()) {
+      return { ok: false, error: 'metadataJson hash does not match on-chain AgentIdentity.metadata_hash' };
+    }
     if (!decoded.isActive) {
       return { ok: false, error: 'Agent is inactive on-chain (deactivated)' };
     }
+
+    const baseSystemPrompt =
+      metadataSchema === 'wunderland.agent-spec.v2' ? specSeedPrompt : legacySeedPromptRaw;
+    if (!baseSystemPrompt) {
+      return {
+        ok: false,
+        error:
+          metadataSchema === 'wunderland.agent-spec.v2'
+            ? 'metadataJson must include prompt.seedPrompt (immutable AgentSpec)'
+            : 'seedPrompt is required (legacy mutable mode)',
+      };
+    }
+
+    const promptImmutable = metadataSchema === 'wunderland.agent-spec.v2' ? 1 : 0;
 
     const seedId = agentIdentityPda;
     const now = Date.now();
@@ -330,13 +440,30 @@ export class WunderlandSolOnboardingService {
       }
 
       // 2) Upsert the agent registry row (wunderbots).
-      const existing = await trx.get<{ seed_id: string; owner_user_id: string }>(
-        'SELECT seed_id, owner_user_id FROM wunderbots WHERE seed_id = ? LIMIT 1',
+      const existing = await trx.get<{
+        seed_id: string;
+        owner_user_id: string;
+        prompt_immutable?: number | null;
+        base_system_prompt?: string | null;
+        onchain_metadata_hash?: string | null;
+      }>(
+        'SELECT seed_id, owner_user_id, prompt_immutable, base_system_prompt, onchain_metadata_hash FROM wunderbots WHERE seed_id = ? LIMIT 1',
         [seedId],
       );
 
       if (existing && String(existing.owner_user_id) !== userId) {
         throw new Error('Agent is already registered to a different backend owner.');
+      }
+
+      if (existing && Number(existing.prompt_immutable ?? 0) === 1) {
+        const existingPrompt = String(existing.base_system_prompt ?? '').trim();
+        if (existingPrompt && existingPrompt !== baseSystemPrompt) {
+          throw new Error('This agent is prompt-immutable; base_system_prompt cannot be changed.');
+        }
+        const existingHash = String(existing.onchain_metadata_hash ?? '').trim().toLowerCase();
+        if (existingHash && existingHash !== decoded.metadataHashHex.toLowerCase()) {
+          throw new Error('On-chain metadata hash mismatch (database drift detected).');
+        }
       }
 
       if (!existing) {
@@ -401,6 +528,20 @@ export class WunderlandSolOnboardingService {
           [decoded.displayName || 'Agent', JSON.stringify(decoded.hexaco), now, seedId],
         );
       }
+
+      // Enforce base prompt + on-chain commitment metadata.
+      await trx.run(
+        `
+          UPDATE wunderbots
+             SET base_system_prompt = ?,
+                 onchain_metadata_hash = ?,
+                 onchain_metadata_schema = ?,
+                 prompt_immutable = ?,
+                 updated_at = ?
+           WHERE seed_id = ?
+        `,
+        [baseSystemPrompt, decoded.metadataHashHex, metadataSchema, promptImmutable, now, seedId],
+      );
 
       // 3) Best-effort: ensure a citizen row exists.
       const citizen = await trx.get<{ seed_id: string }>(

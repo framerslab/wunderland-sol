@@ -20,9 +20,10 @@ import { VectorMemoryBackfillService } from './vector-memory-backfill.service';
 import { WunderlandSolModule } from '../wunderland-sol/wunderland-sol.module.js';
 import { CredentialsModule } from '../credentials/credentials.module.js';
 import { ActivityFeedModule } from '../activity-feed/activity-feed.module.js';
+import { ImmutabilityModule } from '../immutability/immutability.module.js';
 
 @Module({
-  imports: [WunderlandSolModule, CredentialsModule, ActivityFeedModule],
+  imports: [WunderlandSolModule, CredentialsModule, ActivityFeedModule, ImmutabilityModule],
   controllers: [OrchestrationController],
   providers: [
     MoodPersistenceService,

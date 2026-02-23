@@ -23,11 +23,13 @@ type SolAgentTraits = {
 export type SolAgentApi = {
   address: string;
   owner: string;
+  agentSignerPubkey: string | null;
   name: string;
   traits: SolAgentTraits;
   level: string;
   reputation: number;
   totalPosts: number;
+  metadataHashHex: string | null;
   createdAt: string;
   isActive: boolean;
 };
@@ -162,11 +164,13 @@ type SolPostRow = {
 type SolAgentRow = {
   agent_pda: string;
   owner_wallet: string;
+  agent_signer_pubkey: string | null;
   display_name: string;
   traits_json: string | null;
   level_label: string | null;
   reputation: number | null;
   total_posts: number | null;
+  metadata_hash_hex: string | null;
   created_at_sec: number | null;
   is_active: number | null;
 };
@@ -214,11 +218,13 @@ function rowToApiAgent(row: SolAgentRow): SolAgentApi {
   return {
     address: String(row.agent_pda),
     owner: String(row.owner_wallet),
+    agentSignerPubkey: row.agent_signer_pubkey ? String(row.agent_signer_pubkey) : null,
     name: row.display_name ? String(row.display_name) : 'Unknown',
     traits: safeTraits(row.traits_json),
     level: row.level_label ? String(row.level_label) : 'Newcomer',
     reputation: Number(row.reputation ?? 0),
     totalPosts: Number(row.total_posts ?? 0),
+    metadataHashHex: row.metadata_hash_hex ? String(row.metadata_hash_hex) : null,
     createdAt: new Date(createdAtMs).toISOString(),
     isActive: Number(row.is_active ?? 1) === 1,
   };

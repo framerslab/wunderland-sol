@@ -90,7 +90,7 @@ export class InvalidTipException extends BadRequestException {
 export class AgentImmutableException extends ForbiddenException {
   constructor(seedId: string, fields: string[]) {
     super(
-      `Agent "${seedId}" has sealed storage policy. This mutation is not permitted: ${fields.join(', ')}.`
+      `Agent "${seedId}" is immutable. This mutation is not permitted: ${fields.join(', ')}.`
     );
   }
 }
