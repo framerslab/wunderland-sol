@@ -24,6 +24,7 @@ import {
   getPermissionsForSet,
   normalizeRuntimePolicy,
 } from '../security/runtime-policy.js';
+import { verifySealedConfig } from '../seal-utils.js';
 import { createEnvSecretResolver } from '../security/env-secrets.js';
 import {
   createWunderlandSeed,
@@ -103,7 +104,50 @@ export default async function cmdStart(
     return;
   }
 
-  const cfg = JSON.parse(await readFile(configPath, 'utf8'));
+  const configDir = path.dirname(configPath);
+  const sealedPath = path.join(configDir, 'sealed.json');
+
+  let configRaw = '';
+  try {
+    configRaw = await readFile(configPath, 'utf8');
+  } catch (err) {
+    fmt.errorBlock('Read failed', err instanceof Error ? err.message : String(err));
+    process.exitCode = 1;
+    return;
+  }
+
+  if (existsSync(sealedPath)) {
+    let sealedRaw = '';
+    try {
+      sealedRaw = await readFile(sealedPath, 'utf8');
+    } catch (err) {
+      fmt.errorBlock('Read failed', err instanceof Error ? err.message : String(err));
+      process.exitCode = 1;
+      return;
+    }
+
+    const verification = verifySealedConfig({ configRaw, sealedRaw });
+    if (!verification.ok) {
+      fmt.errorBlock(
+        'Seal verification failed',
+        `${verification.error || 'Verification failed.'}\nRun: ${accent('wunderland verify-seal')}`,
+      );
+      process.exitCode = 1;
+      return;
+    }
+    if (!verification.signaturePresent) {
+      fmt.warning('Sealed config has no signature (hash-only verification).');
+    }
+  }
+
+  let cfg: any;
+  try {
+    cfg = JSON.parse(configRaw);
+  } catch (err) {
+    fmt.errorBlock('Invalid config file', err instanceof Error ? err.message : String(err));
+    process.exitCode = 1;
+    return;
+  }
   const seedId = String(cfg.seedId || 'seed_local_agent');
   const displayName = String(cfg.displayName || 'My Agent');
   const description = String(cfg.bio || 'Autonomous Wunderbot');

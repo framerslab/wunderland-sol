@@ -40,6 +40,7 @@ function printHelp(): void {
     ${chalk.white('cron')}                   Scheduled jobs management
     ${chalk.white('status')}                 Agent & connection status
     ${chalk.white('seal')}                   Seal agent config (integrity hash)
+    ${chalk.white('verify-seal')}            Verify sealed.json integrity/signature
     ${chalk.white('list-presets')}            List personality & HEXACO presets
     ${chalk.white('skills')}                 Manage agent skills
     ${chalk.white('skills list')}             List available skills
@@ -127,6 +128,7 @@ const COMMANDS: Record<string, () => Promise<{ default: (...args: any[]) => Prom
   voice:          () => import('./commands/voice.js'),
   cron:           () => import('./commands/cron.js'),
   seal:           () => import('./commands/seal.js'),
+  'verify-seal':  () => import('./commands/verify-seal.js'),
   'list-presets': () => import('./commands/list-presets.js'),
   skills:         () => import('./commands/skills.js'),
   extensions:     () => import('./commands/extensions.js'),

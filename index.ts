@@ -14,7 +14,7 @@
  *   HierarchicalInferenceRouter,
  *   StepUpAuthorizationManager,
  *   HEXACO_PRESETS,
- * } from 'wunderland';
+ * } from 'wunderland/advanced';
  *
  * // Create an agent with HEXACO personality
  * const seed = createWunderlandSeed({

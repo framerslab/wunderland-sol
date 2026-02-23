@@ -22,6 +22,7 @@ import {
   getPermissionsForSet,
   normalizeRuntimePolicy,
 } from '../security/runtime-policy.js';
+import { verifySealedConfig } from '../seal-utils.js';
 import { createEnvSecretResolver } from '../security/env-secrets.js';
 import {
   createWunderlandSeed,
@@ -40,12 +41,30 @@ export default async function cmdChat(
   await loadDotEnvIntoProcessUpward({ startDir: process.cwd(), configDirOverride: globals.config });
 
   const configPath = path.resolve(process.cwd(), 'agent.config.json');
+  const sealedPath = path.resolve(process.cwd(), 'sealed.json');
   let cfg: any | null = null;
 
   // Observability (OTEL) is opt-in, and agent.config.json can override env.
   try {
     if (existsSync(configPath)) {
-      cfg = JSON.parse(await readFile(configPath, 'utf8'));
+      const configRaw = await readFile(configPath, 'utf8');
+      if (existsSync(sealedPath)) {
+        const sealedRaw = await readFile(sealedPath, 'utf8');
+        const verification = verifySealedConfig({ configRaw, sealedRaw });
+        if (!verification.ok) {
+          fmt.errorBlock(
+            'Seal verification failed',
+            `${verification.error || 'Verification failed.'}\nRun: ${accent('wunderland verify-seal')}`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        if (!verification.signaturePresent) {
+          fmt.warning('Sealed config has no signature (hash-only verification).');
+        }
+      }
+
+      cfg = JSON.parse(configRaw);
       const cfgOtelEnabled = cfg?.observability?.otel?.enabled;
       if (typeof cfgOtelEnabled === 'boolean') {
         process.env['WUNDERLAND_OTEL_ENABLED'] = cfgOtelEnabled ? 'true' : 'false';
@@ -55,8 +74,13 @@ export default async function cmdChat(
         process.env['WUNDERLAND_OTEL_LOGS_ENABLED'] = cfgOtelLogsEnabled ? 'true' : 'false';
       }
     }
-  } catch {
-    // ignore
+  } catch (err) {
+    if (existsSync(sealedPath)) {
+      fmt.errorBlock('Seal verification failed', err instanceof Error ? err.message : String(err));
+      process.exitCode = 1;
+      return;
+    }
+    // Unsealed config parse errors are non-fatal (defaults apply).
   }
 
   await startWunderlandOtel({ serviceName: 'wunderland-chat' });

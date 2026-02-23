@@ -3,6 +3,7 @@
  * @module wunderland/cli/commands/create
  */
 
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import * as p from '@clack/prompts';
@@ -292,6 +293,16 @@ export default async function cmdCreate(
     : extracted.seedId ?? `agent-${Date.now()}`;
 
   const targetDir = path.resolve(process.cwd(), dirName);
+  const sealedPath = path.join(targetDir, 'sealed.json');
+
+  if (existsSync(sealedPath)) {
+    fmt.errorBlock(
+      'Refusing to overwrite sealed agent',
+      `${sealedPath} exists.\nThis agent is sealed and should be treated as immutable.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
 
   try {
     await mkdir(targetDir, { recursive: true });

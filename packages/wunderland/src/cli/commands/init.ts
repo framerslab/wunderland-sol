@@ -74,6 +74,16 @@ export default async function cmdInit(
   }
 
   const targetDir = path.resolve(process.cwd(), dirName);
+  const sealedPath = path.join(targetDir, 'sealed.json');
+
+  if (existsSync(sealedPath)) {
+    fmt.errorBlock(
+      'Refusing to overwrite sealed agent',
+      `${sealedPath} exists.\nThis agent is sealed and should be treated as immutable.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
 
   if (existsSync(targetDir)) {
     const entries = await readdir(targetDir).catch(() => []);

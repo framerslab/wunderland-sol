@@ -104,6 +104,16 @@ async function enableExtension(name: string): Promise<void> {
     return;
   }
 
+  const sealedPath = path.join(process.cwd(), 'sealed.json');
+  if (existsSync(sealedPath)) {
+    fmt.errorBlock(
+      'Agent is sealed',
+      `Refusing to modify agent.config.json because ${sealedPath} exists.\nUse ${accent('wunderland verify-seal')} to verify integrity.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const result = await loadAgentConfig(process.cwd());
   if (!result) {
     fmt.errorBlock('Missing agent config', `No agent.config.json in current directory.\nRun ${accent('wunderland init <dir>')} first.`);
@@ -136,6 +146,16 @@ async function enableExtension(name: string): Promise<void> {
 }
 
 async function disableExtension(name: string): Promise<void> {
+  const sealedPath = path.join(process.cwd(), 'sealed.json');
+  if (existsSync(sealedPath)) {
+    fmt.errorBlock(
+      'Agent is sealed',
+      `Refusing to modify agent.config.json because ${sealedPath} exists.\nUse ${accent('wunderland verify-seal')} to verify integrity.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   const result = await loadAgentConfig(process.cwd());
   if (!result) {
     fmt.errorBlock('Missing agent config', `No agent.config.json in current directory.\nRun ${accent('wunderland init <dir>')} first.`);

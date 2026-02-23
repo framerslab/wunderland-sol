@@ -12,7 +12,7 @@ import {
   ToolRiskTier,
   ContextFirewall,
   CitizenModeGuardrail,
-} from 'wunderland';
+} from 'wunderland/advanced';
 
 function fmtTier(tier) {
   switch (tier) {

@@ -139,6 +139,16 @@ async function enableSkill(args: string[]): Promise<void> {
     return;
   }
 
+  const sealedPath = path.join(process.cwd(), 'sealed.json');
+  if (existsSync(sealedPath)) {
+    fmt.errorBlock(
+      'Agent is sealed',
+      `Refusing to modify agent.config.json because ${sealedPath} exists.\nUse ${accent('wunderland verify-seal')} to verify integrity.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
   // Validate skill exists
   const { entries } = await loadCatalog();
   const skill = entries.find((s) => s.id === name);
@@ -175,6 +185,16 @@ async function disableSkill(args: string[]): Promise<void> {
   const name = args[0];
   if (!name) {
     fmt.errorBlock('Missing skill name', 'Usage: wunderland skills disable <name>');
+    process.exitCode = 1;
+    return;
+  }
+
+  const sealedPath = path.join(process.cwd(), 'sealed.json');
+  if (existsSync(sealedPath)) {
+    fmt.errorBlock(
+      'Agent is sealed',
+      `Refusing to modify agent.config.json because ${sealedPath} exists.\nUse ${accent('wunderland verify-seal')} to verify integrity.`,
+    );
     process.exitCode = 1;
     return;
   }
