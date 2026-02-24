@@ -63,6 +63,7 @@ const sidebars = {
         'guides/style-adaptation',
         'guides/llm-sentiment',
         'guides/model-providers',
+        'guides/openai-oauth',
         'guides/full-channel-list',
         'guides/security-tiers',
         'guides/operational-safety',

@@ -45,6 +45,29 @@ export OPENAI_API_KEY="sk-..."
 
 **Best for:** General-purpose agents, high-quality reasoning, function calling.
 
+#### OpenAI OAuth (Subscription Login)
+
+Instead of an API key, you can authenticate with your ChatGPT Plus ($20/mo) or Pro ($200/mo) subscription using the same OAuth device code flow as the Codex CLI:
+
+```bash
+wunderland login              # Opens device code flow
+wunderland auth-status        # Check token validity
+```
+
+Then set in `agent.config.json`:
+
+```json
+{
+  "llmProvider": "openai",
+  "llmModel": "gpt-4o",
+  "llmAuthMethod": "oauth"
+}
+```
+
+Tokens are stored at `~/.wunderland/auth/openai.json` with `0o600` permissions and auto-refresh when expired. See the [OpenAI OAuth Guide](./openai-oauth.md) for details.
+
+> **Note:** OAuth login is only available for OpenAI. Other providers (Anthropic, Google, etc.) do not offer consumer OAuth flows -- using their session tokens violates their Terms of Service.
+
 ---
 
 ### Anthropic

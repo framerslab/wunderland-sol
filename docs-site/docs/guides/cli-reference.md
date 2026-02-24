@@ -301,6 +301,83 @@ The seal is written to `agent.seal.json` and can be verified on subsequent runs.
 
 ---
 
+## `wunderland login`
+
+Authenticate with an LLM provider via OAuth. Currently supports OpenAI's device code flow (same as the Codex CLI), which uses your ChatGPT Plus/Pro subscription for API access.
+
+```bash
+wunderland login [options]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--provider <id>` | Provider to authenticate with (default: `openai`) |
+
+**Example:**
+
+```bash
+wunderland login
+# 1. Open your browser and visit: https://platform.openai.com/device
+# 2. Enter the code: ABC-DEF
+# Waiting for authorization...
+# ✔ Authenticated — Token stored at ~/.wunderland/auth/openai.json
+```
+
+---
+
+## `wunderland logout`
+
+Clear stored OAuth tokens for a provider.
+
+```bash
+wunderland logout [options]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--provider <id>` | Provider to log out from (default: `openai`) |
+
+**Example:**
+
+```bash
+wunderland logout
+# ✔ Cleared OAuth tokens for openai.
+```
+
+---
+
+## `wunderland auth-status`
+
+Show the current OAuth authentication state for a provider.
+
+```bash
+wunderland auth-status [options]
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--provider <id>` | Provider to check (default: `openai`) |
+
+**Example output:**
+
+```
+OAuth Status — openai
+  Status: Authenticated
+  Token:  test-tok...xyz9
+  Expires: 2/23/2026, 11:30 PM (58m remaining)
+  Refresh: Available
+```
+
+See [OpenAI OAuth Guide](./openai-oauth.md) for full details.
+
+---
+
 ## `wunderland list-presets`
 
 List available agent personality presets and HEXACO profiles.
