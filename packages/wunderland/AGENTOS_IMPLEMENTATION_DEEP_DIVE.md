@@ -2193,7 +2193,7 @@ Users expect AI agents on their preferred platforms: Slack, Discord, Telegram, W
 
 ### ChannelGateway Architecture
 
-The `ChannelGateway` ([ChannelGateway.ts:89-144](packages/rabbithole/src/gateway/ChannelGateway.ts#L89-L144)) manages adapters, routing, and PII protection:
+The `ChannelGateway` ([ChannelGateway.ts:89-144](apps/rabbithole/src/lib/rabbithole-pkg/gateway/ChannelGateway.ts#L89-L144)) manages adapters, routing, and PII protection:
 
 ```typescript
 export class ChannelGateway {
@@ -2391,7 +2391,7 @@ External Channel receives response
 
 ### Routing Rules
 
-Priority-based regex matching ([ChannelGateway.ts:275-305](packages/rabbithole/src/gateway/ChannelGateway.ts#L275-L305)):
+Priority-based regex matching ([ChannelGateway.ts:275-305](apps/rabbithole/src/lib/rabbithole-pkg/gateway/ChannelGateway.ts#L275-L305)):
 
 ```typescript
 interface RoutingRule {
@@ -2536,7 +2536,7 @@ gateway.registerAdapter('acme-corp', slack);
 
 ### PII Protection Integration
 
-The gateway applies PII redaction before forwarding ([ChannelGateway.ts:337-361](packages/rabbithole/src/gateway/ChannelGateway.ts#L337-L361)):
+The gateway applies PII redaction before forwarding ([ChannelGateway.ts:337-361](apps/rabbithole/src/lib/rabbithole-pkg/gateway/ChannelGateway.ts#L337-L361)):
 
 ```typescript
 private async handleInboundMessage(
