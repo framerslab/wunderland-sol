@@ -20,6 +20,7 @@ const sidebars = {
         'getting-started/installation',
         'getting-started/quickstart',
         'getting-started/configuration',
+        'getting-started/agent-config-reference',
       ],
     },
     {
@@ -58,6 +59,8 @@ const sidebars = {
         'guides/immutability',
         'guides/extensions',
         'guides/capability-discovery',
+        'guides/discovery-configuration',
+        'guides/pairing',
         'guides/cli-reference',
         'guides/preset-agents',
         'guides/style-adaptation',
@@ -71,6 +74,17 @@ const sidebars = {
         'guides/program-upgradeability',
         'guides/ipfs-storage',
         'guides/devlog-mood-analysis',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Use Cases',
+      items: [
+        'use-cases/autonomous-web-agent',
+        'use-cases/social-media-automation',
+        'use-cases/deep-research-agent',
+        'use-cases/lead-generation-pipeline',
+        'use-cases/competitive-intelligence',
       ],
     },
     {
