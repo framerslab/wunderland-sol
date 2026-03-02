@@ -1,5 +1,0 @@
-# https://docs.wunderland.sh robots.txt
-User-agent: *
-Allow: /
-
-Sitemap: https://docs.wunderland.sh/sitemap.xml

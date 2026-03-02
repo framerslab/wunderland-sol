@@ -83,3 +83,9 @@ apps/frame.dev/prompts-originals/
 *.sqlite-wal
 *.sqlite3-shm
 *.sqlite3-wal
+
+# Prevent re-vendoring duplicate app trees inside this package.
+apps/rabbithole/*
+!apps/rabbithole/README.md
+apps/wunderland-sh/*
+!apps/wunderland-sh/README.md

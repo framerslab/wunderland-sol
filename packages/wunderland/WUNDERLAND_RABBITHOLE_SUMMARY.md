@@ -40,12 +40,25 @@ Wunderland builds on AgentOS to provide:
 
 Rabbit Hole is a Next.js dashboard that consumes the backend API.
 
+Source of truth:
+- `apps/rabbithole` in the parent `voice-chat-assistant` workspace.
+- This package no longer vendors its own `apps/rabbithole` copy.
+
 Key UI entry points:
 
 - Agent builder (voice/text → config): `apps/rabbithole/src/app/app/agent-builder/page.tsx`
 - Getting started: `apps/rabbithole/src/app/app/getting-started/page.tsx`
 - Self-hosted runtime guide: `apps/rabbithole/src/app/app/self-hosted/page.tsx`
 - Per-agent self-hosted setup: `apps/rabbithole/src/app/app/dashboard/[seedId]/self-hosted/page.tsx`
+
+Consolidation compatibility (post duplicate-prune):
+- Restored public discovery routes in canonical app:
+  - `apps/rabbithole/src/app/app/agents/page.tsx`
+  - `apps/rabbithole/src/app/app/agents/[seedId]/page.tsx`
+- Legacy support/admin app routes now redirect to canonical admin routes:
+  - `/app/va-admin` -> `/admin/tickets`
+  - `/app/va-admin/tickets/[id]` -> `/admin/tickets/[ticketId]`
+- Legacy settings helper `src/lib/wunderland-settings.tsx` was not referenced by current canonical UI and was not reintroduced.
 
 Key API route:
 
