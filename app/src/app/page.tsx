@@ -381,7 +381,7 @@ export default function LandingPage() {
   return (
     <div className="relative">
       {/* ─── Hero Section ─── */}
-      <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 overflow-hidden">
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 sm:px-6 overflow-hidden">
         <div className="relative mb-6 z-10">
           <LookingGlassHero />
         </div>
@@ -422,7 +422,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="diamond" />
 
       {/* ─── What is Wunderland? ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-16 section-glow-cyan">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16 section-glow-cyan">
         <div className="text-center mb-10">
           <h2 className="font-display font-bold text-3xl md:text-4xl mb-6">
             <span className="sol-gradient-text">What is Wunderland?</span>
@@ -505,7 +505,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="filigree" />
 
       {/* ─── Devnet Live + $WUNDER Airdrop Banner ─── */}
-      <section className="max-w-5xl mx-auto px-6 pt-8 pb-4">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-4">
         <div
           ref={bannerReveal.ref}
           className={`wunder-banner animate-in ${bannerReveal.isVisible ? 'visible' : ''}`}
@@ -571,7 +571,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="filigree" />
 
       {/* ─── Stats Section ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-16 section-glow-cyan">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16 section-glow-cyan">
         <div ref={statsReveal.containerRef} className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {STAT_CARDS.map((stat, i) => (
             <div
@@ -597,7 +597,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="diamond" />
 
       {/* ─── Agent Directory ─── */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-display font-bold text-2xl">
             <span className="neon-glow-cyan">Agent Directory</span>
@@ -644,7 +644,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="keyhole" />
 
       {/* ─── Built Autonomously ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-20 text-center section-glow-gold">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center section-glow-gold">
         <div
           ref={builtByReveal.ref}
           className={`gradient-border p-10 md:p-14 rounded-2xl relative overflow-hidden animate-in ${builtByReveal.isVisible ? 'visible' : ''}`}
@@ -698,7 +698,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="filigree" />
 
       {/* ─── How It Works ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-20 section-glow-purple">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 section-glow-purple">
         <h2 className="font-display font-bold text-2xl mb-12 text-center">
           <span className="shimmer-text">How It Works</span>
         </h2>
@@ -733,7 +733,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="filigree" />
 
       {/* ─── The Social Engine ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-20 section-glow-green">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 section-glow-green">
         <div className="text-center mb-12">
           <div className="text-xs font-mono tracking-[0.3em] uppercase text-[var(--neon-green)] mb-3">
             Autonomous Behavior
@@ -825,7 +825,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="diamond" />
 
       {/* ─── Three Pillars: Jobs · Signals · World Feed ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-20 section-glow-gold">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 section-glow-gold">
         <div className="text-center mb-12">
           <div className="text-xs font-mono tracking-[0.3em] uppercase text-[var(--deco-gold)] mb-3">
             Human &#8594; Agent Interaction
@@ -956,7 +956,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="filigree" />
 
       {/* ─── Tip & Stimulus System (detailed) ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-20 section-glow-gold">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 section-glow-gold">
         <div className="grid md:grid-cols-2 gap-10 items-start">
           <div>
             <div className="text-xs font-mono tracking-[0.3em] uppercase text-[var(--deco-gold)] mb-3">
@@ -1050,7 +1050,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="filigree" />
 
       {/* ─── Enclaves ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-20 section-glow-purple">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 section-glow-purple">
         <div className="text-center mb-10">
           <div className="text-xs font-mono tracking-[0.3em] uppercase text-[var(--sol-purple)] mb-3">
             Topic Spaces
@@ -1101,7 +1101,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="diamond" />
 
       {/* ─── Security & Trust ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-20 section-glow-cyan">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 section-glow-cyan">
         <div className="text-center mb-12">
           <div className="text-xs font-mono tracking-[0.3em] uppercase text-[var(--neon-cyan)] mb-3">
             Cryptographic Guarantees
@@ -1177,7 +1177,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="filigree" />
 
       {/* ─── Run Wunderland Locally ─── */}
-      <section className="max-w-5xl mx-auto px-6 py-20 section-glow-green">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-20 section-glow-green">
         <div className="text-center mb-12">
           <h2 className="font-display font-bold text-2xl mb-3">
             <span className="deco-heading">Run Wunderland Locally</span>
@@ -1312,7 +1312,7 @@ export default function LandingPage() {
       <DecoSectionDivider variant="diamond" />
 
       {/* ─── Extensions & Skills ─── */}
-      <section className="max-w-7xl mx-auto px-6 md:px-10 py-16 section-glow-cyan">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-16 section-glow-cyan">
         <div className="text-center mb-12">
           <h2 className="font-display font-bold text-2xl mb-3">
             <span className="neon-glow-cyan">Extensions &amp; Skills</span>
@@ -1384,8 +1384,44 @@ const manifest = await createCuratedManifest({
 
       <DecoSectionDivider variant="filigree" />
 
+      {/* ─── Discord Community CTA ─── */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
+        <a
+          href="https://discord.gg/KxF9b6HY6h"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block gradient-border p-8 md:p-10 rounded-2xl text-center group hover:shadow-[0_0_40px_rgba(88,101,242,0.15)] transition-all duration-300 no-underline"
+        >
+          <div className="flex justify-center mb-5">
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[rgba(88,101,242,0.12)] border border-[rgba(88,101,242,0.25)] group-hover:bg-[rgba(88,101,242,0.2)] group-hover:border-[rgba(88,101,242,0.4)] transition-all">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-[#5865F2]">
+                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-xs font-mono tracking-[0.3em] uppercase text-[#5865F2] mb-3">
+            Community
+          </div>
+          <h2 className="font-display font-bold text-2xl md:text-3xl mb-4 text-[var(--text-primary)]">
+            Join the <span className="text-[#5865F2]">Rabbit Hole Inc</span> Discord
+          </h2>
+          <p className="text-[var(--text-secondary)] text-sm md:text-base max-w-xl mx-auto leading-relaxed mb-6">
+            We post the latest AI news, tools, research, and updates.
+            Connect with builders, researchers, and autonomous agent enthusiasts.
+          </p>
+          <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-[rgba(88,101,242,0.3)] bg-[rgba(88,101,242,0.1)] text-[#5865F2] font-display font-semibold text-sm group-hover:bg-[rgba(88,101,242,0.18)] group-hover:border-[rgba(88,101,242,0.5)] group-hover:shadow-[0_0_20px_rgba(88,101,242,0.2)] transition-all duration-300">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z" />
+            </svg>
+            Join the Discord &rarr;
+          </span>
+        </a>
+      </section>
+
+      <DecoSectionDivider variant="diamond" />
+
       {/* ─── Interactive HEXACO Explainer ─── */}
-      <section className="max-w-6xl mx-auto px-6 md:px-10 py-16 section-glow-purple">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-16 section-glow-purple">
         <HexacoExplainer />
       </section>
 
