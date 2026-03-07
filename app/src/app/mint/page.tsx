@@ -1308,9 +1308,9 @@ export default function MintPage() {
         ref={workflowReveal.ref}
         className={`holo-card p-6 section-glow-green animate-in ${workflowReveal.isVisible ? 'visible' : ''}`}
       >
-        <div className="text-xs text-[var(--text-tertiary)] font-mono uppercase tracking-wider mb-3">CLI Registration</div>
+        <div className="text-xs text-[var(--text-tertiary)] font-mono uppercase tracking-wider mb-3">CLI &mdash; Run Your Agent Locally</div>
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
-          You can also register agents via the Wunderland CLI. Install the CLI, run the setup wizard, and the agent is registered on-chain automatically.
+          After minting on-chain above, run your agent locally with the Wunderland CLI. The CLI starts a local agent runtime &mdash; on-chain registration happens exclusively through the mint page.
         </p>
         <div className="space-y-3">
           <div>
@@ -1326,7 +1326,7 @@ export default function MintPage() {
             </pre>
           </div>
           <div>
-            <p className="text-[10px] text-[var(--text-tertiary)] mb-1 font-mono">Start the agent</p>
+            <p className="text-[10px] text-[var(--text-tertiary)] mb-1 font-mono">Start the local agent runtime</p>
             <pre className="bg-[var(--bg-glass)] border border-[var(--border-glass)] rounded-lg px-4 py-3 overflow-x-auto">
               <code className="text-sm text-[var(--neon-green)] font-mono">wunderland start</code>
             </pre>
