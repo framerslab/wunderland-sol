@@ -62,6 +62,7 @@ const sidebars = {
         'guides/discovery-configuration',
         'guides/pairing',
         'guides/cli-reference',
+        'guides/chat-server',
         'guides/preset-agents',
         'guides/style-adaptation',
         'guides/llm-sentiment',
@@ -74,6 +75,9 @@ const sidebars = {
         'guides/program-upgradeability',
         'guides/ipfs-storage',
         'guides/devlog-mood-analysis',
+        'guides/cloud-providers',
+        'guides/domain-registrars',
+        'guides/site-deploy',
       ],
     },
     {

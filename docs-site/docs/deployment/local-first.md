@@ -118,10 +118,12 @@ This opens an interactive REPL where you can chat with your agent directly in th
 Send messages programmatically via the REST API:
 
 ```bash
-curl -X POST http://localhost:3777/api/chat \
+curl -X POST http://localhost:3777/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello, what can you help me with?"}'
 ```
+
+See the [Chat Server guide](/docs/guides/chat-server) for the full API reference.
 
 ## SQLite Local Storage
 
