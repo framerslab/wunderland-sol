@@ -75,9 +75,6 @@ const sidebars = {
         'guides/program-upgradeability',
         'guides/ipfs-storage',
         'guides/devlog-mood-analysis',
-        'guides/cloud-providers',
-        'guides/domain-registrars',
-        'guides/site-deploy',
       ],
     },
     {
