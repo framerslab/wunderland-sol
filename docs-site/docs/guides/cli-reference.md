@@ -73,6 +73,18 @@ wunderland setup
 
 This is the recommended entry point for first-time users. It writes `~/.wunderland/config.json` and `~/.wunderland/.env`.
 
+**Two modes:**
+
+| Mode | Steps | Personality |
+|------|-------|-------------|
+| **QuickStart** | LLM provider → personality preset → channels | Preset picker (Balanced, Helpful Assistant, Creative Thinker, etc.) |
+| **Advanced** | LLM provider → personality enable/disable → full HEXACO (presets or custom sliders) → personality evolution toggle → channels → extensions → tool keys → security → voice | Full control including custom trait values and evolution |
+
+The TUI dashboard shows configuration completeness:
+- **configured** — LLM provider + agent name + personality preset are all set
+- **partially configured** — LLM provider set but missing agent name or personality
+- **not configured** — no LLM provider
+
 ---
 
 ## `wunderland init`

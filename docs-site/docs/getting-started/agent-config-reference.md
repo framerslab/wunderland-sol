@@ -56,6 +56,34 @@ Models the agent's personality using the [HEXACO model](https://hexaco.org/). Al
 }
 ```
 
+### Personality Toggles
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `personalityEnabled` | boolean | `true` | Enable or disable the HEXACO personality system entirely. When `false`, the agent uses a raw system prompt with no personality-derived behavioral guidelines, mood engine, or trait evolution. |
+| `personalityPreset` | string | — | HEXACO preset key. One of `"HELPFUL_ASSISTANT"`, `"CREATIVE_THINKER"`, `"ANALYTICAL_RESEARCHER"`, `"EMPATHETIC_COUNSELOR"`, `"DECISIVE_EXECUTOR"`, or `"custom"`. When set, overrides individual `personality.*` values with the preset's trait profile. |
+| `personalityEvolution` | boolean | `false` | Enable personality evolution. When `true`, the agent's HEXACO traits slowly drift based on interactions using the `TraitEvolution` engine (bounded by ±0.15 max drift from baseline). |
+
+```json
+{
+  "personalityEnabled": true,
+  "personalityPreset": "HELPFUL_ASSISTANT",
+  "personalityEvolution": false
+}
+```
+
+When `personalityEnabled` is `false`:
+- System prompt builder skips all HEXACO-derived behavioral guidelines
+- MoodEngine is not initialized
+- TraitEvolution is not initialized
+- The agent uses its raw `systemPrompt` only
+
+When `personalityEvolution` is `true`:
+- A `TraitEvolution` instance tracks interaction patterns
+- Traits drift at a rate of 0.003 per evolution tick, bounded to ±0.15 from baseline
+- Evolution begins after a minimum of 15 interactions
+- Evolution state persists across restarts
+
 ---
 
 ## LLM Configuration

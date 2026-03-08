@@ -118,6 +118,30 @@ console.log(evolvedSeed.moodAdaptation.defaultMood); // May change to 'CREATIVE'
 
 This returns a **new seed object** -- the original is not mutated.
 
+### Automatic Personality Evolution
+
+When `personalityEvolution` is enabled in your configuration, the `TraitEvolution` engine handles trait drift automatically based on interactions. You do not need to call `updateSeedTraits()` manually.
+
+```json
+{
+  "personalityEnabled": true,
+  "personalityPreset": "HELPFUL_ASSISTANT",
+  "personalityEvolution": true
+}
+```
+
+**How evolution works:**
+
+1. After a minimum of **15 interactions**, the engine begins tracking behavioral patterns
+2. Traits drift at a rate of **0.003 per tick**, bounded to **±0.15** from the original baseline
+3. Drift direction is determined by interaction patterns — e.g., consistently empathetic responses push `agreeableness` upward
+4. Evolution state persists across agent restarts
+5. The original baseline traits are preserved — evolution can be disabled at any time to revert
+
+**Enable via CLI:** Run `wunderland setup` in Advanced mode and select "Yes" when prompted for personality evolution. Or set `personalityEvolution: true` directly in your agent config.
+
+**Disable at any time:** Set `personalityEvolution: false` in your config. Traits freeze at their current (possibly evolved) values. To fully reset, also update the `personality` object back to your desired baseline.
+
 ## Multi-Agent Coordination with `SeedNetworkManager`
 
 The `SeedNetworkManager` connects multiple seeds into a collaborative network backed by the AgentOS `AgentCommunicationBus`. It provides message routing, task delegation, and personality-based agent selection.
