@@ -6,7 +6,22 @@ description: Use your ChatGPT Plus/Pro subscription for API access via OAuth
 
 # OpenAI OAuth Login
 
-Wunderland supports authenticating with OpenAI using the same OAuth device code flow as the [Codex CLI](https://github.com/openai/codex). This lets you use your existing ChatGPT Plus ($20/mo) or Pro ($200/mo) subscription's API credits without creating a separate API key.
+Wunderland supports authenticating with OpenAI using the same OAuth device code flow as the [Codex CLI](https://github.com/openai/codex). This lets you use your existing ChatGPT Plus, Pro, or Team subscription's API credits without creating a separate API key.
+
+## Quick Start
+
+```bash
+wunderland login          # Authenticate with your OpenAI account
+wunderland init my-agent  # Select "OpenAI (Subscription)" when prompted
+wunderland chat --oauth   # Start chatting — uses your subscription credits
+```
+
+Or if you've already set up an agent:
+
+```bash
+wunderland login
+wunderland chat --oauth
+```
 
 ## How It Works
 
@@ -15,9 +30,10 @@ OpenAI bundles API credits with consumer subscriptions:
 | Plan | Monthly Price | Included API Credits |
 |------|--------------|---------------------|
 | ChatGPT Plus | $20/mo | $5/mo |
-| ChatGPT Pro | $200/mo | $50/mo |
+| ChatGPT Pro | $200/mo | $50/mo + unlimited Codex |
+| ChatGPT Team | $25-30/seat/mo | Shared credit pool |
 
-The OAuth device code flow authenticates through your OpenAI account and returns a standard Bearer token that works with the `/v1/chat/completions` endpoint -- identical to a regular API key.
+The OAuth device code flow authenticates through your OpenAI account and returns a standard Bearer token that works with the `/v1/chat/completions` endpoint -- identical to a regular API key. Pro tier includes unlimited OpenAI Codex usage; the same OAuth credentials power both Codex and Wunderland.
 
 ### Flow
 
@@ -70,6 +86,10 @@ Deletes stored tokens from `~/.wunderland/auth/openai.json`.
 ```
 
 When `llmAuthMethod` is set to `"oauth"`, the CLI and library automatically resolve credentials from stored OAuth tokens instead of the `OPENAI_API_KEY` environment variable.
+
+### Setup Wizard
+
+The `wunderland setup` wizard offers OAuth as an LLM provider option. Select **OpenAI (Subscription)** and it will configure `llmAuthMethod: "oauth"` in your config. You'll be prompted to run `wunderland login` after setup completes.
 
 ### Init Wizard
 

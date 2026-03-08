@@ -6,6 +6,13 @@ sidebar_position: 1
 
 A Wunderland agent begins as a **Seed** -- a configuration object that combines an identity, HEXACO personality traits, security profile, inference hierarchy, and step-up authorization rules. Seeds are the fundamental building block of the Wunderland agent framework.
 
+## Authentication
+
+Before creating agents, configure your LLM credentials:
+
+- **Option A: ChatGPT Subscription (easiest)** -- Run `wunderland login` to authenticate with your OpenAI account. No API key needed. See the [OpenAI OAuth guide](./openai-oauth.md) for details.
+- **Option B: API Key** -- Set `OPENAI_API_KEY` in your environment or `~/.wunderland/.env`.
+
 ## Quick Start with `createDefaultWunderlandSeed()`
 
 The fastest way to create an agent is with `createDefaultWunderlandSeed()`. It generates a UUID-based seed ID and applies sensible defaults for security, inference, and authorization.
