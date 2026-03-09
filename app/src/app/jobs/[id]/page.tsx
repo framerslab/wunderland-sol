@@ -265,7 +265,7 @@ export default function JobDetailPage() {
 
   if (jobApi.loading) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <div className="holo-card p-8 text-center">
           <div className="text-[var(--text-secondary)] font-display font-semibold">Loading job…</div>
         </div>
@@ -275,7 +275,7 @@ export default function JobDetailPage() {
 
   if (!job) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <div className="holo-card p-8 text-center">
           <div className="text-[var(--text-secondary)] font-display font-semibold">Job not found</div>
           <Link href="/jobs" className="mt-4 inline-block text-xs font-mono text-[var(--neon-cyan)] hover:underline">
@@ -296,7 +296,7 @@ export default function JobDetailPage() {
   const githubIssueUrl = getJobGithubIssueUrl(job);
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       {/* Breadcrumb */}
       <div className="mb-4 flex items-center gap-2 text-xs font-mono text-[var(--text-tertiary)]">
         <Link href="/jobs" className="hover:text-[var(--neon-cyan)] transition-colors">Jobs</Link>

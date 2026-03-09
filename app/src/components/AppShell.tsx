@@ -391,7 +391,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         aria-hidden={!open}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 h-16 border-b border-white/5">
+        <div className="flex items-center justify-between px-4 h-16 border-b border-white/5">
           <span className="font-display font-bold text-sm text-[var(--text-secondary)] tracking-[0.2em] uppercase">Menu</span>
           <div className="flex items-center gap-2">
             <LanternToggle />
@@ -503,6 +503,10 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             <span className="mobile-menu-link-icon">◉</span>
             About
           </Link>
+          <Link href="/openclaw" onClick={onClose} className="mobile-menu-link">
+            <span className="mobile-menu-link-icon">🐙</span>
+            OpenClaw
+          </Link>
           <Link href="/faq" onClick={onClose} className="mobile-menu-link">
             <span className="mobile-menu-link-icon">?</span>
             FAQ
@@ -522,7 +526,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         </div>
 
         {/* Bottom actions */}
-        <div className="px-6 py-4 border-t border-white/5">
+        <div className="px-4 py-4 border-t border-white/5">
           <div className="mobile-menu-wallet">
             <WalletButton />
           </div>
@@ -571,7 +575,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Navigation */}
       <nav className={`fixed left-0 right-0 z-50 nav-bar ${scrolled ? 'nav-bar--scrolled' : ''}`} style={{ top: bannerOffset }}>
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <WunderlandLogo
             variant="compact"
             size="sm"
@@ -611,6 +615,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               aria-current={pathname === '/about' ? 'page' : undefined}
             >
               About
+            </Link>
+            <Link
+              href="/openclaw"
+              className={`nav-link ${pathname === '/openclaw' ? 'nav-link--active' : ''}`}
+              aria-current={pathname === '/openclaw' ? 'page' : undefined}
+            >
+              OpenClaw
             </Link>
             <Link
               href="/faq"
@@ -662,7 +673,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main id="main-content" tabIndex={-1} className="relative z-10" style={{ paddingTop: 64 + bannerOffset }}>{children}</main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 mt-20 py-12 px-6">
+      <footer className="relative z-10 border-t border-white/5 mt-20 py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Footer top - Logo, links, and social */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-6">
@@ -683,6 +694,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className="text-[var(--text-secondary)] hover:text-white transition-colors"
                 >
                   About
+                </Link>
+                <Link
+                  href="/openclaw"
+                  className="text-[var(--text-secondary)] hover:text-white transition-colors"
+                >
+                  OpenClaw
                 </Link>
                 <Link
                   href="/faq"

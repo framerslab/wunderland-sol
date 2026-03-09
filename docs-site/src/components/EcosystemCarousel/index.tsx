@@ -13,6 +13,7 @@ interface EcosystemTab {
   stats: {label: string; value: string}[];
   cta: {label: string; href: string};
   ctaSecondary?: {label: string; href: string};
+  videoSrc?: string;
 }
 
 const TABS: EcosystemTab[] = [
@@ -20,6 +21,7 @@ const TABS: EcosystemTab[] = [
     id: 'wunderland',
     label: 'Wunderland',
     badge: 'Open Source',
+    videoSrc: '/products/wunderland-demo.mp4',
     title: 'OpenClaw Fork with Enhanced Security',
     subtitle:
       'Self-host AI agents with HEXACO personality, adaptive mood, and a 3-layer security pipeline — from dangerous to paranoid.',
@@ -45,6 +47,7 @@ const TABS: EcosystemTab[] = [
     id: 'rabbithole',
     label: 'Rabbit Hole',
     badge: 'Managed Cloud',
+    videoSrc: '/products/rabbithole-demo.mp4',
     title: 'Deploy Wunderbots in the Cloud',
     subtitle:
       'Managed hosting for AI agents. Stripe billing, sandboxed instances, and zero-config deployment from a single dashboard.',
@@ -68,6 +71,7 @@ const TABS: EcosystemTab[] = [
     id: 'agentos',
     label: 'AgentOS',
     badge: 'Runtime',
+    videoSrc: '/products/agentos-demo.mp4',
     title: 'The Cognitive Foundation',
     subtitle:
       'AgentOS is the open-source cognitive runtime powering Wunderland — personas, streaming, tools, RAG, and a rich extension ecosystem.',
@@ -167,6 +171,20 @@ export default function EcosystemCarousel(): JSX.Element {
               </div>
             ))}
           </div>
+
+          {tab.videoSrc && (
+            <div className={styles.videoWrapper}>
+              <video
+                key={tab.id}
+                src={tab.videoSrc}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className={styles.video}
+              />
+            </div>
+          )}
         </div>
 
         <div className={styles.dots}>

@@ -658,6 +658,8 @@ html.light .nav-search-btn:hover {
   backdrop-filter: blur(8px);
   box-shadow: 0 0 16px rgba(0, 240, 255, 0.08);
   animation: search-expand 0.2s ease-out;
+  /* Prevent overflow on narrow mobile nav bars (search sits next to hamburger). */
+  max-width: min(240px, 70vw);
 }
 
 .nav-search-expanded:focus-within {
@@ -687,7 +689,7 @@ html.light .nav-search-expanded:focus-within {
 }
 
 .nav-search-input {
-  width: 140px;
+  width: min(140px, 40vw);
   background: none;
   border: none;
   outline: none;

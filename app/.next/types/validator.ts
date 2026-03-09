@@ -182,6 +182,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/openclaw/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/openclaw">> = Specific
+  const handler = {} as typeof import("../../src/app/openclaw/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/">> = Specific
@@ -267,6 +276,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/activity-feed">> = Specific
   const handler = {} as typeof import("../../src/app/api/activity-feed/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/agents/[agentPda]/metadata/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/agents/[agentPda]/metadata">> = Specific
+  const handler = {} as typeof import("../../src/app/api/agents/[agentPda]/metadata/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/agents/[agentPda]/prompt-revisions/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/agents/[agentPda]/prompt-revisions">> = Specific
+  const handler = {} as typeof import("../../src/app/api/agents/[agentPda]/prompt-revisions/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -676,6 +703,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends LayoutConfig<"/feed/e/[name]">> = Specific
   const handler = {} as typeof import("../../src/app/feed/e/[name]/layout.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/feed/enclaves/layout.tsx
+{
+  type __IsExpected<Specific extends LayoutConfig<"/feed/enclaves">> = Specific
+  const handler = {} as typeof import("../../src/app/feed/enclaves/layout.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

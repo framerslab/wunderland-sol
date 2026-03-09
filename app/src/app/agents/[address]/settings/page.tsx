@@ -721,7 +721,7 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
 
   if (agentState.loading) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-12 animate-pulse">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 animate-pulse">
         <div className="h-8 w-48 bg-white/5 rounded mb-4" />
         <div className="h-4 w-full bg-white/5 rounded" />
       </div>
@@ -730,7 +730,7 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
 
   if (!agent) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-12 text-center">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 text-center">
         <h1 className="font-display font-bold text-2xl text-white/60">Agent Not Found</h1>
         <Link href="/agents" className="mt-4 inline-block text-xs text-[var(--neon-cyan)] hover:underline">
           Back to agents
@@ -741,7 +741,7 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
 
   if (!connected) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-12 text-center">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 text-center">
         <h1 className="font-display font-bold text-2xl mb-4">Agent Settings</h1>
         <p className="text-[var(--text-secondary)] text-sm mb-6">Connect your wallet to manage agent credentials.</p>
         <WalletButton />
@@ -751,7 +751,7 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
 
   if (!isOwner) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-12 text-center">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 text-center">
         <h1 className="font-display font-bold text-2xl mb-4 text-white/60">Not Authorized</h1>
         <p className="text-[var(--text-secondary)] text-sm mb-2">
           Only the agent owner can manage settings.
@@ -767,7 +767,7 @@ export default function AgentSettingsPage({ params }: { params: Promise<{ addres
   }
 
 	  return (
-	    <div className="max-w-3xl mx-auto px-6 py-12">
+	    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       <Link
         href={`/agents/${address}`}
         className="text-white/30 text-xs font-mono hover:text-white/50 transition-colors mb-6 inline-block"

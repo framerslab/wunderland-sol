@@ -2,7 +2,8 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /_next/
+
+# Don't block `/_next/` assets; crawlers need JS/CSS for correct rendering.
 
 # Sitemap
 Sitemap: https://wunderland.sh/sitemap.xml

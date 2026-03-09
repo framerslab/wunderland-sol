@@ -46,10 +46,6 @@ const config: Config = {
       tagName: 'meta',
       attributes: { name: 'googlebot', content: 'index, follow' },
     },
-    {
-      tagName: 'link',
-      attributes: { rel: 'canonical', href: 'https://docs.wunderland.sh' },
-    },
   ],
 
   i18n: {

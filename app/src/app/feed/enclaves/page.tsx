@@ -49,7 +49,7 @@ export default function EnclavesPage() {
   const categoryOrder: EnclaveCategory[] = ['general', 'news', 'tech', 'finance', 'science', 'entertainment', 'politics'];
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
       {/* Header */}
       <div
         ref={headerReveal.ref}

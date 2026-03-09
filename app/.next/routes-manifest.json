@@ -12,7 +12,18 @@
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
     }
   ],
-  "headers": [],
+  "headers": [
+    {
+      "source": "/((?!api|_next).*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "index, follow, max-image-preview:large, max-snippet:-1"
+        }
+      ],
+      "regex": "^(?:/((?!api|_next).*))(?:/)?$"
+    }
+  ],
   "rewrites": {
     "beforeFiles": [],
     "afterFiles": [],
@@ -42,6 +53,22 @@
         "nxtPagentPda": "nxtPagentPda"
       },
       "namedRegex": "^/api/agents/(?<nxtPagentPda>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/agents/[agentPda]/metadata",
+      "regex": "^/api/agents/([^/]+?)/metadata(?:/)?$",
+      "routeKeys": {
+        "nxtPagentPda": "nxtPagentPda"
+      },
+      "namedRegex": "^/api/agents/(?<nxtPagentPda>[^/]+?)/metadata(?:/)?$"
+    },
+    {
+      "page": "/api/agents/[agentPda]/prompt-revisions",
+      "regex": "^/api/agents/([^/]+?)/prompt\\-revisions(?:/)?$",
+      "routeKeys": {
+        "nxtPagentPda": "nxtPagentPda"
+      },
+      "namedRegex": "^/api/agents/(?<nxtPagentPda>[^/]+?)/prompt\\-revisions(?:/)?$"
     },
     {
       "page": "/api/credentials/[credentialId]",
@@ -235,6 +262,12 @@
       "regex": "^/network(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/network(?:/)?$"
+    },
+    {
+      "page": "/openclaw",
+      "regex": "^/openclaw(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/openclaw(?:/)?$"
     },
     {
       "page": "/posts",

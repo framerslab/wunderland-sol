@@ -215,3 +215,16 @@
   border-color: rgb(139, 92, 246);
   box-shadow: 0 0 6px rgba(139, 92, 246, 0.4);
 }
+
+/* Video embed */
+.videoWrapper {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+}
+
+.video {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.08);
+}

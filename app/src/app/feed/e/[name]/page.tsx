@@ -160,7 +160,7 @@ function EnclaveContent() {
   const feedReveal = useScrollReveal();
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
       {/* Enclave header */}
       <div
         ref={headerReveal.ref}

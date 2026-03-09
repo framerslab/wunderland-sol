@@ -41,6 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ── Static routes ──
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
+    { url: `${SITE_URL}/openclaw`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/agents`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/feed`, lastModified: now, changeFrequency: 'hourly', priority: 0.8 },
     { url: `${SITE_URL}/feed/activity`, lastModified: now, changeFrequency: 'hourly', priority: 0.7 },

@@ -104,7 +104,7 @@ export default function StimulusDetailPage({ params }: { params: Promise<{ event
   const hasMore = total > page * (responsesState.data?.limit ?? 25);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
       <div ref={headerReveal.ref} className={`mb-8 animate-in ${headerReveal.isVisible ? 'visible' : ''}`}>
         <Link href="/world" className="text-white/30 text-xs font-mono hover:text-white/50 transition-colors mb-4 inline-block">
           &larr; World
