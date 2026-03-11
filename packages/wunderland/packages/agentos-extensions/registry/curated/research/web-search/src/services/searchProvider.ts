@@ -335,49 +335,131 @@ export class SearchProviderService {
   }
   
   /**
-   * Search using DuckDuckGo instant answer API
-   * 
+   * Search using DuckDuckGo HTML search page.
+   *
+   * The Instant Answer API (`api.duckduckgo.com/?format=json`) only returns
+   * Wikipedia-style abstracts and related topics — it does NOT return actual
+   * web search results.  For most factual queries (follower counts, prices,
+   * current stats) it returns nothing useful.
+   *
+   * This method POSTs to the HTML search endpoint instead, which returns real
+   * organic search results.  If the HTML scrape fails, it falls back to the
+   * Instant Answer API as a last resort.
+   *
    * @private
    * @param {string} query - Search query
    * @param {number} maxResults - Maximum results
    * @returns {Promise<SearchResult[]>} Search results
    */
   private async searchDuckDuckGoAPI(query: string, maxResults: number): Promise<SearchResult[]> {
-    // DuckDuckGo instant answer API (limited but free)
+    try {
+      const htmlResults = await this.scrapeDuckDuckGoHTML(query, maxResults);
+      if (htmlResults.length > 0) return htmlResults;
+    } catch {
+      // Fall through to instant answer API
+    }
+
+    // Fallback: DuckDuckGo instant answer API (limited but free)
+    return this.searchDuckDuckGoInstantAnswer(query, maxResults);
+  }
+
+  /**
+   * Scrapes real search results from DuckDuckGo's HTML search page.
+   *
+   * @private
+   */
+  private async scrapeDuckDuckGoHTML(query: string, maxResults: number): Promise<SearchResult[]> {
+    const body = new URLSearchParams({ q: query, b: '' });
+    const response = await fetch('https://html.duckduckgo.com/html/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (compatible; WunderlandBot/1.0; +https://wunderland.sh)',
+      },
+      body: body.toString(),
+    });
+
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const results: SearchResult[] = [];
+
+    // Each organic result lives inside a <div class="result ..."> block.
+    // We extract title+URL from the <a class="result__a"> and snippet from
+    // <a class="result__snippet">.
+    const resultBlockRe = /<div[^>]*class="[^"]*result[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi;
+    const blocks = html.match(resultBlockRe) ?? [];
+
+    for (const block of blocks) {
+      if (results.length >= maxResults) break;
+
+      // Title + URL
+      const linkMatch = block.match(/<a[^>]*class="result__a"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/i);
+      if (!linkMatch) continue;
+
+      let url = linkMatch[1];
+      const title = linkMatch[2].replace(/<[^>]+>/g, '').trim();
+
+      // DDG wraps URLs via a redirect — extract the actual destination
+      const uddgMatch = url.match(/[?&]uddg=([^&]+)/);
+      if (uddgMatch) {
+        url = decodeURIComponent(uddgMatch[1]);
+      }
+
+      if (!url || !title) continue;
+
+      // Snippet
+      const snippetMatch = block.match(/<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/i)
+        ?? block.match(/<span[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/span>/i);
+      const snippet = snippetMatch
+        ? snippetMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+        : '';
+
+      results.push({ title, url, snippet });
+    }
+
+    return results;
+  }
+
+  /**
+   * DuckDuckGo Instant Answer API (limited — only returns Wikipedia-style
+   * abstracts and related topics, NOT real search results).
+   *
+   * @private
+   */
+  private async searchDuckDuckGoInstantAnswer(query: string, maxResults: number): Promise<SearchResult[]> {
     const params = new URLSearchParams({
       q: query,
       format: 'json',
       no_html: '1',
-      skip_disambig: '1'
+      skip_disambig: '1',
     });
-    
+
     const response = await fetch(`https://api.duckduckgo.com/?${params}`);
     const data = (await response.json()) as any;
-    
+
     const results: SearchResult[] = [];
-    
-    // Add instant answer if available
+
     if (data.AbstractText && data.AbstractURL) {
       results.push({
         title: data.Heading || query,
         url: data.AbstractURL,
-        snippet: data.AbstractText
+        snippet: data.AbstractText,
       });
     }
-    
-    // Add related topics
+
     if (data.RelatedTopics) {
       for (const topic of data.RelatedTopics.slice(0, maxResults - 1)) {
         if (topic.FirstURL && topic.Text) {
           results.push({
             title: topic.Text.split(' - ')[0] || topic.Text,
             url: topic.FirstURL,
-            snippet: topic.Text
+            snippet: topic.Text,
           });
         }
       }
     }
-    
+
     return results.slice(0, maxResults);
   }
   
