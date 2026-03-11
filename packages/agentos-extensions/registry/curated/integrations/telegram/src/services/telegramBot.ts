@@ -54,42 +54,61 @@ export class TelegramBotService {
   }
   
   /**
-   * Initializes the bot connection
+   * Initializes the bot connection.
+   *
+   * By default the bot is created in **send-only** mode (no polling, no
+   * webhook).  This avoids taking over another process that may already be
+   * polling the same bot token — which would cause Telegram to return a
+   * 409 Conflict and kick the existing poller.
+   *
+   * Polling / webhooks are only started when explicitly configured.
    */
   async initialize(): Promise<void> {
     if (this.bot) {
       return; // Already initialized
     }
-    
+
+    // Send-only mode: no polling, no webhook unless explicitly configured
     const options: TelegramBot.ConstructorOptions = {
-      polling: !this.config.webhookUrl,
-      webHook: this.config.webhookUrl ? true : false
+      polling: false,
+      webHook: false,
     };
-    
-    if (options.polling) {
-      options.polling = {
-        interval: this.config.pollingInterval || 300,
-        autoStart: true,
-        params: {
-          timeout: 10
-        }
-      };
-    }
-    
+
     this.bot = new TelegramBot(this.config.botToken, options);
-    
+
+    // Set up error handling early (before any API calls)
+    this.bot.on('error', (error: any) => {
+      console.error('[Telegram] Bot error:', error?.message ?? error);
+    });
+
+    this.bot.on('polling_error', (error: any) => {
+      const code = error?.response?.statusCode ?? error?.code;
+      if (code === 404 || code === 401) {
+        console.error(`[Telegram] Invalid bot token (HTTP ${code}). Check TELEGRAM_BOT_TOKEN and try again.`);
+        try { this.bot?.stopPolling(); } catch { /* ignore */ }
+      } else {
+        console.error('[Telegram] Polling error:', error?.message ?? error);
+      }
+    });
+
+    // Validate token with getMe()
+    try {
+      const me = await this.bot.getMe();
+      console.log(`[Telegram] Bot authenticated as @${me.username} (${me.first_name})`);
+    } catch (err: any) {
+      const statusCode = err?.response?.statusCode ?? err?.response?.status;
+      const msg = statusCode === 404
+        ? 'Bot token not found (404). The token may be revoked or invalid.'
+        : statusCode === 401
+          ? 'Unauthorized (401). The bot token is incorrect.'
+          : `Failed to authenticate: ${err?.message ?? err}`;
+      this.bot = null;
+      throw new Error(`[Telegram] ${msg} Check your TELEGRAM_BOT_TOKEN.`);
+    }
+
     if (this.config.webhookUrl) {
       await this.bot.setWebHook(this.config.webhookUrl);
     }
-    
-    // Set up error handling
-    this.bot.on('error', (error) => {
-      console.error('Telegram Bot Error:', error);
-    });
-    
-    this.bot.on('polling_error', (error) => {
-      console.error('Telegram Polling Error:', error);
-    });
   }
   
   /**
@@ -386,9 +405,9 @@ export class TelegramBotService {
     if (this.bot) {
       if (this.config.webhookUrl) {
         await this.bot.deleteWebHook();
-      } else {
-        this.bot.stopPolling();
       }
+      // stopPolling is safe to call even if polling was never started
+      try { this.bot.stopPolling(); } catch { /* ignore */ }
       this.bot = null;
     }
   }
