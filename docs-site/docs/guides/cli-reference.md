@@ -162,6 +162,7 @@ wunderland chat [options]
 | `--model <id>` | Override the LLM model for this session |
 | `--dangerously-skip-permissions` | Auto-approve tool calls |
 | `--dangerously-skip-command-safety` | Disable shell command safety checks |
+| `--debug` | Enable verbose tool-calling logs (API requests, round details, tool results) |
 
 **Example:**
 
@@ -170,6 +171,24 @@ wunderland chat --model llama3
 ```
 
 Type your messages directly in the terminal. Press `Ctrl+C` to exit.
+
+### Debug Mode
+
+By default, `wunderland chat` runs quietly -- only tool invocation names and the final response are printed. For troubleshooting or bug reports, enable debug mode to see full tool-calling internals:
+
+```bash
+# Via environment variable
+DEBUG=1 wunderland chat
+WUNDERLAND_DEBUG=1 wunderland chat
+
+# Via flag (when supported by your entry point)
+wunderland chat --debug
+```
+
+Debug mode logs:
+- LLM API POST requests (URL, model, tool count)
+- Each round's tool calls with arguments
+- Tool execution results (success/failure, truncated output)
 
 The chat interface features a cyberpunk-styled frame matching the TUI dashboard aesthetic:
 - Framed header showing agent name, model, and security tier

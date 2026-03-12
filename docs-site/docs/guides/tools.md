@@ -173,6 +173,52 @@ interface MultiSearchResult {
 
 **Note:** `multiSearch` and `provider` are mutually exclusive. If a specific provider is requested, multi-search is not used.
 
+### Deep Research Tool
+
+The `deep_research` tool conducts comprehensive, multi-source research in a single invocation. It recursively decomposes a query into sub-questions, searches and extracts content from multiple sources, identifies knowledge gaps, iterates to fill them, and synthesizes a structured report with citations.
+
+```json
+{
+  "name": "deep_research",
+  "arguments": {
+    "query": "What caused the 2008 financial crisis?",
+    "depth": "moderate",
+    "focusAreas": ["housing market", "regulatory failures"]
+  }
+}
+```
+
+**Depth presets:**
+
+| Depth | Searches | Extractions | LLM Calls | Timeout | Iterations |
+|-------|----------|-------------|-----------|---------|------------|
+| `quick` | 10 | 5 | 3 | 30s | 1 |
+| `moderate` | 20 | 10 | 8 | 2min | 3 |
+| `deep` | 50 | 25 | 20 | 9min | 6 |
+
+The engine uses two LLM tiers internally:
+- **Small model** (gpt-4o-mini) for query decomposition and gap analysis
+- **Synthesis model** (gpt-4o) for the final structured report
+
+When no LLM API key is configured, the tool still works -- it skips decomposition (searches the raw query) and produces a basic findings list instead of a synthesized report.
+
+**Output includes:**
+- Executive summary (2-3 sentences answering the query directly)
+- Detailed findings organized by theme with inline source citations
+- Knowledge gaps (what couldn't be fully answered)
+- Source citations with confidence scores
+- Research tree metadata (searches used, extractions, time taken)
+
+**Input schema:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `query` | `string` (required) | Research question or topic |
+| `depth` | `'quick' \| 'moderate' \| 'deep'` | Research depth (default: `moderate`) |
+| `maxIterations` | `integer` (1-10) | Maximum search-extract-analyze cycles |
+| `sources` | `string[]` | Source types: `web`, `academic`, `news`, `social` |
+| `focusAreas` | `string[]` | Specific aspects to focus on |
+
 ### SerperSearchTool
 
 A dedicated Serper-specific search tool for direct API access.
@@ -237,6 +283,7 @@ const ids = WUNDERLAND_TOOL_IDS;
 //   GIPHY_SEARCH:       'giphy_search',
 //   IMAGE_SEARCH:       'image_search',
 //   TEXT_TO_SPEECH:      'text_to_speech',
+//   DEEP_RESEARCH:      'deep_research',
 //   SOCIAL_POST:        'social_post',
 //   FEED_READ:          'feed_read',
 //   MEMORY_READ:        'memory_read',
@@ -284,6 +331,7 @@ text_to_speech: UNAVAILABLE
 |------|-------------|----------|
 | `web_search` | Any search key (Serper/SerpAPI/Brave) | DuckDuckGo |
 | `research_aggregate` | Any search key | DuckDuckGo |
+| `deep_research` | Any search key + LLM key (OpenAI/OpenRouter) | DuckDuckGo + basic report (no LLM synthesis) |
 | `fact_check` | Any search key | DuckDuckGo |
 | `news_search` | `NEWSAPI_API_KEY` | None |
 | `giphy_search` | `GIPHY_API_KEY` | None |

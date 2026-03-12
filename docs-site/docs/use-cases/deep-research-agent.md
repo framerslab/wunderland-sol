@@ -45,7 +45,41 @@ Build an agent that conducts multi-source investigations — crawling academic p
 At 0.98, the agent triple-checks claims, cross-references sources, and flags contradictions. This is critical for research accuracy.
 :::
 
-## Research Pipeline
+## `deep_research` Tool
+
+The fastest way to run deep research is the `deep_research` tool. One call handles the entire pipeline -- decomposition, multi-source search, content extraction, gap analysis, iteration, and synthesis:
+
+```json
+{
+  "name": "deep_research",
+  "arguments": {
+    "query": "Current state of autonomous AI agents in 2026",
+    "depth": "deep",
+    "sources": ["web", "academic", "news", "social"],
+    "focusAreas": ["major frameworks", "security concerns", "regulatory landscape"]
+  }
+}
+```
+
+The engine runs 3 phases internally:
+
+1. **Decompose** -- breaks the query into 3-5 sub-questions using a cheap LLM (gpt-4o-mini)
+2. **Iterate** -- for each sub-question: search across providers, extract top URLs, analyze gaps, create new sub-queries for missing information
+3. **Synthesize** -- collects all findings and produces a structured report with inline citations using a mid-tier LLM (gpt-4o)
+
+Budget enforcement keeps costs bounded:
+
+| Depth | Searches | Extractions | LLM Calls | Timeout | Iterations |
+|-------|----------|-------------|-----------|---------|------------|
+| `quick` | 10 | 5 | 3 | 30s | 1 |
+| `moderate` | 20 | 10 | 8 | 2min | 3 |
+| `deep` | 50 | 25 | 20 | 9min | 6 |
+
+Works without any API keys (falls back to DuckDuckGo HTML scraping + basic report). Better results with `SERPER_API_KEY` and `OPENAI_API_KEY` or `OPENROUTER_API_KEY`.
+
+## Research Pipeline (Manual)
+
+Agents can also orchestrate research manually using individual tools:
 
 ```
 ┌─────────────────────────────────────────────┐

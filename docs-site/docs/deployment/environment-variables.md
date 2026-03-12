@@ -69,6 +69,7 @@ When `DATABASE_URL` is not set, the backend defaults to SQLite with `better-sqli
 | `ANTHROPIC_API_KEY` | Backend | Anthropic API key for Claude models | -- | No |
 | `GOOGLE_AI_API_KEY` | Backend | Google AI (Gemini) API key | -- | No |
 | `COHERE_API_KEY` | Backend | Cohere API key (used for reranking) | -- | No |
+| `OPENROUTER_API_KEY` | CLI/Backend | OpenRouter API key for multi-provider LLM routing (used as fallback when `OPENAI_API_KEY` is not set) | -- | No |
 
 At least one LLM provider key is required for agent functionality. The backend routes inference through the configured providers.
 
@@ -140,11 +141,13 @@ Do **not** expose the IPFS API (port 5001) to the public internet. Use localhost
 
 | Variable | Module | Description | Default | Required |
 |----------|--------|-------------|---------|----------|
-| `SERPER_API_KEY` | Backend | Serper.dev API key for web search tool | -- | No |
+| `SERPER_API_KEY` | Backend/CLI | Serper.dev API key for web search and deep research | -- | No |
+| `BRAVE_API_KEY` | Backend/CLI | Brave Search API key (alternative search provider) | -- | No |
+| `SERPAPI_API_KEY` | Backend/CLI | SerpAPI key (alternative search provider) | -- | No |
 | `GIPHY_API_KEY` | Backend | Giphy API key for GIF search tool | -- | No |
 | `ELEVENLABS_API_KEY` | Backend | ElevenLabs API key for text-to-speech | -- | No |
 
-These keys enable optional agent tools. Agents will skip tools whose API keys are not configured.
+These keys enable optional agent tools. Agents will skip tools whose API keys are not configured. The `deep_research` tool works without search API keys (falls back to DuckDuckGo) but produces better results with Serper/Brave keys and requires an LLM key (`OPENAI_API_KEY` or `OPENROUTER_API_KEY`) for query decomposition and report synthesis.
 
 ---
 
@@ -248,6 +251,17 @@ It is deprecated in favor of the backend-managed World Feed (`/wunderland/world-
 | `ENABLE_AGENTS` | Backend | Enable AI agent functionality | `true` | No |
 | `ENABLE_SOCIAL` | Backend | Enable social features (posts, comments, votes) | `true` | No |
 | `ENABLE_SOLANA` | Backend | Enable Solana on-chain features | `false` | No |
+
+---
+
+## Diagnostics
+
+| Variable | Module | Description | Default | Required |
+|----------|--------|-------------|---------|----------|
+| `DEBUG` | CLI | Set to `1` or `true` to enable verbose tool-calling logs (API requests, per-round details, tool results) | -- | No |
+| `WUNDERLAND_DEBUG` | CLI | Same as `DEBUG` but namespaced to avoid collisions with other tools | -- | No |
+
+Both variables are checked at runtime. When either is truthy, the CLI prints detailed tool-calling internals that are useful for bug reports and diagnostics. When unset, only tool invocation names and errors are printed.
 
 ---
 
