@@ -35,3 +35,4 @@ test-ledger/
 # Logs
 *.log
 npm-debug.log*
+.docusaurus/
