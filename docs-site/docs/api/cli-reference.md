@@ -1,580 +1,342 @@
 ---
+title: CLI Command Reference
 sidebar_position: 2
 ---
 
 # CLI Command Reference
 
-Complete reference for the `wunderland` command-line interface.
+Wunderland defaults to the interactive TUI when launched in a TTY with no subcommand. Use explicit subcommands for scripts, setup, diagnostics, or automation.
 
-## Interactive TUI Dashboard
+---
 
-When you run `wunderland` with no arguments in a TTY terminal, it launches the **interactive TUI dashboard** — a keyboard-driven terminal UI with:
+## Core Commands
 
-- Cyberpunk-styled frame with cyan/lavender borders
-- Animated scan line intro and banner typewriter effect
-- Agent status panels (config, API keys)
-- Quick action menu with arrow-key navigation and scroll support
-- Responsive layout that adapts to terminal width (stacks panels on narrow screens)
-- Keyboard shortcuts for direct access to commands
+| Command | Purpose |
+| --- | --- |
+| `wunderland` | Open the TUI dashboard |
+| `wunderland setup` | Guided initial configuration (QuickStart or Advanced) |
+| `wunderland doctor` | Health and configuration checks |
+| `wunderland chat` | Interactive chat from the terminal |
+| `wunderland start` | Start the agent runtime/server |
+| `wunderland init <dir>` | Scaffold a new agent project |
+| `wunderland status` | Runtime and connection status |
+| `wunderland help <topic>` | Short operator guides |
 
-```bash
-# Launch the TUI dashboard
-wunderland
-```
+---
 
-**Navigation:**
-
-| Key | Action |
-|-----|--------|
-| `↑`/`↓` or `j`/`k` | Navigate actions |
-| `Enter` | Select action |
-| `1` | Setup onboarding |
-| `2` | Open chat |
-| `3` | Start server |
-| `4`-`7` | Skills, Extensions, Models, RAG |
-| `d` | Doctor |
-| `s` | Status |
-| `v` | Voice |
-| `h` | Help |
-| `r` | Refresh |
-| `q` / `Esc` | Quit |
-
-## Commands
+## Setup & Configuration
 
 ### `wunderland setup`
 
-Interactive onboarding wizard that guides you through initial configuration.
+Interactive setup wizard. Configures LLM provider, personality, channels, RAG memory, and voice.
 
 ```bash
-wunderland setup
+wunderland setup           # Interactive mode
+wunderland setup --yes     # Auto-accept defaults
 ```
 
-The setup wizard:
+**QuickStart mode** covers 5 steps: LLM provider, personality preset, channels, RAG memory, and voice.
+**Advanced mode** adds: custom HEXACO sliders, extensions/skills, security pipeline, and granular TTS/STT customization.
 
-- Detects available LLM providers (Ollama local, OpenAI, Anthropic, OpenRouter)
-- Reads system specs for model recommendations
-- Accepts bulk `.env` paste for API key import
-- Creates the agent seed configuration
-- Stores everything at `~/.wunderland/`
+### `wunderland init <dir>`
 
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--provider <name>` | Skip provider selection (e.g., `ollama`, `openai`, `anthropic`) |
-| `--model <name>` | Skip model selection (e.g., `llama3.1:8b`, `gpt-4o`) |
-| `--non-interactive` | Use defaults for all prompts (combine with `--provider` and `--model`) |
-
----
-
-### `wunderland init <name>`
-
-Scaffold a new Wunderland agent project in a directory.
+Scaffold a new agent project.
 
 ```bash
 wunderland init my-agent
+wunderland init my-agent --preset research-assistant
+wunderland init my-agent --provider openai --model gpt-4o
+wunderland init my-agent --security-tier strict
 ```
 
-Creates a project structure:
+### `wunderland config`
 
-```
-my-agent/
-  seed.config.ts       # Agent seed configuration
-  extensions/          # Custom extension directory
-  .env.example         # Example environment variables
-  package.json         # Node.js package manifest
-  tsconfig.json        # TypeScript configuration
-```
-
-**Arguments:**
-
-| Argument | Description |
-|----------|-------------|
-| `<name>` | Project directory name (also used as default agent name) |
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--template <name>` | Project template (`default`, `minimal`, `full`) |
-| `--no-git` | Skip git initialization |
-
----
-
-### `wunderland start`
-
-Start the local Wunderland HTTP server and agent runtime.
+Read and write configuration values.
 
 ```bash
-wunderland start
+wunderland config get llmProvider            # Read a value
+wunderland config set llmProvider anthropic   # Set a value
+wunderland config set llmModel claude-sonnet-4-6
+wunderland config set voiceProvider openai
+wunderland config set ui.theme cyberpunk
 ```
 
-Launches the agent on port **3777** by default. The server provides:
-
-- REST API at `http://localhost:3777/api/`
-- WebSocket gateway for real-time communication
-- WebChat interface at `http://localhost:3777/chat`
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--port <number>` | Override the server port (default: `3777`) |
-| `--host <address>` | Bind address (default: `0.0.0.0`) |
-| `--no-webchat` | Disable the built-in WebChat interface |
-| `--detach` | Run in the background (daemonize) |
-
----
-
-### `wunderland chat`
-
-Open an interactive terminal conversation with your agent.
-
-```bash
-wunderland chat
-```
-
-Starts a REPL-style chat session. Type messages and receive streamed responses directly in the terminal.
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--no-stream` | Disable streaming (wait for complete response) |
-| `--system <prompt>` | Override the system prompt for this session |
-| `--model <name>` | Override the primary model for this session |
-
-**Special commands within the REPL:**
-
-| Command | Description |
-|---------|-------------|
-| `/clear` | Clear the conversation history |
-| `/system <prompt>` | Change the system prompt |
-| `/model <name>` | Switch the model |
-| `/tools` | List available tools |
-| `/exit` or `Ctrl+C` | Exit the chat |
-
----
+Config is stored at `~/.wunderland/config.json`.
 
 ### `wunderland doctor`
 
-Run health diagnostics on your Wunderland installation.
+Check configuration, API keys, provider connectivity, and voice readiness.
 
 ```bash
 wunderland doctor
 ```
 
-Checks:
-
-- Node.js version compatibility
-- Wunderland CLI version (update available?)
-- LLM provider connectivity (Ollama, OpenAI, etc.)
-- API key validity and format
-- SQLite database integrity
-- Extension loading status
-- Playwright browser installation
-- Port availability (3777)
-- Disk space for models and data
-
-**Output example:**
-
-```
-  Wunderland Doctor
-
-  Node.js ................ v20.11.0   OK
-  Wunderland CLI ......... v1.2.3     OK
-  Ollama ................. running    OK
-    Model: llama3.1:8b .. loaded     OK
-  SQLite database ........ healthy    OK
-  Extensions ............. 5 loaded   OK
-  Playwright ............. installed  OK
-  Port 3777 .............. available  OK
-
-  All checks passed.
-```
-
 ---
 
-### `wunderland channels`
+## Chat & Runtime
 
-Manage messaging channel bindings.
+### `wunderland chat`
+
+Start an interactive chat session.
 
 ```bash
-# List all channel bindings
-wunderland channels list
-
-# Add a new channel
-wunderland channels add <platform> [options]
-
-# Remove a channel binding
-wunderland channels remove <binding-id>
-
-# Test a channel binding
-wunderland channels test <binding-id> --message "Hello"
-
-# Show channel status
-wunderland channels status
+wunderland chat                        # Default mode
+wunderland chat --provider openai      # Override provider
+wunderland chat --model gpt-4o-mini    # Override model
+wunderland chat --overdrive            # Auto-approve tool calls
+wunderland chat --auto-approve-tools   # Fully autonomous
+wunderland chat --oauth                # Use ChatGPT subscription
 ```
 
-**Supported platforms:** `telegram`, `whatsapp`, `discord`, `slack`, `signal`, `imessage`, `google-chat`, `teams`, `matrix`, `zalo`, `email`, `sms`
+**In-chat commands:**
+| Command | Action |
+|---------|--------|
+| `/help` | Show available commands |
+| `/tools` | List available tools |
+| `/clear` | Clear conversation history |
+| `/exit` | End the session |
 
-See the [Messaging Channels](/docs/guides/channels) guide for platform-specific options.
+### `wunderland start`
 
----
-
-### `wunderland config`
-
-View and manage agent configuration.
+Start the agent runtime server.
 
 ```bash
-# Show current configuration
-wunderland config show
-
-# Set a configuration value
-wunderland config set <key> <value>
-
-# Get a configuration value
-wunderland config get <key>
-
-# Seal the agent (irreversible)
-wunderland config seal
-
-# Export configuration as JSON
-wunderland config export > my-agent.json
-
-# Import configuration from JSON
-wunderland config import my-agent.json
+wunderland start                    # Default port
+wunderland start --port 3001        # Custom port
+wunderland start --overdrive        # Auto-approve tools
 ```
-
-**Common config keys:**
-
-| Key | Description |
-|-----|-------------|
-| `agent.name` | Agent display name |
-| `agent.bio` | Agent biography / description |
-| `inference.provider` | LLM provider (`ollama`, `openai`, `anthropic`, `openrouter`) |
-| `inference.primary.model` | Primary model name |
-| `inference.router.model` | Router model name |
-| `inference.auditor.model` | Auditor model name |
-| `server.port` | HTTP server port |
-
----
 
 ### `wunderland status`
 
-Display the current agent status.
+Show runtime status and active connections.
 
 ```bash
 wunderland status
 ```
 
-**Output example:**
-
-```json
-{
-  "seedId": "abc123",
-  "name": "MyAgent",
-  "status": "running",
-  "sealed": false,
-  "provider": "ollama",
-  "model": "llama3.1:8b",
-  "uptime": "2h 15m",
-  "channels": 2,
-  "cronJobs": 3,
-  "extensions": 5
-}
-```
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--json` | Output as raw JSON |
-| `--verbose` | Include detailed extension and channel info |
-
 ---
 
-### `wunderland voice`
-
-Configure voice provider for real-time voice conversations.
+## Voice Commands
 
 ```bash
-# Interactive voice setup
-wunderland voice setup
-
-# Show current voice configuration
-wunderland voice status
-
-# Test voice connection
-wunderland voice test
+wunderland voice status              # Check provider readiness
+wunderland voice tts                 # List TTS providers
+wunderland voice stt                 # List STT providers
+wunderland voice test "Hello"        # Synthesize a test phrase
+wunderland voice clone               # Voice cloning guidance
 ```
 
-**Supported providers:** Twilio, Telnyx, Plivo
+### Details
 
-The setup wizard guides you through provider selection and credential configuration. See the extension-secrets reference for required keys per provider.
+- `status` — Shows telephony, TTS, and STT provider readiness with configuration details
+- `tts` — Lists all text-to-speech providers and whether they are configured
+- `stt` — Lists all speech-to-text providers and whether they are configured
+- `test <text>` — Synthesizes a short sample through the preferred runtime TTS provider
+- `clone` — Explains supported voice-cloning provider paths (ElevenLabs)
 
----
-
-### `wunderland cron`
-
-Manage scheduled jobs for proactive agent tasks.
+### Quick Voice Setup
 
 ```bash
-# List all cron jobs
-wunderland cron list
+# If you have an OpenAI key, voice is one command:
+wunderland config set voiceProvider openai
 
-# Add a new cron job
-wunderland cron add --expression "0 9 * * *" --task "Check morning news"
-
-# Remove a cron job
-wunderland cron remove <job-id>
-
-# Pause a cron job
-wunderland cron pause <job-id>
-
-# Resume a paused cron job
-wunderland cron resume <job-id>
-
-# Show next scheduled runs
-wunderland cron next
-```
-
-**Cron expression format:** Standard 5-field cron (`minute hour day-of-month month day-of-week`).
-
-| Expression | Schedule |
-|------------|----------|
-| `0 9 * * *` | Every day at 9:00 AM |
-| `*/15 * * * *` | Every 15 minutes |
-| `0 0 * * 1` | Every Monday at midnight |
-| `0 9,17 * * 1-5` | Weekdays at 9 AM and 5 PM |
-
----
-
-### `wunderland create`
-
-Generate an agent from a natural language description using LLM analysis.
-
-```bash
-wunderland create [description]
-```
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--managed` | Use managed hosting mode |
-| `--dir <path>` | Output directory for agent files |
-| `--yes` | Skip confirmations |
-
----
-
-### `wunderland hitl`
-
-Human-in-the-loop approval monitor for real-time tool approvals and checkpoints.
-
-```bash
-wunderland hitl watch
-```
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--server <url>` | Agent server URL (default: `http://localhost:3777`) |
-| `--secret <token>` | HITL authentication secret (required) |
-
----
-
-### `wunderland verify-seal`
-
-Verify that `sealed.json` signature and hash match `agent.config.json`.
-
-```bash
-wunderland verify-seal [--dir <path>]
+# Or re-run setup (voice is included in QuickStart)
+wunderland setup
 ```
 
 ---
+
+## Extensions & Skills
 
 ### `wunderland extensions`
 
-Manage agent extensions (tools, guardrails, channels).
+```bash
+wunderland extensions list           # List available extensions
+wunderland extensions add web-search # Add an extension
+wunderland extensions remove giphy   # Remove an extension
+```
+
+### `wunderland skills`
 
 ```bash
-wunderland extensions list
-wunderland extensions info <name>
-wunderland extensions enable <name>
-wunderland extensions disable <name>
+wunderland skills list               # List available skills
+wunderland skills add summarize      # Add a skill
+wunderland skills show web-search    # Show skill details
+```
+
+### `wunderland models`
+
+```bash
+wunderland models                    # Show current provider/model info
 ```
 
 ---
 
-### `wunderland rag`
+## Agent Management
 
-RAG memory management — ingest documents, query vectors, manage collections.
+### `wunderland list-presets`
+
+List all available agent presets.
 
 ```bash
-wunderland rag ingest <file|text>
-wunderland rag query <text>
-wunderland rag collections list|create|delete
-wunderland rag graph local-search|global-search|stats
-wunderland rag health
-wunderland rag audit
+wunderland list-presets
 ```
 
-**Options:**
+Presets include: `research-assistant`, `customer-support`, `coding-agent`, `creative-writer`, and more.
 
-| Flag | Description |
-|------|-------------|
-| `--collection <id>` | Target collection |
-| `--top-k <n>` | Max results (default: 5) |
-| `--graph` | Include GraphRAG context |
-| `--debug` | Show pipeline debug trace |
-| `--format <json\|table>` | Output format |
+### `wunderland seal`
 
----
-
-### `wunderland agency`
-
-Multi-agent collective management.
+Seal an agent's configuration (immutability).
 
 ```bash
-wunderland agency list
-wunderland agency create <name>
-wunderland agency status <name>
-wunderland agency add-seat <agency> <agent>
-wunderland agency handoff <from> <to>
+wunderland seal
+```
+
+### `wunderland export` / `wunderland import`
+
+Export and import agent configurations.
+
+```bash
+wunderland export my-agent.json
+wunderland import my-agent.json
 ```
 
 ---
 
-### `wunderland workflows`
-
-Workflow engine management.
-
-```bash
-wunderland workflows list
-wunderland workflows run <name>
-wunderland workflows status <id>
-wunderland workflows cancel <id>
-```
-
----
-
-### `wunderland evaluate`
-
-Run evaluation suites against datasets.
-
-```bash
-wunderland evaluate run <dataset>
-wunderland evaluate results <id>
-```
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--judge <model>` | LLM judge model |
-| `--format <json\|table>` | Output format |
-
----
-
-### `wunderland provenance`
-
-Audit trail and event chain verification with ed25519 signatures.
-
-```bash
-wunderland provenance audit
-wunderland provenance verify [file]
-wunderland provenance demo
-```
-
----
-
-### `wunderland knowledge`
-
-Knowledge graph operations.
-
-```bash
-wunderland knowledge query <text>
-wunderland knowledge stats
-wunderland knowledge demo
-```
-
----
-
-### `wunderland marketplace`
-
-Skill, tool, and extension marketplace.
-
-```bash
-wunderland marketplace search <query>
-wunderland marketplace info <id>
-wunderland marketplace install <id>
-```
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--source <type>` | Filter: `skills`, `tools`, `channels`, `providers` |
-| `--format <json\|table>` | Output format |
-
----
+## Ollama (Local LLM)
 
 ### `wunderland ollama-setup`
 
-One-command offline-first Ollama setup with hardware detection and model recommendations.
+Auto-detect hardware, install Ollama, recommend models, and configure.
 
 ```bash
-wunderland ollama-setup [model-name]
+wunderland ollama-setup              # Interactive
+wunderland ollama-setup --yes        # Non-interactive
+wunderland ollama-setup --tier mid   # Force tier
+wunderland ollama-setup --skip-pull  # Configure without downloading
+wunderland ollama-setup mistral:7b   # Override model
 ```
-
-**Options:**
-
-| Flag | Description |
-|------|-------------|
-| `--yes` | Non-interactive mode |
-| `--tier <level>` | Force hardware tier: `low`, `mid`, `high` |
-| `--skip-pull` | Configure without downloading models |
 
 ---
 
-### `wunderland export-session`
+## Authentication
 
-Export chat session to JSON or Markdown.
+### `wunderland login`
+
+Authenticate with a ChatGPT subscription (OpenAI OAuth).
 
 ```bash
-wunderland export-session [--format json|md] [-o <path>]
+wunderland login
+```
+
+### `wunderland auth-status`
+
+Check current authentication state.
+
+```bash
+wunderland auth-status
+```
+
+### `wunderland logout`
+
+Remove stored OAuth tokens.
+
+```bash
+wunderland logout
+```
+
+---
+
+## Workflows & Scheduling
+
+### `wunderland workflows`
+
+```bash
+wunderland workflows create daily-report   # Create a workflow
+wunderland workflows list                  # List workflows
+wunderland workflows show daily-report     # Show details
+wunderland workflows run daily-report      # Run manually
+wunderland workflows delete daily-report   # Delete
+```
+
+### `wunderland cron`
+
+```bash
+wunderland cron add "0 9 * * 1-5" daily-report  # Schedule
+wunderland cron list                              # List jobs
+wunderland cron remove <job-id>                   # Remove
+wunderland cron pause <job-id>                    # Pause
+wunderland cron resume <job-id>                   # Resume
+```
+
+---
+
+## Help Topics
+
+```bash
+wunderland help getting-started    # First-run guide
+wunderland help voice              # Voice/speech setup
+wunderland help llm                # LLM provider info
+wunderland help auth               # OAuth and API keys
+wunderland help tui                # TUI dashboard usage
+wunderland help presets            # Agent presets
+wunderland help security           # Approvals and permissions
+wunderland help faq                # Frequently asked questions
+wunderland help ui                 # Themes and ASCII mode
+wunderland help export             # PNG export
 ```
 
 ---
 
 ## Global Flags
 
-These flags are available on all commands:
+| Flag | Effect |
+|------|--------|
+| `--yes` / `-y` | Auto-confirm prompts |
+| `--dry-run` | Show what would happen without writing |
+| `--config <path>` | Override config directory |
+| `--theme <name>` | Set UI theme (`cyberpunk`, `plain`) |
+| `--ascii` | Force ASCII-only glyphs |
+| `--no-color` | Disable colors |
+| `--overdrive` | Auto-approve tool calls |
+| `--auto-approve-tools` | Fully autonomous tool execution |
+| `--dangerously-skip-permissions` | Skip permission checks |
+| `--dangerously-skip-command-safety` | Disable shell safety checks |
+| `--export-png <path>` | Export command output as PNG |
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--help` | `-h` | Show help for the command |
-| `--version` | `-V` | Show the CLI version |
-| `--quiet` | `-q` | Suppress non-essential output |
-| `--yes` | `-y` | Auto-confirm all prompts |
-| `--no-color` | | Disable colored output |
-| `--dry-run` | | Show what would be done without making changes |
-| `--config <path>` | `-c` | Use a specific config file instead of `~/.wunderland/config.json` |
+---
 
-**Examples:**
+## Common Operator Flows
+
+### First-Time Setup
 
 ```bash
-# Auto-confirm all prompts during setup
-wunderland setup --yes
-
-# Dry-run a seal operation
-wunderland config seal --dry-run
-
-# Use a custom config directory
-wunderland start --config /path/to/my-config.json
-
-# Silent mode for scripts
-wunderland doctor --quiet
+wunderland setup
+wunderland doctor
+wunderland chat
 ```
+
+### Daily Development
+
+```bash
+wunderland start          # Terminal 1
+wunderland chat           # Terminal 2
+```
+
+### Voice Testing
+
+```bash
+wunderland voice status
+wunderland voice test "Hello from Wunderland"
+```
+
+### Provider Switching
+
+```bash
+wunderland config set llmProvider anthropic
+wunderland config set llmModel claude-sonnet-4-6
+wunderland doctor   # verify
+wunderland chat     # test
+```
+
+For the runtime-backed voice path, see the [Voice Runtime guide](../guides/voice-runtime).

@@ -1,249 +1,242 @@
 ---
-sidebar_position: 3
+title: Deep Research Agent
+sidebar_position: 2
 ---
 
 # Deep Research Agent
 
-Build an agent that conducts multi-source investigations — crawling academic papers, news, social media, and the web — then synthesizes findings into structured reports delivered via your preferred channel.
+> Build an agent that researches topics deeply — searching the web, reading pages, and producing structured reports.
 
-## Prerequisites
+---
 
-- **Skills**: `deep-research`, `web-scraper`, `summarize`
-- **Extensions**: `deep-research`, `content-extraction`, `web-search`, `news-search`
-- **Channels**: `email`, `slack`, `discord`, or `telegram` (for report delivery)
-- **Optional**: Serper API key (for enhanced search), Brave API key
+## Overview
 
-## Agent Configuration
+A deep research agent combines:
+- **Web search** for discovering sources
+- **Web browser** for extracting page content
+- **Summarization** for distilling findings
+- **RAG memory** for accumulating knowledge across sessions
 
-```json
-{
-  "name": "Research Analyst",
-  "description": "Multi-source research agent with fact-checking",
-  "hexacoTraits": {
-    "honesty": 0.95,
-    "emotionality": 0.2,
-    "extraversion": 0.3,
-    "agreeableness": 0.6,
-    "conscientiousness": 0.98,
-    "openness": 0.85
+---
+
+## Quick Start
+
+```bash
+# Scaffold with the research preset
+wunderland init research-copilot --preset research-assistant
+cd research-copilot
+
+# Add the tools
+wunderland extensions add web-search web-browser
+
+# Start chatting
+wunderland chat
+```
+
+Then ask:
+
+```
+You: Research the current state of WebAssembly adoption in 2024-2025.
+     Include major frameworks, browser support, and performance benchmarks.
+     Produce a structured report with sources.
+```
+
+---
+
+## Library Setup
+
+```ts
+import { createWunderland } from 'wunderland';
+
+const app = await createWunderland({
+  llm: { providerId: 'openai', model: 'gpt-4o' },
+  preset: 'research-assistant',
+  extensions: {
+    tools: ['web-search', 'web-browser'],
   },
-  "securityTier": "balanced",
-  "toolAccessProfile": "assistant",
-  "suggestedSkills": ["deep-research", "web-scraper", "summarize"],
-  "suggestedExtensions": {
-    "tools": [
-      "deep-research",
-      "content-extraction",
-      "web-search",
-      "news-search"
-    ]
-  }
-}
+  skills: ['web-search', 'summarize', 'coding-agent'],
+  discovery: {
+    recallProfile: 'aggressive', // surface more tools when relevant
+  },
+  approvals: {
+    mode: 'deny-side-effects', // read-only by default
+  },
+});
+
+const session = app.session();
+const result = await session.sendText(
+  'Research quantum computing breakthroughs in the last 6 months. ' +
+  'Focus on error correction advances. Cite all sources.'
+);
+
+console.log(result.text);
 ```
 
-:::tip Why High Conscientiousness?
-At 0.98, the agent triple-checks claims, cross-references sources, and flags contradictions. This is critical for research accuracy.
-:::
+---
 
-## `deep_research` Tool
+## Recommended Configuration
 
-The fastest way to run deep research is the `deep_research` tool. One call handles the entire pipeline -- decomposition, multi-source search, content extraction, gap analysis, iteration, and synthesis:
+### agent.config.json
 
 ```json
 {
-  "name": "deep_research",
-  "arguments": {
-    "query": "Current state of autonomous AI agents in 2026",
-    "depth": "deep",
-    "sources": ["web", "academic", "news", "social"],
-    "focusAreas": ["major frameworks", "security concerns", "regulatory landscape"]
+  "llmProvider": "openai",
+  "llmModel": "gpt-4o",
+  "personalityPreset": "analytical",
+  "extensions": {
+    "tools": ["web-search", "web-browser"]
+  },
+  "skills": ["web-search", "summarize"],
+  "rag": {
+    "enabled": true,
+    "mode": "hybrid",
+    "autoIngest": true
+  },
+  "security": {
+    "preLlmClassifier": true,
+    "dualLlmAuditor": true,
+    "outputSigning": false,
+    "riskThreshold": 0.7
   }
 }
 ```
 
-The engine runs 3 phases internally:
+### Why These Settings
 
-1. **Decompose** -- breaks the query into 3-5 sub-questions using a cheap LLM (gpt-4o-mini)
-2. **Iterate** -- for each sub-question: search across providers, extract top URLs, analyze gaps, create new sub-queries for missing information
-3. **Synthesize** -- collects all findings and produces a structured report with inline citations using a mid-tier LLM (gpt-4o)
+- **gpt-4o** — Best reasoning for synthesizing multiple sources
+- **analytical personality** — Fact-focused, thorough, less creative embellishment
+- **hybrid RAG** — Stores research findings for follow-up sessions
+- **autoIngest** — Automatically extracts and stores key facts
+- **deny-side-effects** — Read-only tools (search, browse) work freely; writing requires approval
 
-Budget enforcement keeps costs bounded:
+---
 
-| Depth | Searches | Extractions | LLM Calls | Timeout | Iterations |
-|-------|----------|-------------|-----------|---------|------------|
-| `quick` | 10 | 5 | 3 | 30s | 1 |
-| `moderate` | 20 | 10 | 8 | 2min | 3 |
-| `deep` | 50 | 25 | 20 | 9min | 6 |
+## Research Workflow
 
-Works without any API keys (falls back to DuckDuckGo HTML scraping + basic report). Better results with `SERPER_API_KEY` and `OPENAI_API_KEY` or `OPENROUTER_API_KEY`.
-
-## Research Pipeline (Manual)
-
-Agents can also orchestrate research manually using individual tools:
+### Single-Shot Research
 
 ```
-┌─────────────────────────────────────────────┐
-│             Research Pipeline                │
-├─────────────────────────────────────────────┤
-│                                             │
-│  1. SCOPE     → Define research question    │
-│  2. SEARCH    → Multi-engine web search     │
-│  3. ACADEMIC  → arXiv, Scholar, Semantic    │
-│  4. NEWS      → Google News, HN, Reddit     │
-│  5. EXTRACT   → Content extraction + clean  │
-│  6. ANALYZE   → Cross-reference + verify    │
-│  7. SYNTHESIZE→ Structured report           │
-│  8. DELIVER   → Channel (email, Slack, etc) │
-│  9. STORE     → RAG memory for follow-up    │
-│                                             │
-└─────────────────────────────────────────────┘
+You: Research [topic]. Produce a structured report with:
+     1. Executive summary
+     2. Key findings (with source citations)
+     3. Data points and statistics
+     4. Open questions / areas for further research
 ```
 
-## Example: Technology Landscape Analysis
+### Multi-Turn Deep Dive
+
+```
+You: Search for recent advances in solid-state batteries.
+Agent: [searches, returns initial findings]
+
+You: Read the top 3 most relevant articles in detail.
+Agent: [browses pages, extracts content]
+
+You: Now synthesize everything into a technical brief.
+Agent: [produces structured report with citations]
+
+You: What are the main disagreements between researchers?
+Agent: [analyzes sources for conflicting claims]
+```
+
+### Comparative Analysis
+
+```
+You: Compare React, Vue, and Svelte for a new enterprise dashboard project.
+     Consider: performance, ecosystem, hiring pool, and long-term maintenance.
+     Search for recent benchmarks and industry surveys.
+```
+
+---
+
+## Extension Stack
+
+| Extension | Purpose |
+|-----------|---------|
+| `web-search` | Multi-provider search (Serper, SerpAPI, Brave) |
+| `web-browser` | Page content extraction, screenshot, structured data |
+| `news-search` | NewsAPI integration for current events |
+| `image-search` | Find relevant images and diagrams |
+
+### Environment Variables
 
 ```bash
-wunderland chat
+# Required: at least one search provider
+SERPER_API_KEY=...        # serper.dev (recommended)
+# or
+SERPAPI_API_KEY=...       # serpapi.com
+# or
+BRAVE_API_KEY=...         # search.brave.com
 
-> Research the current state of autonomous AI agents in 2026.
-  Cover: major frameworks, adoption trends, security concerns,
-  regulatory landscape. Check arXiv for recent papers, scan
-  HackerNews and Reddit for community sentiment, and review
-  news coverage. Send me a report on Slack when done.
+# Optional: for current news
+NEWSAPI_API_KEY=...       # newsapi.org
 ```
 
-The agent will autonomously:
+---
 
-1. **Search** across multiple engines (Serper, Brave, DuckDuckGo)
-2. **Scan academic sources** — arXiv, Google Scholar, Semantic Scholar
-3. **Monitor social** — Reddit (r/MachineLearning, r/artificial), HackerNews
-4. **Extract content** from each source, cleaning HTML to structured text
-5. **Cross-reference** claims across sources, flagging contradictions
-6. **Generate report** with executive summary, key findings, source citations
-7. **Deliver** via Slack channel with formatted markdown
-8. **Store** all findings in RAG memory for future queries
+## Scaling Research
 
-## Multi-Source Investigation
+### RAG Memory for Ongoing Research
 
-The `deep-research` extension provides:
-
-### Academic Paper Search
-
-```bash
-# Search arXiv, Google Scholar, Semantic Scholar simultaneously
-wunderland chat
-
-> Find all papers published in the last 6 months about
-  prompt injection attacks on autonomous agents.
-  Summarize key findings and defensive techniques.
-```
-
-### Trend Detection
-
-```bash
-# Monitor trending topics across platforms
-wunderland chat
-
-> What are the trending discussions about AI safety
-  on Twitter, Reddit, and HackerNews this week?
-  Identify emerging concerns and community sentiment.
-```
-
-### Fact-Checking
-
-The agent cross-references claims from multiple sources:
+With RAG enabled, your agent remembers findings across sessions:
 
 ```
-Claim: "GPT-5 achieves 95% on MMLU"
-├── Source 1 (arXiv): Confirmed — paper cites 94.8%
-├── Source 2 (news): Partially confirmed — says "over 94%"
-├── Source 3 (Reddit): Unverified — user claim without citation
-└── Verdict: HIGH CONFIDENCE — multiple independent sources agree
+# Session 1
+You: Research the EU AI Act and its implications for startups.
+
+# Session 2 (days later)
+You: What did we learn about the EU AI Act last time?
+Agent: [recalls from RAG memory] Based on our previous research...
+
+You: Has anything changed since then? Search for updates.
+Agent: [searches for new information, compares with stored knowledge]
 ```
 
-## Scheduled Research
+### Scheduled Research
 
-Set up recurring research tasks:
+Combine with [scheduling](/docs/guides/scheduling) for automated research:
 
-```bash
-# Daily news digest
-wunderland cron add --name "ai-digest" \
-  --schedule "0 8 * * *" \
-  --task "Compile today's top AI news from arXiv, HackerNews, \
-          and Reddit. Send digest to Slack #research channel."
-
-# Weekly competitive analysis
-wunderland cron add --name "competitor-watch" \
-  --schedule "0 9 * * 1" \
-  --task "Research competitor activity: product launches, \
-          blog posts, social media. Compare to last week."
+```json
+{
+  "name": "weekly-industry-scan",
+  "steps": [
+    {
+      "id": "search",
+      "action": "web-search",
+      "params": { "query": "{{topic}} news this week" }
+    },
+    {
+      "id": "analyze",
+      "action": "chat",
+      "params": {
+        "prompt": "Analyze these findings. Highlight anything that differs from what we knew before."
+      }
+    },
+    {
+      "id": "report",
+      "action": "channel-post",
+      "params": { "channel": "slack", "target": "#research" }
+    }
+  ]
+}
 ```
 
-## RAG Memory for Knowledge Accumulation
+---
 
-Every research session builds on previous knowledge:
+## Guardrails
 
-```bash
-wunderland chat
+For research agents, keep these defaults:
 
-> What did we learn about prompt injection defenses
-  from last week's research? Has anything changed?
-```
+- **Read-only by default** — Search and browse don't modify anything
+- **Require approval for posting** — If the agent publishes findings, require human review
+- **Verify sources** — The analytical personality preset encourages citation
+- **Rate limit searches** — Avoid hitting API quotas in deep research sessions
 
-The agent queries its RAG memory (vector + graph stores) to find relevant prior research, then focuses new investigation on gaps and updates.
+---
 
-### Knowledge Graph
+## Next Steps
 
-The agent builds entity relationships from research:
-
-```
-[Prompt Injection] --DEFENDED_BY--> [Input Sanitization]
-[Prompt Injection] --DEFENDED_BY--> [Dual-LLM Auditing]
-[Dual-LLM Auditing] --IMPLEMENTED_BY--> [Wunderland]
-[Wunderland] --FORK_OF--> [OpenClaw]
-```
-
-## Report Delivery
-
-Reports are delivered via your configured channel:
-
-### Slack
-
-```bash
-wunderland channels add slack
-# Configure webhook URL or OAuth token
-```
-
-### Email
-
-```bash
-wunderland channels add email
-# Configure SMTP settings
-```
-
-### Discord
-
-```bash
-wunderland channels add discord
-# Configure bot token and channel ID
-```
-
-Reports include:
-- Executive summary (2-3 paragraphs)
-- Key findings (numbered list)
-- Source citations with links
-- Confidence levels per claim
-- Recommended follow-up questions
-
-## Security Considerations
-
-- **Source verification**: The agent evaluates source credibility (academic > news > social)
-- **Bias detection**: High honesty (0.95) trait makes the agent flag potential bias
-- **Rate limiting**: Searches are rate-limited to avoid being blocked
-- **Data retention**: Research data stored in RAG memory follows your retention policies
-
-## Related Guides
-
-- [Browser Automation](/docs/guides/browser-automation) — For web content extraction
-- [Skills System](/docs/guides/skills-system) — Custom research skills
-- [Channels](/docs/guides/channels) — Report delivery channels
-- [Scheduling](/docs/guides/scheduling) — Recurring research tasks
+- **[Autonomous Web Agent](/docs/use-cases/autonomous-web-agent)** — Simpler research agent pattern
+- **[Extensions Guide](/docs/guides/extensions)** — Add more tool capabilities
+- **[Scheduling Guide](/docs/guides/scheduling)** — Automate research workflows
+- **[Voice Concierge](/docs/use-cases/voice-concierge)** — Add voice to your research agent

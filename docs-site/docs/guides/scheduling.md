@@ -1,404 +1,346 @@
 ---
-sidebar_position: 10
+title: Scheduling & Workflows
+sidebar_position: 8
 ---
 
-# Scheduling
+# Scheduling & Workflows
 
-The `CronScheduler` provides time-based job execution for Wunderland agents. It supports three schedule kinds: one-shot absolute times, interval-based repetition, and standard 5-field cron expressions with optional timezone support.
+> Automate agent tasks with cron-like scheduling, workflow pipelines, and event-driven triggers.
 
-## CronScheduler Setup
+Wunderland supports scheduling agents to run tasks on a recurring basis — from simple cron jobs to multi-step workflow pipelines with conditions and branching.
 
-```typescript
-import { CronScheduler } from 'wunderland/advanced/scheduling';
+---
 
-const scheduler = new CronScheduler({
-  tickMs: 10_000,  // Check every 10 seconds (default)
-});
+## Quick Start
 
-// Register a handler for when jobs are due
-const unsubscribe = scheduler.onJobDue(async (job) => {
-  console.log(`Job fired: ${job.name}`);
-  console.log(`Payload:`, job.payload);
-});
+```bash
+# Create a workflow
+wunderland workflows create daily-report
 
-// Start the tick loop
-scheduler.start();
+# Schedule it to run weekdays at 9 AM
+wunderland cron add "0 9 * * 1-5" daily-report
 
-// Later: stop the scheduler
-scheduler.stop();
+# List scheduled jobs
+wunderland cron list
 
-// Check if running
-console.log(scheduler.running); // true/false
+# Run a workflow manually
+wunderland workflows run daily-report
 ```
 
-The scheduler uses `setInterval` internally and fires an immediate first tick on `start()`.
+---
 
-## Schedule Kinds
+## Workflows
 
-Every job has a `schedule` property that determines when it runs. Three kinds are available:
+A workflow is a named sequence of agent actions that can be triggered manually, on a schedule, or by events.
 
-### One-Shot (`at`)
+### Create a Workflow
 
-Runs exactly once at an absolute ISO timestamp. The job is automatically disabled after execution.
-
-```typescript
-const schedule = {
-  kind: 'at' as const,
-  at: '2025-06-15T14:30:00Z',
-};
+```bash
+wunderland workflows create <name>
 ```
 
-### Interval-Based (`every`)
+This generates a `workflows/<name>.json` file in your agent project:
 
-Runs at fixed intervals, optionally anchored to a specific start time.
-
-```typescript
-// Every 30 minutes
-const schedule = {
-  kind: 'every' as const,
-  everyMs: 30 * 60 * 1000,
-};
-
-// Every hour, anchored to a specific time
-const anchoredSchedule = {
-  kind: 'every' as const,
-  everyMs: 60 * 60 * 1000,
-  anchorMs: new Date('2025-01-01T00:00:00Z').getTime(),
-};
-```
-
-When an anchor is provided, the scheduler aligns runs to the anchor time. For example, if the anchor is midnight and the interval is 1 hour, runs happen at 01:00, 02:00, 03:00, etc., regardless of when the scheduler started.
-
-### Cron Expression (`cron`)
-
-Standard 5-field cron expressions with optional timezone.
-
-```
-minute  hour  day-of-month  month  day-of-week
-```
-
-```typescript
-// Every day at 9am UTC
-const schedule = {
-  kind: 'cron' as const,
-  expr: '0 9 * * *',
-};
-
-// Every weekday at 9am Eastern
-const timezoneSchedule = {
-  kind: 'cron' as const,
-  expr: '0 9 * * 1-5',
-  tz: 'America/New_York',
-};
-
-// Every 15 minutes
-const frequentSchedule = {
-  kind: 'cron' as const,
-  expr: '*/15 * * * *',
-};
-```
-
-#### Supported Cron Syntax
-
-| Feature | Syntax | Example |
-|---------|--------|---------|
-| Wildcard | `*` | `* * * * *` (every minute) |
-| Specific value | `N` | `30 * * * *` (at minute 30) |
-| Range | `N-M` | `0 9-17 * * *` (hours 9-17) |
-| Step | `*/N` | `*/5 * * * *` (every 5 minutes) |
-| Range with step | `N-M/S` | `0-30/10 * * * *` (minutes 0, 10, 20, 30) |
-| List | `N,M,O` | `0,15,30,45 * * * *` (every 15 min) |
-
-Day-of-week: 0 = Sunday, 6 = Saturday.
-
-## Job Payloads
-
-Each job carries a payload that describes what happens when the job fires.
-
-```typescript
-type CronPayload =
-  | { kind: 'stimulus'; stimulusType: string; data: Record<string, unknown> }
-  | { kind: 'webhook'; url: string; method?: string; headers?: Record<string, string>; body?: string }
-  | { kind: 'message'; channelPlatform: string; conversationId: string; text: string }
-  | { kind: 'custom'; handler: string; args?: Record<string, unknown> };
-```
-
-### Stimulus Payload
-
-Inject a stimulus event into the agent's processing pipeline.
-
-```typescript
-const payload = {
-  kind: 'stimulus' as const,
-  stimulusType: 'scheduled_review',
-  data: { topic: 'daily-summary' },
-};
-```
-
-### Webhook Payload
-
-Call an HTTP endpoint.
-
-```typescript
-const payload = {
-  kind: 'webhook' as const,
-  url: 'https://api.example.com/trigger',
-  method: 'POST',
-  headers: { 'Authorization': 'Bearer ...' },
-  body: JSON.stringify({ event: 'cron_fire' }),
-};
-```
-
-### Message Payload
-
-Send a message to a specific channel.
-
-```typescript
-const payload = {
-  kind: 'message' as const,
-  channelPlatform: 'discord',
-  conversationId: 'channel-123',
-  text: 'Daily report time!',
-};
-```
-
-### Custom Payload
-
-Invoke a named handler with arguments.
-
-```typescript
-const payload = {
-  kind: 'custom' as const,
-  handler: 'generateWeeklyReport',
-  args: { format: 'markdown' },
-};
-```
-
-## CRUD Operations
-
-### Creating Jobs
-
-```typescript
-const job = scheduler.addJob({
-  seedId: 'cipher',
-  ownerUserId: 'user-1',
-  name: 'Daily Summary',
-  description: 'Generate a daily summary post',
-  enabled: true,
-  schedule: { kind: 'cron', expr: '0 9 * * *', tz: 'America/New_York' },
-  payload: {
-    kind: 'stimulus',
-    stimulusType: 'daily_summary',
-    data: { topic: 'tech' },
-  },
-});
-
-console.log(job.id);               // UUID
-console.log(job.state.nextRunAtMs); // Next fire time in epoch ms
-```
-
-### Updating Jobs
-
-```typescript
-const updated = scheduler.updateJob(job.id, {
-  name: 'Updated Daily Summary',
-  schedule: { kind: 'cron', expr: '0 10 * * *' },
-  enabled: true,
-});
-
-if (updated) {
-  console.log('Next run:', new Date(updated.state.nextRunAtMs!));
-}
-```
-
-When the schedule changes, the next run time is automatically recomputed.
-
-### Removing Jobs
-
-```typescript
-const removed = scheduler.removeJob(job.id);
-// true if the job existed
-```
-
-### Querying Jobs
-
-```typescript
-// Get by ID
-const job = scheduler.getJob('job-uuid');
-
-// List all jobs
-const all = scheduler.listJobs();
-
-// Filter by seedId
-const agentJobs = scheduler.listJobs({ seedId: 'cipher' });
-
-// Filter by enabled status
-const activeJobs = scheduler.listJobs({ enabled: true });
-```
-
-### Pausing and Resuming
-
-```typescript
-// Pause (sets enabled=false, clears nextRunAtMs)
-scheduler.pauseJob(job.id);
-
-// Resume (sets enabled=true, recomputes nextRunAtMs)
-scheduler.resumeJob(job.id);
-```
-
-## Job State
-
-Each job tracks its execution state.
-
-```typescript
-interface CronJobState {
-  nextRunAtMs?: number;                    // Next scheduled run
-  lastRunAtMs?: number;                    // Last execution time
-  lastStatus?: 'ok' | 'error' | 'skipped'; // Last run result
-  lastError?: string;                      // Error message if failed
-  runCount: number;                        // Total executions
-}
-```
-
-After each execution:
-- `lastRunAtMs` is updated to the run time
-- `runCount` is incremented
-- `lastStatus` is set to `'ok'` or `'error'` depending on whether any handler threw
-- `lastError` captures the error message (if any)
-- `nextRunAtMs` is recomputed (or cleared for one-shot `at` schedules)
-
-## Handler Registration
-
-Register one or more handlers that are called when any job fires. All registered handlers are invoked for every due job.
-
-```typescript
-// Handler receives a clone of the job
-const unsubscribe = scheduler.onJobDue(async (job) => {
-  switch (job.payload.kind) {
-    case 'stimulus':
-      await processStimulus(job.payload.stimulusType, job.payload.data);
-      break;
-    case 'webhook':
-      await fetch(job.payload.url, {
-        method: job.payload.method ?? 'POST',
-        headers: job.payload.headers,
-        body: job.payload.body,
-      });
-      break;
-    case 'message':
-      await sendMessage(job.payload.channelPlatform, job.payload.conversationId, job.payload.text);
-      break;
-    case 'custom':
-      await invokeHandler(job.payload.handler, job.payload.args);
-      break;
+```json
+{
+  "name": "daily-report",
+  "description": "Generate and distribute a daily summary report",
+  "steps": [
+    {
+      "id": "research",
+      "action": "web-search",
+      "params": { "query": "latest news in {{topic}}" }
+    },
+    {
+      "id": "summarize",
+      "action": "chat",
+      "params": { "prompt": "Summarize these findings into a report: {{research.output}}" }
+    },
+    {
+      "id": "distribute",
+      "action": "channel-post",
+      "params": {
+        "channel": "slack",
+        "message": "{{summarize.output}}"
+      }
+    }
+  ],
+  "variables": {
+    "topic": "AI and machine learning"
   }
-});
-
-// Later: remove the handler
-unsubscribe();
+}
 ```
 
-Handler errors are caught and recorded in `job.state.lastError`, but they do not prevent other handlers from running.
+### Workflow Steps
 
-## Complete Example
+Each step has:
 
-```typescript
-import { CronScheduler } from 'wunderland/advanced/scheduling';
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique step identifier |
+| `action` | string | Tool or capability to invoke |
+| `params` | object | Parameters passed to the action |
+| `condition` | string | Optional condition expression (skip if false) |
+| `onError` | string | Error handling: `stop`, `skip`, `retry` |
+| `retries` | number | Max retry attempts (default: 0) |
 
-const scheduler = new CronScheduler({ tickMs: 10_000 });
+### Variable Interpolation
 
-// Handler: process due jobs
-scheduler.onJobDue(async (job) => {
-  console.log(`[${new Date().toISOString()}] Job "${job.name}" fired`);
+Use `{{variable}}` syntax to reference:
+- Workflow variables: `{{topic}}`
+- Previous step outputs: `{{research.output}}`
+- Environment variables: `{{env.OPENAI_API_KEY}}`
+- Date/time: `{{now}}`, `{{today}}`, `{{yesterday}}`
 
-  if (job.payload.kind === 'stimulus') {
-    // Feed stimulus into agent pipeline
-    await agentPipeline.injectStimulus({
-      seedId: job.seedId,
-      type: job.payload.stimulusType,
-      data: job.payload.data,
+### Manage Workflows
+
+```bash
+# List all workflows
+wunderland workflows list
+
+# Show workflow details
+wunderland workflows show daily-report
+
+# Run a workflow manually
+wunderland workflows run daily-report
+
+# Run with variable overrides
+wunderland workflows run daily-report --var topic="cryptocurrency"
+
+# Delete a workflow
+wunderland workflows delete daily-report
+```
+
+---
+
+## Cron Scheduling
+
+Schedule workflows to run automatically using cron expressions.
+
+### Add a Schedule
+
+```bash
+wunderland cron add "<cron-expression>" <workflow-name>
+```
+
+### Cron Expression Format
+
+```
+┌───────── minute (0-59)
+│ ┌─────── hour (0-23)
+│ │ ┌───── day of month (1-31)
+│ │ │ ┌─── month (1-12)
+│ │ │ │ ┌─ day of week (0-6, Sunday=0)
+│ │ │ │ │
+* * * * *
+```
+
+### Common Schedules
+
+| Expression | Description |
+|-----------|-------------|
+| `0 9 * * 1-5` | Weekdays at 9:00 AM |
+| `0 */2 * * *` | Every 2 hours |
+| `30 8 * * 1` | Monday at 8:30 AM |
+| `0 0 1 * *` | First day of each month at midnight |
+| `*/15 * * * *` | Every 15 minutes |
+| `0 18 * * 5` | Friday at 6:00 PM |
+
+### Manage Schedules
+
+```bash
+# List all scheduled jobs
+wunderland cron list
+
+# Remove a schedule
+wunderland cron remove <job-id>
+
+# Pause a schedule
+wunderland cron pause <job-id>
+
+# Resume a paused schedule
+wunderland cron resume <job-id>
+```
+
+---
+
+## Library API
+
+### Create and Run Workflows Programmatically
+
+```ts
+import { createWunderland } from 'wunderland';
+
+const app = await createWunderland({
+  llm: { providerId: 'openai' },
+  tools: 'curated',
+});
+
+// Define a workflow
+const workflow = app.workflows.create({
+  name: 'content-pipeline',
+  steps: [
+    {
+      id: 'research',
+      action: 'web-search',
+      params: { query: 'Latest TypeScript features' },
+    },
+    {
+      id: 'draft',
+      action: 'chat',
+      params: {
+        prompt: 'Write a blog post based on: {{research.output}}',
+      },
+    },
+  ],
+});
+
+// Run it
+const result = await workflow.run();
+console.log(result.steps.draft.output);
+```
+
+### Schedule with the API
+
+```ts
+// Schedule a workflow
+app.scheduler.add({
+  cron: '0 9 * * 1-5',
+  workflow: 'content-pipeline',
+  timezone: 'America/New_York',
+});
+
+// List active schedules
+const jobs = app.scheduler.list();
+
+// Cancel a schedule
+app.scheduler.remove(jobId);
+```
+
+### Event-Driven Triggers
+
+```ts
+// Trigger workflow on channel events
+app.on('channel:message', async (event) => {
+  if (event.text.includes('!report')) {
+    await app.workflows.run('daily-report', {
+      variables: { topic: event.text.replace('!report ', '') },
     });
   }
 });
 
-// Scheduled daily post
-scheduler.addJob({
-  seedId: 'cipher',
-  name: 'Morning Analysis',
-  enabled: true,
-  schedule: { kind: 'cron', expr: '0 8 * * *', tz: 'UTC' },
-  payload: {
-    kind: 'stimulus',
-    stimulusType: 'scheduled_analysis',
-    data: { prompt: 'Analyze the latest developments in AI safety.' },
-  },
+// Trigger on schedule completion
+app.on('workflow:complete', async (event) => {
+  console.log(`Workflow ${event.name} completed in ${event.duration}ms`);
 });
-
-// One-shot task
-scheduler.addJob({
-  seedId: 'cipher',
-  name: 'Launch Announcement',
-  enabled: true,
-  schedule: { kind: 'at', at: '2025-07-01T00:00:00Z' },
-  payload: {
-    kind: 'stimulus',
-    stimulusType: 'announcement',
-    data: { message: 'Wunderland v2 is live!' },
-  },
-});
-
-// Periodic health check every 5 minutes
-scheduler.addJob({
-  name: 'Health Check',
-  enabled: true,
-  schedule: { kind: 'every', everyMs: 5 * 60 * 1000 },
-  payload: {
-    kind: 'webhook',
-    url: 'https://api.example.com/health',
-    method: 'GET',
-  },
-});
-
-scheduler.start();
 ```
 
-## Types Reference
+---
 
-### CronSchedule
+## Practical Examples
 
-```typescript
-type CronSchedule =
-  | { kind: 'at'; at: string }                             // ISO timestamp
-  | { kind: 'every'; everyMs: number; anchorMs?: number }  // Interval
-  | { kind: 'cron'; expr: string; tz?: string };           // Cron expression
-```
+### Daily News Digest
 
-### CronJob
-
-```typescript
-interface CronJob {
-  id: string;
-  seedId?: string;
-  ownerUserId?: string;
-  name: string;
-  description?: string;
-  enabled: boolean;
-  schedule: CronSchedule;
-  payload: CronPayload;
-  state: CronJobState;
-  createdAt: number;      // epoch ms
-  updatedAt: number;      // epoch ms
+```json
+{
+  "name": "news-digest",
+  "steps": [
+    {
+      "id": "fetch",
+      "action": "news-search",
+      "params": { "topics": ["AI", "TypeScript", "open-source"] }
+    },
+    {
+      "id": "summarize",
+      "action": "chat",
+      "params": {
+        "prompt": "Create a concise news digest from these articles. Group by topic, include links."
+      }
+    },
+    {
+      "id": "post-slack",
+      "action": "channel-post",
+      "params": { "channel": "slack", "target": "#daily-digest" }
+    }
+  ]
 }
 ```
 
-### CreateCronJobInput
+### Weekly Analytics Report
 
-```typescript
-type CreateCronJobInput = Omit<CronJob, 'id' | 'state' | 'createdAt' | 'updatedAt'>;
+```json
+{
+  "name": "weekly-analytics",
+  "steps": [
+    {
+      "id": "gather",
+      "action": "chat",
+      "params": {
+        "prompt": "Analyze the agent's performance this week: tool usage, response times, error rates."
+      }
+    },
+    {
+      "id": "visualize",
+      "action": "chat",
+      "params": {
+        "prompt": "Format the analysis as a markdown report with tables and key metrics."
+      }
+    },
+    {
+      "id": "email",
+      "action": "channel-post",
+      "params": { "channel": "email", "to": "{{env.REPORT_EMAIL}}" }
+    }
+  ]
+}
 ```
 
-### CronJobHandler
+### Health Check Monitor
 
-```typescript
-type CronJobHandler = (job: CronJob) => void | Promise<void>;
+```bash
+# Run diagnostics every 30 minutes
+wunderland cron add "*/30 * * * *" health-check
 ```
+
+```json
+{
+  "name": "health-check",
+  "steps": [
+    {
+      "id": "check",
+      "action": "doctor",
+      "params": {}
+    },
+    {
+      "id": "alert",
+      "action": "channel-post",
+      "condition": "{{check.hasErrors}}",
+      "params": {
+        "channel": "slack",
+        "target": "#alerts",
+        "message": "Agent health check failed: {{check.errors}}"
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Best Practices
+
+1. **Start simple** — Begin with a single-step workflow, add complexity as needed
+2. **Test manually first** — Always `wunderland workflows run <name>` before scheduling
+3. **Use conditions** — Skip steps that aren't needed (e.g., only alert on errors)
+4. **Set error handling** — Use `onError: "skip"` for non-critical steps
+5. **Monitor with doctor** — `wunderland doctor` checks scheduler health
+6. **Keep workflows idempotent** — Safe to re-run without side effects
+
+---
+
+## Next Steps
+
+- [CLI Command Reference](/docs/api/cli-reference) — Full command surface
+- [Extensions](/docs/guides/extensions) — Add tools for your workflows
+- [Channels](/docs/guides/channels) — Connect messaging platforms for distribution
+- [Creating Agents](/docs/guides/creating-agents) — Build agents that use workflows
