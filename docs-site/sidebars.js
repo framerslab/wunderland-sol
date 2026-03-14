@@ -47,8 +47,6 @@ const sidebars = {
       items: [
         'guides/creating-agents',
         'guides/cli-reference',
-        'guides/llm-providers',
-        'guides/local-llm-setup',
         'guides/library-first-api',
         'guides/hexaco-personality',
         'guides/security-pipeline',
