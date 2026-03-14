@@ -125,11 +125,11 @@ export const guideSections: SiteSection[] = [
         external: true,
       },
       {
-        title: 'Speech Runtime',
+        title: 'Voice Runtime',
         description:
-          'Wunderland now uses the shared AgentOS `speech-runtime` for STT, TTS, VAD, and provider switching.',
-        href: 'https://docs.agentos.sh/docs/features/speech-runtime',
-        label: 'Open Speech Runtime Docs',
+          'Configure TTS, STT, and VAD with OpenAI, ElevenLabs, Deepgram, or local providers.',
+        href: 'https://docs.wunderland.sh/docs/guides/voice-runtime',
+        label: 'Open Voice Guide',
         accent: 'var(--neon-gold)',
         external: true,
       },
@@ -165,11 +165,19 @@ export const guideSections: SiteSection[] = [
         external: true,
       },
       {
-        title: 'AgentOS Integration',
-        description: 'See how Wunderland sits on top of AgentOS core, extensions, and skills.',
-        href: 'https://docs.wunderland.sh/docs/architecture/agentos-integration',
-        label: 'View Architecture',
+        title: 'LLM Providers',
+        description: 'Configure OpenAI, Anthropic, Gemini, Ollama (local), or OpenRouter.',
+        href: 'https://docs.wunderland.sh/docs/guides/llm-providers',
+        label: 'Provider Setup',
         accent: 'var(--sol-purple)',
+        external: true,
+      },
+      {
+        title: 'Security & Approvals',
+        description: 'Execution modes, tool permissions, guardrails, and production hardening.',
+        href: 'https://docs.wunderland.sh/docs/guides/security',
+        label: 'Security Guide',
+        accent: 'var(--neon-gold)',
         external: true,
       },
     ],
@@ -183,11 +191,11 @@ export const tutorialTracks: TutorialTrack[] = [
     level: 'Beginner',
     description:
       'Install the CLI, complete setup, run `wunderland chat`, and validate your first agent loop.',
-    href: 'https://docs.wunderland.sh/docs/getting-started/quickstart',
+    href: 'https://docs.wunderland.sh/docs/tutorials/first-agent',
     accent: 'var(--neon-cyan)',
     steps: [
       'Install the CLI globally and run `wunderland setup`.',
-      'Choose an LLM provider and confirm base config values.',
+      'Choose an LLM provider, personality, and voice configuration.',
       'Start the agent, then open an interactive chat session.',
     ],
   },
@@ -211,12 +219,12 @@ export const tutorialTracks: TutorialTrack[] = [
     level: 'Intermediate',
     description:
       'Use the shared `speech-runtime` abstraction for Whisper-class STT, OpenAI or ElevenLabs TTS, and swappable providers.',
-    href: 'https://docs.agentos.sh/docs/extensions/built-in/speech-runtime',
+    href: 'https://docs.wunderland.sh/docs/tutorials/voice-agent',
     accent: 'var(--neon-gold)',
     steps: [
-      'Enable the `speech-runtime` voice pack instead of legacy voice-only extensions.',
-      'Choose STT, TTS, and VAD providers through one high-level config surface.',
-      'Validate with the CLI voice commands and keep the same runtime in embedded apps.',
+      'Configure TTS and STT providers during setup (OpenAI, ElevenLabs, or local).',
+      'Test with CLI voice commands: status, tts, stt, test.',
+      'Use the library API for voice loops in your own app.',
     ],
   },
   {
@@ -252,12 +260,12 @@ export const exampleShowcases: ExampleShowcase[] = [
     title: 'Voice Concierge',
     description:
       'A speech-enabled assistant using the shared runtime for listening, transcription, and TTS playback.',
-    href: 'https://docs.agentos.sh/docs/features/speech-runtime',
+    href: 'https://docs.wunderland.sh/docs/use-cases/voice-concierge',
     accent: 'var(--neon-gold)',
     commands: [
-      "extensions: { voice: ['speech-runtime'] }",
-      'wunderland voice tts "Welcome to Wunderland"',
-      'wunderland voice stt ./samples/check-in.wav',
+      'wunderland config set voiceProvider openai',
+      'wunderland voice test "Welcome to Wunderland"',
+      'wunderland voice status',
     ],
   },
   {

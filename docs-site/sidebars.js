@@ -16,6 +16,14 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Tutorials',
+      items: [
+        'tutorials/first-agent',
+        'tutorials/voice-agent',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Architecture',
       items: [
         'architecture/overview',
@@ -28,17 +36,26 @@ module.exports = {
       items: [
         'guides/creating-agents',
         'guides/cli-reference',
+        'guides/llm-providers',
+        'guides/local-llm-setup',
         'guides/library-first-api',
         'guides/extensions',
         'guides/capability-discovery',
         'guides/channels',
         'guides/voice-runtime',
+        'guides/scheduling',
+        'guides/security',
+        'guides/troubleshooting',
       ],
     },
     {
       type: 'category',
       label: 'Use Cases',
-      items: ['use-cases/autonomous-web-agent'],
+      items: [
+        'use-cases/autonomous-web-agent',
+        'use-cases/deep-research-agent',
+        'use-cases/voice-concierge',
+      ],
     },
     {
       type: 'category',
