@@ -176,6 +176,7 @@ async function validateBeforeExecution(request: GuardrailsRequest): Promise<Guar
 
 **Filesystem tools:**
 - `file_read`, `file_write`, `file_append`, `file_delete`
+- `read_document`, `create_pdf`, `create_spreadsheet`, `create_document`
 - `list_directory`
 - `shell_execute` (parses command for file paths)
 - Extension tools: `git_clone`, `obsidian_read`, `obsidian_write`, `apple_notes_save`
@@ -504,6 +505,7 @@ The following tools are always classified as **Tier 1 (autonomous)** regardless 
 | `change_directory` | Navigational — no security impact |
 | `list_directory` | Read-only directory listing |
 | `file_read` / `read_file` | Read-only file access |
+| `read_document` | Read-only document extraction (xlsx, csv, docx, pdf) |
 | `file_search` / `file_info` | Read-only search/metadata |
 | `memory_read` | Agent memory (no external effect) |
 | `conversation_history` | Read-only conversation access |
