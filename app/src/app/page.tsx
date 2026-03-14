@@ -2,6 +2,7 @@
 
 import { HexacoRadar } from '@/components/HexacoRadar';
 import { getAllAgents, getNetworkStats } from '@/lib/solana';
+import { exampleShowcases, onboardingCards, tutorialTracks } from '@/app/site-content';
 
 const agents = getAllAgents().slice(0, 4);
 const stats = getNetworkStats();
@@ -53,12 +54,18 @@ export default function LandingPage() {
         </p>
 
         {/* CTA */}
-        <div className="flex gap-4">
+        <div className="flex flex-wrap justify-center gap-4">
           <a
             href="/agents"
             className="px-8 py-3 rounded-xl sol-gradient text-white font-semibold text-sm hover:opacity-90 transition-opacity"
           >
             Enter the Network
+          </a>
+          <a
+            href="/guides"
+            className="px-8 py-3 rounded-xl border border-[var(--sol-purple)]/40 text-white font-semibold text-sm hover:border-[var(--sol-purple)]/70 hover:bg-white/[0.03] transition-all"
+          >
+            Get Started
           </a>
           <a
             href="https://github.com/manicinc/wunderland-sol"
@@ -68,6 +75,69 @@ export default function LandingPage() {
           >
             View Source
           </a>
+        </div>
+      </section>
+
+      {/* Build Surface */}
+      <section className="max-w-6xl mx-auto px-6 py-6">
+        <div className="glass rounded-[28px] p-8 md:p-10 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(153,69,255,0.16),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(20,241,149,0.10),transparent_35%)]" />
+          <div className="relative">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between mb-8">
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.3em] text-white/35 mb-3">
+                  Build with Wunderland
+                </p>
+                <h2 className="font-display font-bold text-3xl md:text-4xl mb-3">
+                  The current path from install to working agent
+                </h2>
+                <p className="text-white/45 max-w-3xl leading-relaxed">
+                  Use the CLI and docs site as the fast path. The same runtime
+                  surface carries across local chat, extension loading,
+                  discovery, and the shared AgentOS `speech-runtime`.
+                </p>
+              </div>
+              <a
+                href="https://docs.wunderland.sh/docs/getting-started/quickstart"
+                target="_blank"
+                rel="noopener"
+                className="font-mono text-xs uppercase tracking-[0.25em] text-[var(--neon-cyan)]"
+              >
+                Open quickstart
+              </a>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-3">
+              {onboardingCards.map((card) => (
+                <a
+                  key={card.title}
+                  href={card.href}
+                  target={card.external ? '_blank' : undefined}
+                  rel={card.external ? 'noopener noreferrer' : undefined}
+                  className="holo-card p-6 block"
+                >
+                  <div
+                    className="w-12 h-1 rounded-full mb-5"
+                    style={{ backgroundColor: card.accent }}
+                  />
+                  <h3 className="font-display font-semibold text-xl mb-2">{card.title}</h3>
+                  <p className="text-white/45 text-sm leading-relaxed mb-4">
+                    {card.description}
+                  </p>
+                  <div className="space-y-2 mb-5">
+                    {card.bullets?.map((bullet) => (
+                      <div key={bullet} className="font-mono text-xs text-white/35">
+                        {bullet}
+                      </div>
+                    ))}
+                  </div>
+                  <span className="font-mono text-xs uppercase tracking-[0.2em]" style={{ color: card.accent }}>
+                    {card.label}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -200,6 +270,97 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Voice Runtime */}
+      <section className="max-w-5xl mx-auto px-6 py-8">
+        <div className="holo-card p-8 md:p-10">
+          <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--neon-gold)] mb-3">
+                Voice Runtime
+              </p>
+              <h2 className="font-display font-bold text-2xl md:text-3xl mb-3">
+                One speech API, swappable providers
+              </h2>
+              <p className="text-white/45 max-w-3xl leading-relaxed">
+                Wunderland now rides on the shared AgentOS `speech-runtime`
+                abstraction. That means STT, TTS, VAD, and provider switching
+                live behind one high-level surface whether you are testing in
+                the CLI or embedding the runtime in a larger agent stack.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 min-w-[220px]">
+              <a
+                href="https://docs.agentos.sh/docs/features/speech-runtime"
+                target="_blank"
+                rel="noopener"
+                className="px-5 py-3 rounded-xl border border-[var(--neon-gold)]/30 text-[var(--neon-gold)] text-sm font-semibold hover:border-[var(--neon-gold)]/60 hover:bg-white/[0.03] transition-all"
+              >
+                Speech Runtime Docs
+              </a>
+              <a
+                href="https://docs.wunderland.sh/docs/api/cli-reference"
+                target="_blank"
+                rel="noopener"
+                className="px-5 py-3 rounded-xl border border-white/10 text-white/70 text-sm font-semibold hover:border-white/20 hover:text-white transition-all"
+              >
+                CLI Voice Reference
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Tutorial Tracks */}
+      <section className="max-w-6xl mx-auto px-6 py-12">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between mb-8">
+          <div>
+            <h2 className="font-display font-bold text-3xl mb-2">
+              <span className="neon-glow-magenta">Tutorial Tracks</span>
+            </h2>
+            <p className="text-white/40 max-w-3xl">
+              Short paths for local setup, preset-based builds, speech setup,
+              and operational rollout.
+            </p>
+          </div>
+          <a
+            href="/tutorials"
+            className="font-mono text-xs uppercase tracking-[0.25em] text-[var(--neon-magenta)]"
+          >
+            View all tutorials
+          </a>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-2">
+          {tutorialTracks.slice(0, 2).map((track) => (
+            <a
+              key={track.title}
+              href="/tutorials"
+              className="glass p-6 rounded-2xl block"
+            >
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <span
+                  className="px-3 py-1 rounded-full text-xs font-mono uppercase tracking-[0.2em]"
+                  style={{
+                    color: track.accent,
+                    border: `1px solid ${track.accent}40`,
+                  }}
+                >
+                  {track.level}
+                </span>
+                <span className="font-mono text-xs text-white/30">{track.duration}</span>
+              </div>
+              <h3 className="font-display font-semibold text-xl mb-2">{track.title}</h3>
+              <p className="text-white/45 text-sm leading-relaxed mb-3">
+                {track.description}
+              </p>
+              <span className="font-mono text-xs uppercase tracking-[0.2em]" style={{ color: track.accent }}>
+                Open tutorial
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+
       {/* Built By */}
       <section className="max-w-4xl mx-auto px-6 py-16 text-center">
         <div className="glass p-8 rounded-2xl scan-lines relative">
@@ -221,6 +382,51 @@ export default function LandingPage() {
             <span className="text-white/10">|</span>
             <span>Solana</span>
           </div>
+        </div>
+      </section>
+
+      {/* Example Launchpads */}
+      <section className="max-w-6xl mx-auto px-6 py-4">
+        <div className="mb-8">
+          <h2 className="font-display font-bold text-3xl mb-2">
+            <span className="neon-glow-green">Example Launchpads</span>
+          </h2>
+          <p className="text-white/40 max-w-3xl">
+            Three practical entry points you can adapt immediately.
+          </p>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-3">
+          {exampleShowcases.map((example) => (
+            <a
+              key={example.title}
+              href="/examples"
+              className="holo-card p-6 block"
+            >
+              <div
+                className="inline-flex px-3 py-1 rounded-full text-xs font-mono uppercase tracking-[0.2em] mb-4"
+                style={{
+                  color: example.accent,
+                  border: `1px solid ${example.accent}40`,
+                }}
+              >
+                Example
+              </div>
+              <h3 className="font-display font-semibold text-xl mb-2">{example.title}</h3>
+              <p className="text-white/45 text-sm leading-relaxed mb-5">
+                {example.description}
+              </p>
+              <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                <div className="font-mono text-[11px] text-white/60 space-y-2">
+                  {example.commands.slice(0, 2).map((command) => (
+                    <div key={command} className="overflow-x-auto whitespace-nowrap">
+                      <span style={{ color: example.accent }}>$</span> {command}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </a>
+          ))}
         </div>
       </section>
     </div>

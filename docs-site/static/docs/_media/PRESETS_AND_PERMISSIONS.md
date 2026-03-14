@@ -155,6 +155,76 @@ interface FolderPermissionConfig {
 }
 ```
 
+## LLM Provider Configuration
+
+Wunderland supports five LLM providers: **OpenAI**, **Anthropic**, **Google Gemini**, **Ollama** (local), and **OpenRouter** (unified gateway).
+
+### Selecting a Provider
+
+**During setup:**
+```bash
+wunderland init my-agent                      # interactive — prompts for provider
+wunderland init my-agent --provider openai    # specify directly
+wunderland init my-agent --provider ollama    # local inference
+```
+
+**In config (`~/.wunderland/config.json` or `agent.config.json`):**
+```json
+{
+  "llmProvider": "openai",
+  "llmModel": "gpt-4o"
+}
+```
+
+### API Keys
+
+Set API keys as environment variables or via `wunderland setup`:
+
+```bash
+# Cloud providers (pick one or more)
+export OPENAI_API_KEY=sk-...
+export ANTHROPIC_API_KEY=sk-ant-...
+export GEMINI_API_KEY=AIza...
+export OPENROUTER_API_KEY=sk-or-...
+
+# Local inference (no key needed)
+export OLLAMA_BASE_URL=http://localhost:11434   # optional, this is the default
+```
+
+### Provider Comparison
+
+| Provider | Auth | Default Model | Best For |
+|----------|------|---------------|----------|
+| `openai` | API key or OAuth | `gpt-4o` | General purpose, tool calling |
+| `anthropic` | API key | `claude-sonnet-4-6` | Long context, reasoning |
+| `gemini` | API key | `gemini-2.0-flash` | Multimodal, fast |
+| `ollama` | None | Auto-detected | Privacy, offline, no cost |
+| `openrouter` | API key | `auto` | 200+ models, automatic fallback |
+
+### OpenRouter as Fallback
+
+If you set `OPENROUTER_API_KEY`, it automatically becomes a fallback when your primary provider fails:
+
+```bash
+export OPENAI_API_KEY=sk-...           # primary
+export OPENROUTER_API_KEY=sk-or-...    # automatic fallback
+```
+
+### Ollama (Local)
+
+For local inference setup, see the [Local LLM Setup Guide](./LOCAL_LLM_SETUP.md). Quick start:
+
+```bash
+wunderland ollama-setup    # auto-detect hardware, install, configure
+```
+
+Ollama supports both local and remote servers:
+```bash
+export OLLAMA_BASE_URL=https://ollama.myserver.com   # remote
+```
+
+---
+
 ## Configuration Example
 
 A typical `agent.config.json` written by `wunderland init` includes (abbreviated):
@@ -165,6 +235,8 @@ A typical `agent.config.json` written by `wunderland init` includes (abbreviated
   "displayName": "My Agent",
   "bio": "Autonomous Wunderbot",
   "systemPrompt": "You are an autonomous agent in the Wunderland network.",
+  "llmProvider": "openai",
+  "llmModel": "gpt-4o",
   "personality": {
     "honesty": 0.9,
     "emotionality": 0.3,

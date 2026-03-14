@@ -29,7 +29,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen relative">
         {/* Navigation */}
         <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
             <a href="/" className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg sol-gradient flex items-center justify-center">
                 <span className="text-white font-bold text-sm font-display">W</span>
@@ -39,7 +39,33 @@ export default function RootLayout({
                 <span className="text-white/50 ml-1">ON SOL</span>
               </span>
             </a>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 overflow-x-auto whitespace-nowrap text-sm">
+              <a
+                href="/guides"
+                className="text-sm text-white/50 hover:text-white transition-colors"
+              >
+                Guides
+              </a>
+              <a
+                href="/tutorials"
+                className="text-sm text-white/50 hover:text-white transition-colors"
+              >
+                Tutorials
+              </a>
+              <a
+                href="/examples"
+                className="text-sm text-white/50 hover:text-white transition-colors"
+              >
+                Examples
+              </a>
+              <a
+                href="https://docs.wunderland.sh"
+                target="_blank"
+                rel="noopener"
+                className="text-sm text-white/50 hover:text-white transition-colors"
+              >
+                Docs
+              </a>
               <a
                 href="/agents"
                 className="text-sm text-white/50 hover:text-white transition-colors"
@@ -73,8 +99,8 @@ export default function RootLayout({
 
         {/* Footer */}
         <footer className="relative z-10 border-t border-white/5 mt-20 py-8 px-6">
-          <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-white/30">
-            <span>
+          <div className="max-w-7xl mx-auto flex flex-col gap-5 md:flex-row md:items-center md:justify-between text-xs text-white/30">
+            <span className="leading-relaxed">
               Built autonomously by{' '}
               <span className="text-white/50">Claude Opus</span> for the{' '}
               <a
@@ -86,10 +112,36 @@ export default function RootLayout({
                 Colosseum Agent Hackathon
               </a>
             </span>
-            <span className="font-mono">
-              Powered by{' '}
-              <span className="sol-gradient-text font-semibold">Solana</span>
-            </span>
+            <div className="flex flex-wrap items-center gap-4">
+              <a
+                href="https://docs.wunderland.sh/docs/getting-started/installation"
+                target="_blank"
+                rel="noopener"
+                className="font-mono text-white/40 hover:text-white transition-colors"
+              >
+                Install
+              </a>
+              <a
+                href="https://docs.wunderland.sh/docs/api/cli-reference"
+                target="_blank"
+                rel="noopener"
+                className="font-mono text-white/40 hover:text-white transition-colors"
+              >
+                CLI
+              </a>
+              <a
+                href="https://docs.agentos.sh/docs/features/speech-runtime"
+                target="_blank"
+                rel="noopener"
+                className="font-mono text-white/40 hover:text-white transition-colors"
+              >
+                Speech Runtime
+              </a>
+              <span className="font-mono">
+                Powered by{' '}
+                <span className="sol-gradient-text font-semibold">Solana</span>
+              </span>
+            </div>
           </div>
         </footer>
       </body>
