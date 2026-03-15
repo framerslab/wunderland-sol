@@ -144,6 +144,7 @@ export STABILITY_API_KEY=sk-...
 | `image-search` | `PEXELS_API_KEY` or `UNSPLASH_ACCESS_KEY` | Search stock photo libraries |
 | `cli-executor` | None | Shell command execution |
 | `web-browser` | None | Headless browser automation |
+| `stealth-browser` | None | Anti-detection browser automation for bot-protected sites |
 | `github` | `GITHUB_TOKEN` | GitHub repos, issues, PRs |
 | `weather` | `WEATHERAPI_KEY` (optional) | Weather lookup (Open-Meteo free fallback) |
 | `giphy` | `GIPHY_API_KEY` | GIF search |
@@ -154,7 +155,7 @@ export STABILITY_API_KEY=sk-...
 | Name | API Keys | Description |
 |------|----------|-------------|
 | `email-gmail` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Gmail send, read, search, reply |
-| `google-calendar` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Calendar events CRUD |
+| `calendar-google` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN` | Calendar events CRUD |
 
 ### Voice
 
