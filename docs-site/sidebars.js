@@ -68,6 +68,7 @@ const sidebars = {
         'guides/channels',
         'guides/immutability',
         'guides/extensions',
+        'guides/extension-configuration',
         'guides/capability-discovery',
         'guides/discovery-configuration',
         'guides/pairing',
