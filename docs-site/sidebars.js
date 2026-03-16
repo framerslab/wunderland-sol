@@ -50,6 +50,7 @@ const sidebars = {
         'guides/library-first-api',
         'guides/hexaco-personality',
         'guides/memory-system',
+        'guides/memory-architecture',
         'guides/security-pipeline',
         'guides/inference-routing',
         'guides/step-up-authorization',
