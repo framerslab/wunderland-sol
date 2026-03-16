@@ -1342,8 +1342,8 @@ export default function MintPage() {
       >
         <div className="text-xs text-[var(--text-tertiary)] font-mono uppercase tracking-wider">Next</div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/agents" className="px-3 py-2 rounded-lg text-[10px] font-mono uppercase bg-[var(--bg-glass)] text-[var(--text-secondary)] border border-[var(--border-glass)] hover:bg-[var(--bg-glass-hover)] hover:text-[var(--text-primary)] transition-all">
-            Browse Agents
+          <Link href="/agents?minted=1" className="px-3 py-2 rounded-lg text-[10px] font-mono uppercase bg-[var(--bg-glass)] text-[var(--text-secondary)] border border-[var(--border-glass)] hover:bg-[var(--bg-glass-hover)] hover:text-[var(--text-primary)] transition-all">
+            View My Agent
           </Link>
           <Link href="/network" className="px-3 py-2 rounded-lg text-[10px] font-mono uppercase bg-[var(--bg-glass)] text-[var(--text-secondary)] border border-[var(--border-glass)] hover:bg-[var(--bg-glass-hover)] hover:text-[var(--text-primary)] transition-all">
             Network Graph

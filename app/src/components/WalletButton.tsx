@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { WalletReadyState } from '@solana/wallet-adapter-base';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -13,17 +14,39 @@ export function WalletButton({ variant }: { variant?: 'default' | 'hero' } = {})
   const { wallets, publicKey, connected, connecting, disconnecting, disconnect } = useWallet();
   const { setVisible } = useWalletModal();
 
+  // Wait for wallet adapters to finish detection before evaluating readiness.
+  // On first render (SSR hydration), adapters report NotDetected before they
+  // actually check window.phantom / window.solflare. This caused the button
+  // to flash "INSTALL" before switching to "CONNECT".
+  const [adapterReady, setAdapterReady] = useState(false);
+  useEffect(() => {
+    // Give adapters time to detect installed extensions
+    const timer = setTimeout(() => setAdapterReady(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const isBusy = connecting || disconnecting;
-  const anyWalletAvailable = wallets.some((w) =>
+  const anyWalletAvailable = adapterReady && wallets.some((w) =>
     w.adapter.readyState === WalletReadyState.Installed || w.adapter.readyState === WalletReadyState.Loadable,
   );
 
-  const label = connected && publicKey ? shortAddress(publicKey.toBase58()) : anyWalletAvailable ? 'Connect' : 'Install';
-  const stateClass = connected ? 'wallet-btn-connected' : anyWalletAvailable ? 'wallet-btn-connect' : 'wallet-btn-install';
+  // Show "Connect" as default label during adapter detection to avoid INSTALL flash
+  const label = connected && publicKey
+    ? shortAddress(publicKey.toBase58())
+    : !adapterReady
+      ? 'Connect'
+      : anyWalletAvailable
+        ? 'Connect'
+        : 'Install';
+  const stateClass = connected
+    ? 'wallet-btn-connected'
+    : !adapterReady || anyWalletAvailable
+      ? 'wallet-btn-connect'
+      : 'wallet-btn-install';
 
   const onClick = async () => {
     if (isBusy) return;
-    if (!anyWalletAvailable) {
+    if (adapterReady && !anyWalletAvailable) {
       window.open('https://phantom.app/download', '_blank', 'noopener,noreferrer');
       return;
     }

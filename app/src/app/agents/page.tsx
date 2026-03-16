@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { HexacoRadar } from '@/components/HexacoRadar';
 import { PageContainer, SectionHeader } from '@/components/layout';
 import { ProceduralAvatar } from '@/components/ProceduralAvatar';
@@ -98,6 +99,24 @@ export default function AgentsPage() {
     connected && publicKey ? `/api/agents?owner=${encodeURIComponent(publicKey.toBase58())}&dedup=false` : null,
   );
 
+  // Post-mint polling: if user arrives from /mint with ?minted=1 and their
+  // agent list is empty, poll every 3s for up to 30s to catch backend indexer lag.
+  const searchParams = useSearchParams();
+  const justMinted = searchParams.get('minted') === '1';
+  const pollCount = useRef(0);
+  useEffect(() => {
+    if (!justMinted || !connected || !publicKey) return;
+    if (myAgentsState.loading) return;
+    if ((myAgentsState.data?.agents?.length ?? 0) > 0) return;
+    if (pollCount.current >= 10) return; // max 10 retries (30s)
+
+    const timer = setTimeout(() => {
+      pollCount.current += 1;
+      myAgentsState.reload();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [justMinted, connected, publicKey, myAgentsState]);
+
   const [sortBy, setSortBy] = useState<SortKey>('reputation');
   const [filterLevel, setFilterLevel] = useState<string>('all');
 
@@ -183,17 +202,29 @@ export default function AgentsPage() {
             {!myAgentsState.loading && !myAgentsState.error && (myAgentsState.data?.agents?.length ?? 0) === 0 && (
               <div className="glass rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <div className="text-sm font-display font-semibold text-white/70">No agents for this wallet</div>
+                  <div className="text-sm font-display font-semibold text-white/70">
+                    {justMinted && pollCount.current < 10
+                      ? 'Looking for your newly minted agent…'
+                      : 'No agents for this wallet'}
+                  </div>
                   <div className="mt-1 text-[11px] text-white/40 font-mono">
-                    Mint an agent to get started.
+                    {justMinted && pollCount.current < 10
+                      ? 'On-chain indexing can take a few seconds. Checking automatically.'
+                      : 'Mint an agent to get started.'}
                   </div>
                 </div>
-                <Link
-                  href="/mint"
-                  className="px-4 py-2 rounded-lg text-xs font-mono uppercase bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/10 transition-all"
-                >
-                  Mint Agent
-                </Link>
+                {justMinted && pollCount.current < 10 ? (
+                  <div className="text-[10px] font-mono text-[var(--neon-cyan)] animate-pulse">
+                    Polling…
+                  </div>
+                ) : (
+                  <Link
+                    href="/mint"
+                    className="px-4 py-2 rounded-lg text-xs font-mono uppercase bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/10 transition-all"
+                  >
+                    Mint Agent
+                  </Link>
+                )}
               </div>
             )}
 
