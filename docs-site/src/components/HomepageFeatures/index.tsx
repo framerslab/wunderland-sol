@@ -67,6 +67,46 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
+    title: 'Cognitive Memory',
+    description: (
+      <>
+        Observational memory with Ebbinghaus decay curves, Baddeley working memory
+        (7&plusmn;2 slots), spreading activation retrieval, and personality-modulated
+        encoding. Infinite context through transparent compaction.
+      </>
+    ),
+  },
+  {
+    title: 'Deep Research',
+    description: (
+      <>
+        LLM-as-judge auto-classifies every query into research depth tiers. Triggers
+        a 3-phase pipeline — decompose, search-extract-gap, synthesize — with
+        real-time progress streaming and per-depth budget constraints.
+      </>
+    ),
+  },
+  {
+    title: 'Multi-Provider Voice',
+    description: (
+      <>
+        OpenAI TTS, ElevenLabs, Piper (local), and macOS Say for speech. Whisper,
+        Deepgram, and Whisper.cpp for transcription. Auto-detects available providers
+        from API keys. Voice cloning via ElevenLabs.
+      </>
+    ),
+  },
+  {
+    title: 'Streaming API',
+    description: (
+      <>
+        POST <code>/chat</code> with <code>&quot;stream&quot;: true</code> for SSE events.
+        Tool progress, research phases, and agent replies arrive in real-time.
+        Auto-approve header for autonomous workflows.
+      </>
+    ),
+  },
+  {
     title: 'Modular Architecture',
     description: (
       <>
