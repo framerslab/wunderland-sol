@@ -116,3 +116,35 @@ HyDE operates within the existing RAG pipeline. When enabled:
 5. **Results returned** to the main LLM as context for the final answer
 
 If HyDE is disabled, the pipeline falls back to standard query embedding — no other behavior changes.
+
+## HyDE and Observational Memory
+
+The observational memory system (MemoryObserver + MemoryReflector) produces long-term memory traces that are encoded into the same vector store used by the RAG pipeline. HyDE improves retrieval of these traces significantly.
+
+### Why It Matters
+
+Observation notes and reflection traces are written as declarative statements: "User prefers Docker Compose for deployments" or "The team decided to postpone the migration until Q3." When a user later asks "how should we deploy?", raw query embedding may not match these statements well — the question and the stored answer occupy different semantic neighborhoods.
+
+HyDE bridges this gap. It generates a hypothetical answer like "Deployments should use Docker Compose as configured in the project..." and embeds *that*. The hypothetical answer is semantically closer to the stored observation trace, producing higher-quality retrieval.
+
+### The Pipeline
+
+```
+User asks "what did we decide about the migration?"
+  ↓
+HyDE generates: "The team decided to postpone the migration until Q3
+                  due to resource constraints and dependency on..."
+  ↓
+Hypothetical answer is embedded
+  ↓
+Vector search finds the reflection trace:
+  "Team postponed migration to Q3. Resource constraints cited."
+  ↓
+Trace returned as context for the final response
+```
+
+### Adaptive Thresholds for Sparse Observations
+
+Early in a conversation, the agent may have few observation traces stored. HyDE's adaptive thresholding (stepping from 0.7 down to 0.3) prevents empty results in these cases — the system will surface partial matches from observations rather than returning nothing.
+
+As the conversation progresses and the reflector produces more traces, the vector store becomes denser, and high-threshold matches become more common.
