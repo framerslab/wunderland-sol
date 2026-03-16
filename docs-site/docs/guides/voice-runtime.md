@@ -73,6 +73,110 @@ export DEEPGRAM_API_KEY=...           # Deepgram STT
 
 ---
 
+## Callable Voice Tools
+
+Beyond the library API and CLI, Wunderland agents can call TTS and STT **as tools** during conversations. The `voice-synthesis` extension pack exposes two tools that any agent can invoke mid-turn.
+
+### `text_to_speech` Tool
+
+Converts text to audio. Auto-detects the best available provider from API keys.
+
+**Provider resolution order:** `OPENAI_API_KEY` > `ELEVENLABS_API_KEY` > Ollama (local fallback)
+
+```json
+{
+  "text": "Hello from your Wunderbot",
+  "voice": "nova",
+  "model": "tts-1-hd",
+  "provider": "auto",
+  "format": "mp3"
+}
+```
+
+Returns `audioBase64` (base64-encoded audio), `contentType`, `provider`, `voice`, and `durationEstimateMs`.
+
+**Voices by provider:**
+
+| Provider | Available Voices |
+|----------|-----------------|
+| OpenAI | alloy, echo, fable, onyx, **nova** (default), shimmer |
+| ElevenLabs | **rachel** (default), domi, bella, antoni, josh, arnold, adam, sam, or any custom voice ID |
+| Ollama | Depends on loaded model |
+
+### `speech_to_text` Tool
+
+Transcribes audio using OpenAI Whisper. Accepts base64 audio or a fetchable URL.
+
+```json
+{
+  "audioBase64": "UklGRi...",
+  "language": "en",
+  "model": "whisper-1",
+  "responseFormat": "verbose_json"
+}
+```
+
+Returns `text`, `language`, `durationSeconds`, and optional `segments` with word-level timestamps.
+
+### Example: Agent Uses TTS in Conversation
+
+```
+User: Can you read this summary aloud?
+Agent: Sure — let me synthesize the audio.
+       [calls text_to_speech { text: "Q3 revenue grew 12%...", voice: "nova" }]
+Agent: Here's the audio version of the summary.
+       [returns audio/mpeg base64 payload to client]
+```
+
+The client receives the base64 audio in the tool result and can play it directly or save it.
+
+### Example: HTTP API with Audio Response
+
+```bash
+# Start your agent server
+wunderland start
+
+# Send a message that triggers TTS
+curl -X POST http://localhost:3777/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Read the last paragraph aloud using the shimmer voice"}'
+```
+
+The agent calls `text_to_speech` internally. The response `reply` field contains the agent's text, and the tool result (with `audioBase64`) is available in the conversation context.
+
+### Configuring Provider Defaults
+
+Set provider defaults via the CLI:
+
+```bash
+# Configure the voice-synthesis extension
+wunderland extensions configure voice-synthesis
+
+# Or set defaults directly
+wunderland extensions set-default tts openai
+wunderland extensions set-default stt openai
+```
+
+In `agent.config.json`, use `providerDefaults` to pin provider preferences:
+
+```json
+{
+  "providerDefaults": {
+    "tts": "elevenlabs",
+    "stt": "openai"
+  },
+  "extensions": ["voice-synthesis"]
+}
+```
+
+Or set the `TTS_PROVIDER` environment variable globally:
+
+```bash
+export TTS_PROVIDER=elevenlabs
+```
+
+---
+
 ## Library API
 
 ### Enable Voice in Your App
