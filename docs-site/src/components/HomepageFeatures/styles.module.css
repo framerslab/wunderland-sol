@@ -1,8 +1,12 @@
 .features {
-  display: flex;
-  align-items: center;
   padding: 2rem 0;
   width: 100%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
 }
 
 .featureCard {
@@ -10,12 +14,33 @@
   border: 1px solid rgba(167, 139, 250, 0.1);
   border-radius: 12px;
   padding: 1.5rem 1rem;
-  margin-bottom: 1.5rem;
   transition: all 0.2s ease;
-  min-height: 180px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.featureCard h3 {
+  margin-bottom: 0.75rem;
+}
+
+.featureCard p {
+  margin: 0;
 }
 
 .featureCard:hover {
   border-color: rgba(167, 139, 250, 0.25);
   transform: translateY(-2px);
+}
+
+@media (max-width: 996px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

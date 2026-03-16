@@ -85,7 +85,6 @@ wunderland chat --provider openai      # Override provider
 wunderland chat --model gpt-4o-mini    # Override model
 wunderland chat --overdrive            # Auto-approve tool calls
 wunderland chat --auto-approve-tools   # Fully autonomous
-wunderland chat --oauth                # Use ChatGPT subscription
 ```
 
 **In-chat commands:**

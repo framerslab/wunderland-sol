@@ -10,8 +10,10 @@ A Wunderland agent begins as a **Seed** -- a configuration object that combines 
 
 Before creating agents, configure your LLM credentials:
 
-- **Option A: ChatGPT Subscription (easiest)** -- Run `wunderland login` to authenticate with your OpenAI account. No API key needed. See the [OpenAI OAuth guide](./openai-oauth.md) for details.
-- **Option B: API Key** -- Set `OPENAI_API_KEY` in your environment or `~/.wunderland/.env`.
+- **Option A: OpenAI API Key** -- Set `OPENAI_API_KEY` in your environment or `~/.wunderland/.env`.
+- **Option B: Another provider API key** -- Configure Gemini, Anthropic, OpenRouter, or Ollama in your environment and `agent.config.json`.
+
+OpenAI OAuth subscription login is currently unavailable. See the [OpenAI OAuth guide](./openai-oauth.md) for status and migration details.
 
 ## Quick Start with `createDefaultWunderlandSeed()`
 

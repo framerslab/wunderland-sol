@@ -59,14 +59,11 @@ Then set in `agent.config.json`:
 ```json
 {
   "llmProvider": "openai",
-  "llmModel": "gpt-4o",
-  "llmAuthMethod": "oauth"
+  "llmModel": "gpt-4o"
 }
 ```
 
-Tokens are stored at `~/.wunderland/auth/openai.json` with `0o600` permissions and auto-refresh when expired. See the [OpenAI OAuth Guide](./openai-oauth.md) for details.
-
-> **Note:** OAuth login is only available for OpenAI. Other providers (Anthropic, Google, etc.) do not offer consumer OAuth flows -- using their session tokens violates their Terms of Service.
+Use `OPENAI_API_KEY` in your environment or config. OpenAI OAuth subscription login is currently disabled in Wunderland. See the [OpenAI OAuth Guide](./openai-oauth.md) for current status and migration details.
 
 ---
 

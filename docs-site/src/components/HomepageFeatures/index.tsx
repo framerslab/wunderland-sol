@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import Heading from '@theme/Heading';
 import styles from './styles.module.css';
 
@@ -90,7 +89,7 @@ const FeatureList: FeatureItem[] = [
     title: 'Multi-Provider Voice',
     description: (
       <>
-        OpenAI TTS, ElevenLabs, Piper (local), and macOS Say for speech. Whisper,
+        OpenAI TTS, ElevenLabs, and Piper (local) for speech. Whisper,
         Deepgram, and Whisper.cpp for transcription. Auto-detects available providers
         from API keys. Voice cloning via ElevenLabs.
       </>
@@ -129,12 +128,10 @@ const FeatureList: FeatureItem[] = [
 
 function Feature({title, description}: FeatureItem) {
   return (
-    <div className={clsx('col col--4')}>
-      <div className={clsx('text--center padding-horiz--md', styles.featureCard)}>
-        <Heading as="h3">{title}</Heading>
-        <p>{description}</p>
-      </div>
-    </div>
+    <article className={styles.featureCard}>
+      <Heading as="h3">{title}</Heading>
+      <p>{description}</p>
+    </article>
   );
 }
 
@@ -142,7 +139,7 @@ export default function HomepageFeatures(): JSX.Element {
   return (
     <section className={styles.features}>
       <div className="container">
-        <div className="row">
+        <div className={styles.grid}>
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />
           ))}
