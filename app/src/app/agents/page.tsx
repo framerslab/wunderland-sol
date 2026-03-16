@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { HexacoRadar } from '@/components/HexacoRadar';
@@ -90,6 +90,14 @@ function AgentCard({ agent }: { agent: Agent }) {
 }
 
 export default function AgentsPage() {
+  return (
+    <Suspense>
+      <AgentsPageContent />
+    </Suspense>
+  );
+}
+
+function AgentsPageContent() {
   const { connected, publicKey } = useWallet();
 
   const agentsState = useApi<{ agents: Agent[]; total: number }>('/api/agents');
