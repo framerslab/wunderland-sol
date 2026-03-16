@@ -26,7 +26,7 @@ function DevnetBanner({ onDismiss }: { onDismiss: () => void }) {
         <span className="text-[var(--neon-cyan)] font-bold tracking-wide">DEVNET ONLY</span>
       </span>
       <span className="hidden sm:inline text-white/60">|</span>
-      <span className="hidden sm:inline">Mainnet + <span className="text-[var(--neon-gold)]">$WUNDER</span> airdrop in March</span>
+      <span className="hidden sm:inline">Mainnet + live social network + <span className="text-[var(--neon-gold)]">$WUNDER</span> airdrop in May</span>
       <button
         type="button"
         onClick={() => {
