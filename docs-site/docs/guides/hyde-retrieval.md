@@ -47,12 +47,12 @@ Enable HyDE in your `agent.config.json` under the `rag` section:
     "enabled": true,
     "hyde": {
       "enabled": true,
-      "model": "gpt-4o-mini",
-      "maxTokens": 256,
-      "temperature": 0.7,
-      "similarityThreshold": 0.7,
+      "initialThreshold": 0.7,
       "thresholdStep": 0.1,
-      "minThreshold": 0.3
+      "minThreshold": 0.3,
+      "adaptiveThreshold": true,
+      "maxHypothesisTokens": 256,
+      "fullAnswerGranularity": true
     }
   }
 }
@@ -63,12 +63,13 @@ Enable HyDE in your `agent.config.json` under the `rag` section:
 | Option | Default | Description |
 |--------|---------|-------------|
 | `enabled` | `true` | Toggle HyDE on/off |
-| `model` | Agent's configured model | LLM used for hypothesis generation (use a small/fast model) |
-| `maxTokens` | `256` | Max tokens for the hypothetical answer |
-| `temperature` | `0.7` | Creativity of the hypothesis — higher values explore more |
-| `similarityThreshold` | `0.7` | Starting similarity score for vector search |
+| `initialThreshold` | `0.7` | Starting similarity score for vector search |
 | `thresholdStep` | `0.1` | How much to lower the threshold on each retry |
 | `minThreshold` | `0.3` | Lowest similarity threshold before giving up |
+| `adaptiveThreshold` | `true` | Whether to step the threshold down automatically |
+| `maxHypothesisTokens` | `200` | Token budget guidance for the hypothetical answer prompt |
+| `fullAnswerGranularity` | `true` | Prefer full prose answers instead of terse keyword expansions |
+| `hypothesisSystemPrompt` | Built-in default | Advanced override for the HyDE hypothesis prompt |
 
 ## Performance
 
