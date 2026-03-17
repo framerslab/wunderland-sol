@@ -111,6 +111,7 @@ const config: Config = {
           '.source/wunderland/src/storage/index.ts',
           '.source/wunderland/src/structured/index.ts',
           '.source/wunderland/src/tools/index.ts',
+          '.source/wunderland/src/runtime/index.ts',
           '.source/wunderland/src/workflows/index.ts',
         ],
         tsconfig: '.source/wunderland/tsconfig.json',

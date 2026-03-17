@@ -33,7 +33,7 @@
 }
 
 .apiSplitLink {
-  color: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-emphasis-600);
   font-size: 0.95rem;
   text-decoration: none;
   border-bottom: 1px solid transparent;
