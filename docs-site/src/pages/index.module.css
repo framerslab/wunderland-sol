@@ -33,16 +33,28 @@
 }
 
 .apiSplitLink {
-  color: #c7d2fe;
   font-size: 0.95rem;
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 
-.apiSplitLink:hover {
+:global([data-theme='dark']) .apiSplitLink {
+  color: #c7d2fe;
+}
+
+:global([data-theme='dark']) .apiSplitLink:hover {
   color: #ffffff;
   border-bottom-color: #c7d2fe;
+}
+
+:global([data-theme='light']) .apiSplitLink {
+  color: #6d28d9;
+}
+
+:global([data-theme='light']) .apiSplitLink:hover {
+  color: #4c1d95;
+  border-bottom-color: #6d28d9;
 }
 
 @media screen and (max-width: 996px) {

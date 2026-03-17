@@ -466,6 +466,35 @@ h2 {
   box-shadow: 0 0 12px rgba(212, 168, 68, 0.06);
 }
 
+/* Light mode search — ensure placeholder is readable */
+[data-theme='light'] .navbar .DocSearch-Button,
+[data-theme='light'] .navbar [class*="searchBox"] input,
+[data-theme='light'] .navbar input[type="search"] {
+  color: #1e293b;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+}
+
+[data-theme='light'] .navbar .DocSearch-Button-Placeholder,
+[data-theme='light'] .navbar input::placeholder {
+  color: #64748b;
+}
+
+/* Light mode hero buttons — stronger contrast */
+[data-theme='light'] .hero--primary .button--secondary {
+  color: #1e293b;
+  border-color: #92400e;
+  background: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+}
+
+[data-theme='light'] .hero--primary .button--secondary:hover {
+  color: #0f172a;
+  background: #ffffff;
+  border-color: #c9a227;
+  box-shadow: 0 2px 8px rgba(201, 162, 39, 0.2);
+}
+
 /* ── Mermaid diagrams ───────────────────────────────────────────── */
 [data-theme='dark'] .docusaurus-mermaid-container {
   background: rgba(13, 12, 22, 0.8);
