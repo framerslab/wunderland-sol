@@ -151,7 +151,7 @@ When re-running setup, existing keys are preserved. New keys are added, and upda
 
 ## Smart Config Widget (Workspace)
 
-The **Smart Config** widget in the [Workspace](/app/workspace) provides an AI-powered alternative to manual key entry. Instead of configuring credentials one by one, paste your entire `.env` block and let GPT-4o automatically identify and map each key.
+The **Smart Config** widget in the Wunderland app provides an AI-powered alternative to manual key entry. Instead of configuring credentials one by one, paste your entire `.env` block and let GPT-4o automatically identify and map each key.
 
 ### How It Works
 

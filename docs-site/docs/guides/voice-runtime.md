@@ -36,6 +36,7 @@ wunderland config set sttModel whisper-1
 export OPENAI_API_KEY=sk-...          # OpenAI TTS + Whisper STT
 export ELEVENLABS_API_KEY=...         # ElevenLabs TTS
 export DEEPGRAM_API_KEY=...           # Deepgram STT
+export WHISPER_LOCAL_BASE_URL=http://127.0.0.1:8080/v1  # Local OpenAI-compatible STT
 ```
 
 ---
@@ -105,18 +106,23 @@ Returns `audioBase64` (base64-encoded audio), `contentType`, `provider`, `voice`
 
 ### `speech_to_text` Tool
 
-Transcribes audio using OpenAI Whisper. Accepts base64 audio or a fetchable URL.
+Transcribes audio using OpenAI Whisper, Deepgram, or a local OpenAI-compatible
+Whisper runtime. Accepts base64 audio or a fetchable URL.
 
 ```json
 {
   "audioBase64": "UklGRi...",
+  "provider": "auto",
   "language": "en",
   "model": "whisper-1",
   "responseFormat": "verbose_json"
 }
 ```
 
-Returns `text`, `language`, `durationSeconds`, and optional `segments` with word-level timestamps.
+Returns `text`, `provider`, `model`, `language`, `durationSeconds`, and optional
+`segments` with word-level timestamps or utterance groupings.
+
+**Provider resolution order:** `OPENAI_API_KEY` > `DEEPGRAM_API_KEY` > explicitly configured `WHISPER_LOCAL_BASE_URL`
 
 ### Example: Agent Uses TTS in Conversation
 
@@ -173,6 +179,7 @@ Or set the `TTS_PROVIDER` environment variable globally:
 
 ```bash
 export TTS_PROVIDER=elevenlabs
+export STT_PROVIDER=deepgram
 ```
 
 ---
@@ -433,5 +440,5 @@ wunderland config set voiceProvider openai
 
 - [CLI Command Reference](/docs/api/cli-reference) — Full command surface
 - [Voice Concierge Use Case](/docs/use-cases/voice-concierge) — Build a speech-enabled assistant
-- [LLM Provider Setup](/docs/guides/llm-providers) — Configure your LLM backend
+- [LLM Provider Setup](/docs/guides/model-providers) — Configure your LLM backend
 - [Configuration](/docs/getting-started/configuration) — Full config reference

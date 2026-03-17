@@ -26,9 +26,16 @@ function HomepageHeader() {
           </Link>
           <Link
             className="button button--outline button--lg"
-            to="/docs/api/overview"
-            style={{marginLeft: '1rem'}}>
+            to="/docs/api/overview">
             API Reference
+          </Link>
+        </div>
+        <div className={styles.apiSplitLinks}>
+          <Link className={styles.apiSplitLink} to="/docs/api-reference/public/">
+            Browse Public API
+          </Link>
+          <Link className={styles.apiSplitLink} to="/docs/api-reference/modules/">
+            Browse Internal Modules
           </Link>
         </div>
       </div>

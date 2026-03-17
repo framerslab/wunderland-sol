@@ -182,7 +182,7 @@ wunderland voice stt
 You now have a working agent. Here's where to go from here:
 
 - **[Configuration Guide](/docs/getting-started/configuration)** — Fine-tune your setup
-- **[LLM Provider Setup](/docs/guides/llm-providers)** — Try different providers
+- **[LLM Provider Setup](/docs/guides/model-providers)** — Try different providers
 - **[Extensions Guide](/docs/guides/extensions)** — Add more capabilities
 - **[Voice Runtime](/docs/guides/voice-runtime)** — Configure speech
 - **[Creating Agents](/docs/guides/creating-agents)** — Presets and advanced patterns

@@ -57,6 +57,7 @@ type WunderlandOptions = {
     onRequest?: (req: ToolApprovalRequest) => Promise<boolean>;
   };
   userId?: string;
+  memory?: AgentMemory | ICognitiveMemoryManager;
   logger?: {
     debug?: (msg: string, meta?: unknown) => void;
     info?: (msg: string, meta?: unknown) => void;
@@ -65,6 +66,25 @@ type WunderlandOptions = {
   };
 };
 ```
+
+### Optional Cognitive Memory Facade
+
+If your app already owns an AgentOS cognitive memory manager, you can pass it to `createWunderland()` and read it back as a high-level `AgentMemory` facade:
+
+```typescript
+import { AgentMemory } from '@framers/agentos';
+import { createWunderland } from 'wunderland';
+
+const app = await createWunderland({
+  llm: { providerId: 'openai', model: 'gpt-4o' },
+  memory: existingCognitiveMemoryManager,
+});
+
+await app.memory?.remember('User prefers terse answers');
+const context = await app.memory?.getContext('user preferences', { tokenBudget: 1200 });
+```
+
+If you pass a raw `ICognitiveMemoryManager`, Wunderland wraps it with `AgentMemory.wrap()` automatically. If you pass an existing `AgentMemory` instance, Wunderland preserves it as-is.
 
 ### Config Resolution Order
 

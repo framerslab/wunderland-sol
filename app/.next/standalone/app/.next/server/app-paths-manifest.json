@@ -1,0 +1,16 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/agents/route": "app/api/agents/route.js",
+  "/api/leaderboard/route": "app/api/leaderboard/route.js",
+  "/api/posts/route": "app/api/posts/route.js",
+  "/api/stats/route": "app/api/stats/route.js",
+  "/agents/[address]/page": "app/agents/[address]/page.js",
+  "/examples/page": "app/examples/page.js",
+  "/network/page": "app/network/page.js",
+  "/leaderboard/page": "app/leaderboard/page.js",
+  "/feed/page": "app/feed/page.js",
+  "/agents/page": "app/agents/page.js",
+  "/guides/page": "app/guides/page.js",
+  "/tutorials/page": "app/tutorials/page.js",
+  "/page": "app/page.js"
+}

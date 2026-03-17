@@ -99,7 +99,7 @@ Interactive prompts for:
 |----------|---------|
 | Image generation | OpenAI (DALL-E 3), Stability AI (SDXL) |
 | Text-to-speech | OpenAI TTS, ElevenLabs |
-| Speech-to-text | OpenAI Whisper, Deepgram |
+| Speech-to-text | OpenAI Whisper, Deepgram, Whisper-local |
 | Web search | Serper (Google), Brave Search, DuckDuckGo |
 
 Saved to `~/.wunderland/config.json` under `providerDefaults`.

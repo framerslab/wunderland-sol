@@ -39,6 +39,15 @@ const LOCAL_PKG = resolve(ROOT, '../../../packages/wunderland');
 // GitHub repo URL for CI builds
 const REPO_URL = 'https://github.com/jddunn/wunderland.git';
 
+function resolveExistingPath(...candidates) {
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
 function syncTypedocMedia() {
   // TypeDoc readme gets rewritten to `_media/*` links, but with `trailingSlash: false`
   // those resolve to `/docs/_media/*` (not `/docs/api-reference/_media/*`).
@@ -55,8 +64,20 @@ function syncTypedocMedia() {
   ];
 
   const assets = [
-    { src: resolve(assetsDir, 'wunderland-logo.svg'), dest: 'wunderland-logo.svg' },
-    { src: resolve(assetsDir, 'wunderland-logo-light.svg'), dest: 'wunderland-logo-light.svg' },
+    {
+      src: resolveExistingPath(
+        resolve(assetsDir, 'wunderland-logo.svg'),
+        resolve(assetsDir, 'logo-transparent.svg'),
+      ),
+      dest: 'wunderland-logo.svg',
+    },
+    {
+      src: resolveExistingPath(
+        resolve(assetsDir, 'wunderland-logo-light.svg'),
+        resolve(assetsDir, 'logo-transparent.svg'),
+      ),
+      dest: 'wunderland-logo-light.svg',
+    },
   ];
 
   mkdirSync(STATIC_MEDIA_DIR, { recursive: true });
@@ -72,8 +93,8 @@ function syncTypedocMedia() {
 
   // Copy static assets (logos) for markdown pages to reference.
   for (const asset of assets) {
-    if (!existsSync(asset.src)) {
-      console.warn(`pull-source: Missing media file: ${asset.src}`);
+    if (!asset.src) {
+      console.warn('pull-source: Missing media file: no wunderland logo asset found');
       continue;
     }
     copyFileSync(asset.src, resolve(DOCS_MEDIA_DIR, asset.dest));

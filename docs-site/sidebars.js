@@ -1,12 +1,20 @@
 // @ts-check
 
-// Try to import TypeDoc-generated sidebar (may not exist on first build)
-let typedocSidebarItems = [];
+// Try to import TypeDoc-generated sidebars (may not exist on first build)
+let publicTypedocSidebarItems = [];
+let internalTypedocSidebarItems = [];
 try {
-  const loaded = require('./docs/api-reference/typedoc-sidebar.cjs');
-  typedocSidebarItems = Array.isArray(loaded) ? loaded : loaded?.items ?? [];
+  const loaded = require('./docs/api-reference/public/typedoc-sidebar.cjs');
+  publicTypedocSidebarItems = Array.isArray(loaded) ? loaded : loaded?.items ?? [];
 } catch {
-  // TypeDoc sidebar not yet generated — will be created during build
+  // Public TypeDoc sidebar not yet generated — will be created during build
+}
+
+try {
+  const loaded = require('./docs/api-reference/modules/typedoc-sidebar.cjs');
+  internalTypedocSidebarItems = Array.isArray(loaded) ? loaded : loaded?.items ?? [];
+} catch {
+  // Internal TypeDoc sidebar not yet generated — will be created during build
 }
 
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
@@ -127,7 +135,16 @@ const sidebars = {
   apiSidebar: [
     'api/overview',
     'api/cli-reference',
-    ...typedocSidebarItems,
+    {
+      type: 'category',
+      label: 'Public API',
+      items: publicTypedocSidebarItems,
+    },
+    {
+      type: 'category',
+      label: 'Internal Modules',
+      items: internalTypedocSidebarItems,
+    },
   ],
 };
 

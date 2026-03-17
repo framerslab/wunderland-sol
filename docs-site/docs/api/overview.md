@@ -92,7 +92,12 @@ import { createWunderlandTools, SocialPostTool } from 'wunderland/tools';
 
 ## Auto-Generated Reference
 
-The full auto-generated TypeDoc API reference is available in the sidebar under **API Reference**. It documents every exported class, interface, type, function, and constant with their signatures and JSDoc descriptions.
+The generated API reference is intentionally split into two surfaces:
+
+- **Public API** — the stable, high-level `wunderland` package entrypoint intended for most application developers
+- **Internal Modules** — expanded class and module docs for the advanced subsystem entrypoints (`wunderland/advanced/*`, `wunderland/tools`, and related internals)
+
+Use the **Public API** section first if you are integrating Wunderland into an app or service. Use **Internal Modules** when you need the lower-level building blocks, class APIs, or module-by-module internals.
 
 ## Web App API Routes
 

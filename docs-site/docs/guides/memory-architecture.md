@@ -257,7 +257,7 @@ Lessons are deduplicated per session and surfaced by RAG retrieval on future sim
 
 ## HyDE Retrieval
 
-[Hypothetical Document Embedding](/guides/hyde-retrieval) improves memory retrieval by generating a hypothetical answer before searching. Enabled by default.
+[Hypothetical Document Embedding](/docs/guides/hyde-retrieval) improves memory retrieval by generating a hypothetical answer before searching. Enabled by default.
 
 ```json
 {
