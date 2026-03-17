@@ -172,6 +172,35 @@ h2 {
   font-size: 1.05rem;
   letter-spacing: 0.02em;
   opacity: 0.85;
+  color: #e2e8f0;
+}
+
+[data-theme='light'] .hero__subtitle {
+  color: #334155;
+}
+
+/* Hero buttons — ensure readable on dark/light hero backgrounds */
+.hero--primary .button--secondary {
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hero--primary .button--secondary:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='light'] .hero--primary .button--secondary {
+  color: #1e293b;
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme='light'] .hero--primary .button--secondary:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 /* ── Sidebar — ornate Art Deco ──────────────────────────────────── */

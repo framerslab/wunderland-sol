@@ -33,17 +33,16 @@
 }
 
 .apiSplitLink {
-  color: var(--ifm-hero-text-color);
-  opacity: 0.65;
+  color: #c7d2fe;
   font-size: 0.95rem;
   text-decoration: none;
   border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease, opacity 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .apiSplitLink:hover {
-  opacity: 1;
-  border-bottom-color: var(--ifm-color-primary);
+  color: #ffffff;
+  border-bottom-color: #c7d2fe;
 }
 
 @media screen and (max-width: 996px) {
