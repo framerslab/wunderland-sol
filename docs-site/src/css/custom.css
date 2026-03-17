@@ -203,6 +203,26 @@ h2 {
   background: rgba(255, 255, 255, 0.9);
 }
 
+/* ── Hero sub-links (Browse Public API / Browse Internal Modules) ── */
+[data-theme='dark'] .hero--primary a[class*="apiSplitLink"] {
+  color: #c7d2fe !important;
+}
+
+[data-theme='dark'] .hero--primary a[class*="apiSplitLink"]:hover {
+  color: #ffffff !important;
+  border-bottom-color: #c7d2fe;
+}
+
+[data-theme='light'] .hero--primary a[class*="apiSplitLink"] {
+  color: #7c3aed !important;
+  font-weight: 500;
+}
+
+[data-theme='light'] .hero--primary a[class*="apiSplitLink"]:hover {
+  color: #4c1d95 !important;
+  border-bottom-color: #7c3aed;
+}
+
 /* ── Sidebar — ornate Art Deco ──────────────────────────────────── */
 [data-theme='dark'] .menu {
   background-color: transparent;
