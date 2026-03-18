@@ -67,7 +67,7 @@ const repositories: Repository[] = [
   },
   {
     name: 'AgentOS Skills',
-    description: '18 curated SKILL.md prompt modules — weather, GitHub, Slack, Notion, Spotify, coding-agent, and more. Data-only package with zero runtime dependencies.',
+    description: '40 curated SKILL.md prompt modules spanning research, developer tooling, productivity, social automation, voice, and more. Typed SDK with lazy-loading factories and zero-cost catalog queries.',
     url: 'https://github.com/framersai/agentos-skills',
     category: 'core',
     icon: BookOpen,

@@ -103,8 +103,8 @@ const EXTRACTION_PROMPT = `You are an AI configuration expert. Extract structure
 - devops-assistant: Infrastructure and deployment specialist
 - personal-assistant: Friendly, organized daily helper
 
-**Available skills (18 curated):**
-web-search, weather, summarize, github, coding-agent, git, slack-helper, discord-helper, notion, obsidian, trello, apple-notes, apple-reminders, healthcheck, spotify-player, whisper-transcribe, 1password, image-gen
+**Available skills (40 curated):**
+web-search, weather, summarize, deep-research, github, coding-agent, git, slack-helper, discord-helper, notion, obsidian, trello, apple-notes, apple-reminders, healthcheck, spotify-player, whisper-transcribe, 1password, image-gen, memory-manager, voice-conversation, account-manager, content-creator, cloud-ops, web-scraper, site-deploy, seo-campaign, social-broadcast, twitter-bot, instagram-bot, linkedin-bot, facebook-bot, threads-bot, bluesky-bot, mastodon-bot, youtube-bot, tiktok-bot, pinterest-bot, reddit-bot, blog-publisher
 
 **Available tools:**
 web-search, web-browser, cli-executor, giphy, image-search, voice-synthesis, news-search

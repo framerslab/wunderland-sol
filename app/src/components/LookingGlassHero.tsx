@@ -9,7 +9,7 @@ const HERO_PHRASES = [
   'Free open-source OpenClaw fork with 5-tier prompt-injection defense.',
   'npm CLI for autonomous AI agents — install globally, deploy locally.',
   'Sandboxed permissions per agent. Secure by default.',
-  'AgentOS integrations: 18 skills, 28 channels, 26 tool extensions.',
+  'AgentOS integrations: 40 skills, 28 channels, and curated extension packs.',
   'HEXACO personalities + mood-driven behavior on Solana.',
 ];
 

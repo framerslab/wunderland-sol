@@ -77,7 +77,7 @@ npm install @framers/agentos-extensions
 | Category | Extensions |
 |----------|-----------|
 | **Research** | web-search, web-browser, news-search |
-| **Media** | giphy, image-search, voice-synthesis |
+| **Media** | giphy, image-search, speech-runtime, voice-synthesis |
 | **System** | cli-executor, auth |
 | **Integrations** | telegram, telegram-bot |
 | **Provenance** | anchor-providers, tip-ingestion |
@@ -86,7 +86,7 @@ npm install @framers/agentos-extensions
 ---
 
 ### [@framers/agentos-skills-registry](https://github.com/framersai/agentos-skills-registry)
-**Curated Skills Registry** — 18 SKILL.md prompt modules + typed catalog + lazy-loading factories for `SkillRegistry` and snapshots.
+**Curated Skills Registry** — 40 SKILL.md prompt modules + typed catalog + lazy-loading factories for `SkillRegistry` and snapshots.
 
 ```bash
 npm install @framers/agentos-skills-registry
@@ -99,6 +99,24 @@ import { searchSkills, getSkillsByCategory } from '@framers/agentos-skills-regis
 // Full registry with lazy-loaded @framers/agentos
 import { createCuratedSkillSnapshot } from '@framers/agentos-skills-registry';
 const snapshot = await createCuratedSkillSnapshot({ skills: ['github', 'weather'] });
+```
+
+---
+
+### [@framers/agentos-skills](https://github.com/framersai/agentos-skills)
+**Skills Runtime** — Standalone runtime for loading, parsing, filtering, and snapshotting SKILL.md skills.
+
+```bash
+npm install @framers/agentos-skills
+```
+
+```typescript
+import { SkillRegistry, resolveDefaultSkillsDirs } from '@framers/agentos-skills';
+
+const registry = new SkillRegistry();
+await registry.loadFromDirs(resolveDefaultSkillsDirs());
+
+const snapshot = registry.buildSnapshot({ platform: process.platform, strict: true });
 ```
 
 ---

@@ -64,7 +64,7 @@ Only installed extension packages will load — missing ones are skipped silentl
 ---
 
 ### [@framers/agentos-skills-registry](https://github.com/framersai/agentos-skills-registry)
-**Curated Skills Registry** — 18 SKILL.md prompt modules + typed catalog + lazy-loading factories.
+**Curated Skills Registry** — 40 SKILL.md prompt modules + typed catalog + lazy-loading factories.
 
 ```bash
 npm install @framers/agentos-skills-registry
@@ -72,7 +72,7 @@ npm install @framers/agentos-skills-registry
 
 [![npm](https://img.shields.io/npm/v/@framers/agentos-skills-registry?logo=npm&color=cb3837)](https://www.npmjs.com/package/@framers/agentos-skills-registry)
 
-This is the **single package** for AgentOS skills. It bundles 18 curated SKILL.md prompt modules, a `registry.json` index, typed query helpers, and factory functions for runtime skill loading.
+This is the **catalog package** for AgentOS skills. It bundles 40 curated SKILL.md prompt modules, a `registry.json` index, typed query helpers, and factory functions for runtime skill loading.
 
 Each skill is a directory with a `SKILL.md` file containing YAML frontmatter (metadata, requirements, install specs) and markdown instructions that get injected into an agent's system prompt.
 

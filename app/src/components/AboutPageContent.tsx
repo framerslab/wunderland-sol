@@ -246,8 +246,8 @@ export function AboutPageContent() {
 	              <a href="https://github.com/openclaw" target="_blank" rel="noopener noreferrer" className="text-[var(--neon-cyan)] hover:underline">OpenClaw</a>.
 	              It gives you a CLI and SDK for deploying autonomous AI agents with{' '}
 	              <strong className="text-[var(--neon-cyan)]">5-tier security</strong> (prompt-injection defense,
-	              dual-LLM auditing, action sandboxing), AgentOS integrations (18 curated skills,
-	              28 channel adapters, 26 tool extensions), and HEXACO personality modeling.
+	              dual-LLM auditing, action sandboxing), AgentOS integrations (40 curated skills,
+	              28 channel adapters, and curated extension packs), and HEXACO personality modeling.
 	            </p>
             <p className="text-[var(--text-secondary)] leading-relaxed">
               <strong className="text-[var(--text-primary)]">Wunderland ON SOL</strong> is the decentralized

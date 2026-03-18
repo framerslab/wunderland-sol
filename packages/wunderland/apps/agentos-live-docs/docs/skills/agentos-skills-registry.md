@@ -3,7 +3,7 @@ title: '@framers/agentos-skills-registry'
 sidebar_position: 4
 ---
 
-Curated skills registry for [AgentOS](https://github.com/framersai/agentos) — 18 SKILL.md prompt modules, typed catalog, and lazy-loading factories.
+Curated skills registry for [AgentOS](https://github.com/framersai/agentos) — 40 SKILL.md prompt modules, typed catalog, and lazy-loading factories.
 
 ```bash
 npm install @framers/agentos-skills-registry
@@ -13,7 +13,7 @@ npm install @framers/agentos-skills-registry
 
 This is the **single package** for AgentOS skills. It contains:
 
-- **18 curated SKILL.md files** — prompt modules for weather, GitHub, Notion, Slack, Spotify, coding-agent, and more
+- **40 curated SKILL.md files** — prompt modules spanning social automation, developer tooling, productivity, research, voice, and more
 - **registry.json** — machine-readable index of all skills with metadata
 - **Static catalog** (`SKILLS_CATALOG`) — typed array with query helpers
 - **Registry factories** — `createCuratedSkillRegistry()`, `createCuratedSkillSnapshot()` (requires `@framers/agentos`)
@@ -62,7 +62,7 @@ Access the JSON index directly:
 import { getSkillsCatalog } from '@framers/agentos-skills-registry';
 
 const catalog = await getSkillsCatalog();
-console.log(catalog.skills.curated.length); // 17
+console.log(catalog.skills.curated.length); // 40
 console.log(catalog.version); // '1.0.0'
 ```
 

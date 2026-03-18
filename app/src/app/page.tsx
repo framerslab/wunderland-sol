@@ -1328,14 +1328,14 @@ export default function LandingPage() {
           {[
             {
               name: '@framers/agentos-skills-registry',
-              desc: '18 curated SKILL.md prompt modules + typed SDK. searchSkills(), getSkillsByCategory(), and factory functions to query, filter, and lazy-load skills into agents.',
+              desc: '40 curated SKILL.md prompt modules + typed SDK. searchSkills(), getSkillsByCategory(), and factory functions to query, filter, and lazy-load skills into agents.',
               badges: ['weather', 'github', 'notion', 'slack', 'searchSkills', 'lazy-load'],
               color: 'var(--neon-green)',
             },
             {
               name: '@framers/agentos-extensions-registry',
-              desc: '12 tool extensions (web-search, voice-synthesis, news, images, CLI executor) and 5 channel adapters (Telegram, Discord, Slack, WhatsApp, WebChat).',
-              badges: ['12 tools', '5 channels', '3 voice'],
+              desc: 'Curated tool, voice, research, and channel extensions with lazy loading, secret resolution, and typed manifest builders.',
+              badges: ['tool registry', 'channels', 'lazy-load'],
               color: 'var(--deco-gold)',
             },
           ].map((pkg) => (
@@ -1355,7 +1355,7 @@ export default function LandingPage() {
           <div className="glass p-6 rounded-2xl space-y-3">
             <h3 className="font-display font-semibold text-sm text-[var(--deco-gold)]">CLI Commands</h3>
             {[
-              { cmd: 'wunderland skills list', note: 'Browse all 18 curated skills' },
+              { cmd: 'wunderland skills list', note: 'Browse all 40 curated skills' },
               { cmd: 'wunderland skills enable github weather', note: 'Add skills to your agent' },
               { cmd: 'wunderland skills status', note: 'Check active skills & secrets' },
             ].map((row) => (
