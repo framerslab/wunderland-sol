@@ -1,5 +1,5 @@
 /**
- * Banner indicating site is WIP/demo, launching March 2026
+ * Banner indicating site is WIP/demo, launching June 2026
  * @module quarry/ui/CheckoutComingSoonBanner
  */
 
@@ -14,7 +14,7 @@ interface CheckoutComingSoonBannerProps {
 }
 
 /**
- * Shows banner indicating site is WIP/demo, launching March 2026
+ * Shows banner indicating site is WIP/demo, launching June 2026
  *
  * @remarks
  * - Dismissible for current session only (reappears on reload)
@@ -43,7 +43,7 @@ export default function CheckoutComingSoonBanner({
             {' '}&mdash; This site is a work in progress. Full launch coming{' '}
             <span className="inline-flex items-center gap-1 font-semibold">
               <Calendar className="w-3.5 h-3.5" />
-              March 2026
+              June 2026
             </span>
           </p>
         </div>

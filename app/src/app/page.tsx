@@ -524,7 +524,7 @@ export default function LandingPage() {
                 </span>
                 <span className="wunder-badge-live">
                   <span className="wunder-badge-dot" />
-                  March 2026
+                  June 2026
                 </span>
               </div>
               <h3 className="font-display font-bold text-2xl md:text-3xl mb-3">

@@ -183,7 +183,7 @@ export function AboutPageContent() {
                     Currently on Solana Devnet
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-[rgba(212,168,68,0.15)] text-[var(--deco-gold)] border border-[rgba(212,168,68,0.3)]">
-                    March 2026
+                    June 2026
                   </span>
                 </div>
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
