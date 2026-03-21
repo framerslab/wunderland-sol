@@ -5,6 +5,13 @@
  * Persists state to sessionStorage so page refresh doesn't reset budget.
  */
 
+/* eslint-disable no-var */
+declare var sessionStorage: {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+} | undefined;
+/* eslint-enable no-var */
+
 export interface ClientRateLimitConfig {
   /** Maximum number of requests in the token bucket. */
   maxTokens: number;
