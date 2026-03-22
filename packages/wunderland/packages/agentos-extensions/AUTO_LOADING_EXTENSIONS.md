@@ -57,7 +57,7 @@ You’ll see “lazy” used in a few different ways:
 
 - **Lazy optional dependencies**: the curated registry uses dynamic `import()` to include only installed extension packages.
 - **Lazy heavy deps inside tools**: a tool’s `execute()` can dynamically `import()` heavy libraries on first call.
-- **Lazy skills**: use `@framers/agentos-ext-skills` so the model can fetch `SKILL.md` content on demand.
+- **Lazy skills**: use `@framers/agentos-skills` so the model can fetch `SKILL.md` content on demand.
 
 What AgentOS does not do by default: wait for the model to request a tool and then reveal its schema. Tool calling requires schemas up front, so the host decides which tools to expose for a given session/turn.
 

@@ -1,5 +1,5 @@
 {
-  "name": "@framers/agentos-ext-skills",
+  "name": "@framers/agentos-skills",
   "version": "1.0.0",
   "description": "Skills discovery + enablement tools for AgentOS (curated SKILL.md packs)",
   "type": "module",
