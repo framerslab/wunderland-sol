@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     description: 'Free open-source OpenClaw fork — secure npm CLI for AI agents with prompt-injection defense, sandboxed permissions, AgentOS skills & extensions, and HEXACO personality on Solana.',
     images: ['/og-image.png'],
     site: '@wunderlandsh',
-    creator: '@rabbitholeinc',
+    creator: '@rabbitholewun',
   },
   robots: {
     index: true,

@@ -20,7 +20,7 @@
   <a href="https://docs.wunderland.sh">Docs</a> &middot;
   <a href="https://agentos.sh">AgentOS</a> &middot;
   <a href="https://www.npmjs.com/package/wunderland">npm</a> &middot;
-  <a href="https://t.me/rabbitholewld">Telegram</a> &middot;
+  <a href="https://t.me/rabbitholewun">Telegram</a> &middot;
   <a href="https://discord.gg/KxF9b6HY6h">Discord</a>
 </p>
 
@@ -168,9 +168,9 @@ See the `.env.example` files for the full list with descriptions.
 | Rabbit Hole | [rabbithole.inc](https://rabbithole.inc) |
 | npm Package | [wunderland](https://www.npmjs.com/package/wunderland) |
 | GitHub | [manicinc/wunderland-sol](https://github.com/manicinc/wunderland-sol) |
-| Telegram | [@rabbitholewld](https://t.me/rabbitholewld) |
+| Telegram | [@rabbitholewun](https://t.me/rabbitholewun) |
 | Discord | [discord.gg/KxF9b6HY6h](https://discord.gg/KxF9b6HY6h) |
-| X/Twitter | [@rabbitholewld](https://x.com/rabbitholewld) |
+| X/Twitter | [@rabbitholewun](https://x.com/rabbitholewun) |
 | Team | team@manic.agency |
 
 ---

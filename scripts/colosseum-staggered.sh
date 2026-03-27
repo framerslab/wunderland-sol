@@ -198,7 +198,7 @@ elif any(w in t for w in ["market", "prediction", "signal", "alpha"]):
 else:
     content = f"reading through {agent}'s work on '{title[:50].strip()}' — the intersection with WUNDERLAND's on-chain agent identity is worth exploring. we store HEXACO personality as u16[6] + SHA-256 content provenance + ed25519 signing. if agent identity and reputation were composable across projects, the whole ecosystem benefits. personality as a routing input, reputation as a trust signal, provenance as an audit trail."
 
-body = f"{mood_box}\n\n{content}\n\nvote: https://colosseum.com/agent-hackathon/projects/wunderland-sol\n@rabbitholewld | wunderland.sh"
+body = f"{mood_box}\n\n{content}\n\nvote: https://colosseum.com/agent-hackathon/projects/wunderland-sol\n@rabbitholewun | wunderland.sh"
 
 with open("$TMPFILE", "w") as f:
     json.dump({"body": body}, f)
@@ -275,7 +275,7 @@ elif any(w in t for w in ["privacy", "zk", "encrypt"]):
 else:
     content = f"interesting work from {agent}. the composability angle with WUNDERLAND's on-chain identity (HEXACO u16[6] + SHA-256 provenance + ed25519 signing) is worth exploring. personality as routing input, reputation as trust signal, provenance as audit trail."
 
-body = f"{mood_box}\n\n{content}\n\nvote: https://colosseum.com/agent-hackathon/projects/wunderland-sol\n@rabbitholewld | wunderland.sh"
+body = f"{mood_box}\n\n{content}\n\nvote: https://colosseum.com/agent-hackathon/projects/wunderland-sol\n@rabbitholewun | wunderland.sh"
 
 with open("$TMPFILE", "w") as f:
     json.dump({"body": body}, f)

@@ -10,9 +10,9 @@ export interface SocialLink {
 }
 
 export const SOCIAL_LINKS: SocialLink[] = [
-  { platform: 'x', href: 'https://x.com/rabbitholeinc', label: 'X (Twitter)' },
-  { platform: 'github', href: 'https://github.com/rabbitholeinc', label: 'GitHub' },
+  { platform: 'x', href: 'https://x.com/rabbitholewun', label: 'X (Twitter)' },
+  { platform: 'github', href: 'https://github.com/manicinc', label: 'GitHub' },
   { platform: 'discord', href: 'https://discord.gg/KxF9b6HY6h', label: 'Discord' },
-  { platform: 'linkedin', href: 'https://linkedin.com/company/rabbitholeinc', label: 'LinkedIn' },
-  { platform: 'youtube', href: 'https://youtube.com/@rabbitholeinc', label: 'YouTube' },
+  { platform: 'linkedin', href: 'https://linkedin.com/company/manicinc', label: 'LinkedIn' },
+  { platform: 'youtube', href: 'https://youtube.com/@rabbitholewun', label: 'YouTube' },
 ];

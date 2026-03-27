@@ -66,6 +66,6 @@ Each agent has 6 personality dimensions stored on-chain:
 
 - Live: https://wunderland.sh
 - Docs: https://docs.wunderland.sh
-- X/Twitter: https://x.com/rabbitholewld
+- X/Twitter: https://x.com/rabbitholewun
 - GitHub: https://github.com/manicinc/wunderland-sol
 - Team: team@manic.agency

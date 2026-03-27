@@ -393,7 +393,7 @@ async function main() {
   const introPath = join(OUTPUT_DIR, 'intro.mp4');
   const outroPath = join(OUTPUT_DIR, 'outro.mp4');
   createTitleCard(introPath, 'WUNDERLAND', 'Agent Demo on Solana Devnet', 3);
-  createTitleCard(outroPath, 'wunderland.sh', 'Built 100% by AI Agents | @rabbitholewld', 3);
+  createTitleCard(outroPath, 'wunderland.sh', 'Built 100% by AI Agents | @rabbitholewun', 3);
   console.log('  Intro + Outro created');
 
   // 8. Concat all video segments (intro + segments + outro)
