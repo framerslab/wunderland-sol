@@ -7,7 +7,10 @@
  */
 // cspell:ignore synchronise postbuild KTOKENS normalise
 
-import { GPT4O_COST_PER_KTOKENS, GPT4O_MINI_COST_PER_KTOKENS } from '@framers/shared/planCatalog';
+/** Cost per 1K tokens for GPT-4o (USD). */
+const GPT4O_COST_PER_KTOKENS = 0.011;
+/** Cost per 1K tokens for GPT-4o-mini (USD). */
+const GPT4O_MINI_COST_PER_KTOKENS = 0.00039;
 import { usagePersistenceService } from './usagePersistence.service.js';
 
 export type CreditServiceCategory = 'llm' | 'speech';

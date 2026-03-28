@@ -15,7 +15,6 @@
   "dependencies": {
     "@framers/agentos": "workspace:*",
     "@framers/agentos-extensions-registry": "workspace:*",
-    "@framers/shared": "workspace:*",
     "@framers/sql-storage-adapter": "workspace:*",
     "@nestjs/common": "^11.1.13",
     "@nestjs/config": "^4.0.2",
