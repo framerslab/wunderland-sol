@@ -20,12 +20,40 @@ RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
 COPY . .
 
 # Strip parent monorepo workspace references (only exist when used as submodule).
-# Replace workspace:* protocol with npm semver ranges so pnpm fetches from registry.
+# Replace workspace:* protocol for EXTERNAL packages (@framers/*, wunderland)
+# with npm semver ranges. Keep workspace:* for LOCAL packages (@wunderland-sol/*,
+# @wunderland/*) which are always in the Docker build context.
 RUN sed -i '/\.\.\/\.\.\//d' pnpm-workspace.yaml \
- && find . -name 'package.json' -maxdepth 3 -not -path '*/node_modules/*' \
-      -exec sed -i \
-        's/"workspace:\*"/">=0.1.0"/g; s/"workspace:\^/"^/g; s/"workspace:~/"~/g' \
-      {} +
+ && node -e ' \
+    const fs = require("fs"); const path = require("path"); \
+    const localScopes = ["@wunderland-sol/", "@wunderland/"]; \
+    function fix(f) { \
+      try { \
+        const pkg = JSON.parse(fs.readFileSync(f, "utf8")); let changed = false; \
+        for (const section of ["dependencies","devDependencies","optionalDependencies","peerDependencies"]) { \
+          if (!pkg[section]) continue; \
+          for (const [name, ver] of Object.entries(pkg[section])) { \
+            if (typeof ver !== "string" || !ver.startsWith("workspace:")) continue; \
+            if (localScopes.some(s => name.startsWith(s))) continue; \
+            pkg[section][name] = ver.replace("workspace:*",">=0.1.0").replace("workspace:^","^").replace("workspace:~","~"); \
+            changed = true; \
+          } \
+        } \
+        if (changed) fs.writeFileSync(f, JSON.stringify(pkg, null, 2) + "\n"); \
+      } catch {} \
+    } \
+    const glob = require("path"); \
+    function walk(dir, depth) { \
+      if (depth > 3) return; \
+      for (const e of fs.readdirSync(dir, {withFileTypes:true})) { \
+        if (e.name === "node_modules") continue; \
+        const p = path.join(dir, e.name); \
+        if (e.isDirectory()) walk(p, depth+1); \
+        else if (e.name === "package.json") fix(p); \
+      } \
+    } \
+    walk(".", 0); \
+  '
 
 RUN pnpm install --no-frozen-lockfile --shamefully-hoist
 
