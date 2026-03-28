@@ -35,7 +35,7 @@ RUN sed -i '/\.\.\/\.\.\//d' pnpm-workspace.yaml \
           for (const [name, ver] of Object.entries(pkg[section])) { \
             if (typeof ver !== "string" || !ver.startsWith("workspace:")) continue; \
             if (localScopes.some(s => name.startsWith(s))) continue; \
-            pkg[section][name] = ver.replace("workspace:*",">=0.1.0").replace("workspace:^","^").replace("workspace:~","~"); \
+            pkg[section][name] = ver.replace("workspace:*","latest").replace("workspace:^","^").replace("workspace:~","~"); \
             changed = true; \
           } \
         } \
@@ -54,6 +54,9 @@ RUN sed -i '/\.\.\/\.\.\//d' pnpm-workspace.yaml \
     } \
     walk(".", 0); \
   '
+
+# Remove stale lock file from when vendored packages existed.
+RUN rm -f pnpm-lock.yaml
 
 RUN pnpm install --no-frozen-lockfile --shamefully-hoist
 
