@@ -16,11 +16,18 @@ RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
 # Copy the full workspace (filtered by .dockerignore).
 COPY . .
 
+# Strip parent monorepo workspace references (only exist when used as submodule).
+# Replace workspace:* protocol with npm semver ranges so pnpm fetches from registry.
+RUN sed -i '/\.\.\/\.\.\//d' pnpm-workspace.yaml \
+ && find . -name 'package.json' -maxdepth 3 -not -path '*/node_modules/*' \
+      -exec sed -i \
+        's/"workspace:\*"/">=0.1.0"/g; s/"workspace:\^/"^/g; s/"workspace:~/"~/g' \
+      {} +
+
 RUN pnpm install --no-frozen-lockfile --shamefully-hoist
 
-# Build SDK first (app depends on it), then build the Next.js app.
-RUN pnpm --filter @framers/shared build \
- && pnpm --filter @wunderland-sol/sdk build \
+# Build local workspace packages, then the Next.js app.
+RUN pnpm --filter @wunderland-sol/sdk build \
  && pnpm --filter @wunderland-sol/app build
 
 # -----------------------------------------------------------------------------

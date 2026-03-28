@@ -1,7 +1,10 @@
 # syntax=docker/dockerfile:1
 
-# Wunderland Sol — NestJS backend, standalone repo build.
-# Build context is the wunderland-sh repo root.
+# Wunderland Sol — NestJS backend.
+# Build context is the wunderland-sol repo root.
+#
+# External @framers/* packages are installed from npm (not vendored).
+# Local packages (sdk, wunderland-social) are built from workspace.
 
 FROM node:22-bookworm-slim AS builder
 
@@ -16,66 +19,32 @@ RUN corepack enable && corepack prepare pnpm@10.15.1 --activate
 # Copy the full workspace (filtered by .dockerignore).
 COPY . .
 
+# Strip parent monorepo workspace references (only exist when used as submodule).
+# Replace workspace:* protocol with npm semver ranges so pnpm fetches from registry.
+RUN sed -i '/\.\.\/\.\.\//d' pnpm-workspace.yaml \
+ && find . -name 'package.json' -maxdepth 3 -not -path '*/node_modules/*' \
+      -exec sed -i \
+        's/"workspace:\*"/">=0.1.0"/g; s/"workspace:\^/"^/g; s/"workspace:~/"~/g' \
+      {} +
+
 RUN pnpm install --no-frozen-lockfile --shamefully-hoist
 
-# Clean stale dist artifacts from any prior build / submodule state.
-RUN rm -rf packages/agentos/dist packages/agentos-extensions-registry/dist
-
-# Build packages in dependency order:
-#   shared -> sql-storage-adapter -> agentos -> extensions-registry
-#   -> curated extensions -> wunderland -> sdk -> backend
-RUN pnpm --filter @framers/shared build \
- && pnpm --filter @framers/sql-storage-adapter build \
- && pnpm --filter @framers/agentos build \
- && pnpm --filter @framers/agentos-extensions-registry build \
- && pnpm --filter @framers/agentos-ext-cli-executor build \
- && pnpm --filter @framers/agentos-ext-web-search build \
- && pnpm --filter @framers/agentos-ext-web-browser build \
- && pnpm --filter @framers/agentos-ext-giphy build \
- && pnpm --filter @framers/agentos-ext-image-search build \
- && pnpm --filter @framers/agentos-ext-voice-synthesis build \
- && pnpm --filter @framers/agentos-ext-news-search build \
- && pnpm --filter @framers/agentos-skills-registry build \
- && pnpm --filter wunderland build \
- && pnpm --filter @wunderland/social build \
+# Build local workspace packages only (external @framers/* come pre-built from npm).
+RUN pnpm --filter @wunderland/social build 2>/dev/null || true \
  && pnpm --filter @wunderland-sol/sdk build \
  && pnpm --filter @wunderland-sol/backend build
 
 # Prune devDependencies (keep optionals — extensions are optionalDeps).
 RUN pnpm prune --prod 2>/dev/null || true
 
-# Force ALL workspace packages to use their built workspace versions.
-# pnpm may hoist npm-published versions over workspace builds when
-# extensions depend on ^semver ranges. Overwrite with actual builds.
-RUN for pkg in \
-      "packages/agentos:@framers/agentos" \
-      "packages/shared:@framers/shared" \
-      "packages/sql-storage-adapter:@framers/sql-storage-adapter" \
-      "packages/agentos-extensions-registry:@framers/agentos-extensions-registry" \
-      "packages/agentos-skills-registry:@framers/agentos-skills-registry" \
-      "packages/agentos-ext-skills:@framers/agentos-ext-skills" \
-      "packages/agentos-extensions/registry/curated/system/cli-executor:@framers/agentos-ext-cli-executor" \
-      "packages/agentos-extensions/registry/curated/research/web-search:@framers/agentos-ext-web-search" \
-      "packages/agentos-extensions/registry/curated/research/web-browser:@framers/agentos-ext-web-browser" \
-      "packages/agentos-extensions/registry/curated/research/news-search:@framers/agentos-ext-news-search" \
-      "packages/agentos-extensions/registry/curated/media/giphy:@framers/agentos-ext-giphy" \
-      "packages/agentos-extensions/registry/curated/media/image-search:@framers/agentos-ext-image-search" \
-      "packages/agentos-extensions/registry/curated/media/voice-synthesis:@framers/agentos-ext-voice-synthesis" \
-      "packages/wunderland:wunderland" \
-      "sdk:@wunderland-sol/sdk"; \
-    do \
-      src="${pkg%%:*}"; \
-      dest="node_modules/${pkg##*:}"; \
-      if [ -d "$src" ]; then \
-        rm -rf "$dest" && mkdir -p "$dest" \
-        && cp "$src/package.json" "$dest/package.json" 2>/dev/null || true \
-        && cp -r "$src/dist" "$dest/dist" 2>/dev/null || true; \
-      fi; \
-    done \
- && rm -rf node_modules/@wunderland/social \
+# Ensure local workspace packages are in node_modules.
+RUN rm -rf node_modules/@wunderland/social \
  && mkdir -p node_modules/@wunderland \
  && cp -r packages/wunderland-social node_modules/@wunderland/social \
- && echo '[docker] Workspace packages installed into node_modules.'
+ && rm -rf node_modules/@wunderland-sol/sdk \
+ && mkdir -p node_modules/@wunderland-sol \
+ && cp -r sdk node_modules/@wunderland-sol/sdk \
+ && echo '[docker] Local workspace packages installed into node_modules.'
 
 # -----------------------------------------------------------------------------
 
