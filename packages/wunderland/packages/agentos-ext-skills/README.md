@@ -1,4 +1,4 @@
-# @framers/agentos-skills
+# @framers/agentos-ext-skills
 
 AgentOS extension pack that provides **skills discovery + enablement tools** for `SKILL.md` prompt modules.
 
@@ -19,7 +19,7 @@ This extension is intended to be used alongside:
 
 ```ts
 import { AgentOS } from '@framers/agentos';
-import { createExtensionPack } from '@framers/agentos-skills';
+import { createExtensionPack } from '@framers/agentos-ext-skills';
 
 const agentos = new AgentOS();
 await agentos.initialize({

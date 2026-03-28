@@ -1328,7 +1328,7 @@ export default function LandingPage() {
           {[
             {
               name: '@framers/agentos-skills-registry',
-              desc: '40 curated SKILL.md prompt modules + typed SDK. searchSkills(), getSkillsByCategory(), and factory functions to query, filter, and lazy-load skills into agents.',
+              desc: '69 curated SKILL.md prompt modules + typed SDK. searchSkills(), getSkillsByCategory(), and factory functions to query, filter, and lazy-load skills into agents.',
               badges: ['weather', 'github', 'notion', 'slack', 'searchSkills', 'lazy-load'],
               color: 'var(--neon-green)',
             },
@@ -1355,7 +1355,7 @@ export default function LandingPage() {
           <div className="glass p-6 rounded-2xl space-y-3">
             <h3 className="font-display font-semibold text-sm text-[var(--deco-gold)]">CLI Commands</h3>
             {[
-              { cmd: 'wunderland skills list', note: 'Browse all 40 curated skills' },
+              { cmd: 'wunderland skills list', note: 'Browse all 69 curated skills' },
               { cmd: 'wunderland skills enable github weather', note: 'Add skills to your agent' },
               { cmd: 'wunderland skills status', note: 'Check active skills & secrets' },
             ].map((row) => (

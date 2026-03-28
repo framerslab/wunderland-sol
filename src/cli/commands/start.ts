@@ -156,7 +156,7 @@ export default async function cmdStart(
       import('@framers/agentos-ext-news-search'),
     ]);
 
-    const skillsExtModule: string = '@framers/agentos-skills';
+    const skillsExtModule: string = '@framers/agentos-ext-skills';
     const skillsExt = await import(skillsExtModule).catch(() => null);
 
     const packs = [
@@ -219,7 +219,7 @@ export default async function cmdStart(
       '@framers/agentos-ext-voice-synthesis',
       '@framers/agentos-ext-news-search',
     );
-    if (skillsExt) preloadedPackages.push('@framers/agentos-skills');
+    if (skillsExt) preloadedPackages.push('@framers/agentos-ext-skills');
   }
 
   // In server mode we can't prompt for approvals. Expose only tools that are

@@ -79,7 +79,7 @@ const TABS: EcosystemTab[] = [
       'GMI cognitive architecture',
       'Streaming-first with tool orchestration',
       'Extension system: channels, tools, skills',
-      '@framers/agentos-skills-registry: 40 curated skills + typed catalog with query/filter/lazy-load',
+      '@framers/agentos-skills-registry: 69 curated skills + typed catalog with query/filter/lazy-load',
       'Curated extension packs + 28 channel adapters via @framers/agentos-extensions-registry',
       'Multi-provider inference routing',
     ],

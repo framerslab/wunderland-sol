@@ -86,7 +86,7 @@ npm install @framers/agentos-extensions
 ---
 
 ### [@framers/agentos-skills-registry](https://github.com/framersai/agentos-skills-registry)
-**Curated Skills Registry** — 40 SKILL.md prompt modules + typed catalog + lazy-loading factories for `SkillRegistry` and snapshots.
+**Curated Skills Catalog SDK** — query helpers, factories, and typed SDK for the 69 curated SKILL.md files.
 
 ```bash
 npm install @framers/agentos-skills-registry
@@ -103,15 +103,11 @@ const snapshot = await createCuratedSkillSnapshot({ skills: ['github', 'weather'
 
 ---
 
-### [@framers/agentos-skills](https://github.com/framersai/agentos-skills)
-**Skills Runtime** — Standalone runtime for loading, parsing, filtering, and snapshotting SKILL.md skills.
-
-```bash
-npm install @framers/agentos-skills
-```
+### @framers/agentos/skills
+**Skills Engine** — Runtime for loading, parsing, filtering, and snapshotting SKILL.md skills (SkillLoader, SkillRegistry, path utils). Bundled inside `@framers/agentos`.
 
 ```typescript
-import { SkillRegistry, resolveDefaultSkillsDirs } from '@framers/agentos-skills';
+import { SkillRegistry, resolveDefaultSkillsDirs } from '@framers/agentos/skills';
 
 const registry = new SkillRegistry();
 await registry.loadFromDirs(resolveDefaultSkillsDirs());
@@ -121,11 +117,20 @@ const snapshot = registry.buildSnapshot({ platform: process.platform, strict: tr
 
 ---
 
-### [@framers/agentos-skills](https://github.com/framersai/agentos-skills)
-**Skills Tools Extension** — Tools for skill discovery + enablement (`skills_list`, `skills_read`, `skills_enable`).
+### @framers/agentos-skills
+**Skills Content** — 69 curated SKILL.md files + registry.json (content-only package, no runtime code).
 
 ```bash
 npm install @framers/agentos-skills
+```
+
+---
+
+### [@framers/agentos-ext-skills](https://github.com/framersai/agentos-ext-skills)
+**Skills Tools Extension** — Tools for skill discovery + enablement (`skills_list`, `skills_read`, `skills_enable`).
+
+```bash
+npm install @framers/agentos-ext-skills
 ```
 
 ---

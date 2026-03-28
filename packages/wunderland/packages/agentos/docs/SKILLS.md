@@ -49,22 +49,24 @@ console.log(snapshot.prompt);
 
 ## Curated registry (optional)
 
-- `@framers/agentos-skills-registry` — 40 curated SKILL.md files + typed catalog + helpers to load and build snapshots
+- `@framers/agentos-skills` — 69 curated SKILL.md files + registry.json (content-only)
+- `@framers/agentos-skills-registry` — Catalog SDK with query helpers, factories, and typed catalog
+- `@framers/agentos/skills` — Engine (SkillLoader, SkillRegistry, path utils)
 
-The curated bundle currently includes **40 skills** spanning developer tools, productivity, information, communication, memory, and voice. See `@framers/agentos-skills-registry/registry.json` for the canonical list.
+The curated bundle currently includes **69 skills** spanning developer tools, productivity, information, communication, memory, and voice. See `@framers/agentos-skills-registry/registry.json` for the canonical list.
 
 `@framers/agentos-skills-registry` supports two usage modes:
 
 - Lightweight catalog queries (no `@framers/agentos` peer dependency)
 - Factory helpers that **lazy-load** `@framers/agentos/skills` only when called (to build a `SkillRegistry` or snapshot)
 
-If you’ve installed `@framers/agentos-skills`, agents can inspect these via `skills_read` and enable them into a local skills directory via `skills_enable`.
+If you’ve installed `@framers/agentos-ext-skills`, agents can inspect these via `skills_read` and enable them into a local skills directory via `skills_enable`.
 
 ## Agentic discovery (optional)
 
 If you want agents to **discover and enable** curated skills at runtime (HITL-gated), add:
 
-- `@framers/agentos-skills` — exposes `skills_list`, `skills_read`, and `skills_enable` tools.
+- `@framers/agentos-ext-skills` — exposes `skills_list`, `skills_read`, and `skills_enable` tools.
 
 It also includes:
 

@@ -13,7 +13,7 @@ Skills are **modular prompt modules** that extend what an AgentOS-based agent ca
 ## Skill Docs
 
 - Skill format: [`SKILL.md`](./skill-format)
-- Skills extension (tools): [`@framers/agentos-skills`](./skills-extension)
+- Skills extension (tools): [`@framers/agentos-ext-skills`](./skills-extension)
 - Curated skills registry: [`@framers/agentos-skills-registry`](./agentos-skills-registry) (data + typed SDK + factories)
 
 ## Skills vs Extensions
@@ -71,7 +71,7 @@ const snapshot = await createCuratedSkillSnapshot({ skills: ['github', 'weather'
 
 If you don’t want to inject all skill prompt content up front, load the **skills tool extension**:
 
-- `@framers/agentos-skills`: exposes `skills_list`, `skills_read`, `skills_status`, `skills_enable`, `skills_install`
+- `@framers/agentos-ext-skills`: exposes `skills_list`, `skills_read`, `skills_status`, `skills_enable`, `skills_install`
 
 This enables a “lazy” flow where the model can:
 

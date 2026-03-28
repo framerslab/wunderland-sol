@@ -8,7 +8,7 @@ import { SkillsEnableTool } from '../src/tools/skillsEnable';
 import { SkillsListTool } from '../src/tools/skillsList';
 import { SkillsReadTool } from '../src/tools/skillsRead';
 
-describe('@framers/agentos-skills tools', () => {
+describe('@framers/agentos-ext-skills tools', () => {
   it('skills_list returns catalog entries', async () => {
     const tool = new SkillsListTool();
     const result = await tool.execute({}, {} as any);

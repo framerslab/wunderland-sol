@@ -68,7 +68,7 @@
   },
   "optionalDependencies": {
     "@framers/agentos-ext-auth": "^1.0.0",
-    "@framers/agentos-skills": "^1.0.0",
+    "@framers/agentos-ext-skills": "^1.0.0",
     "@framers/agentos-ext-web-search": "^1.0.0",
     "@framers/agentos-ext-web-browser": "^1.0.0",
     "@framers/agentos-ext-telegram": "^1.0.0",

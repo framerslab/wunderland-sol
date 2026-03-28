@@ -324,7 +324,7 @@ const SKILL_BY_NAME = new Map(SKILLS_CATALOG.map((s) => [s.name, s] as const));
 
 const HOSTED_BLOCKED_EXTENSION_PACKAGES = new Set<string>([
   '@framers/agentos-ext-cli-executor',
-  '@framers/agentos-skills',
+  '@framers/agentos-ext-skills',
 ]);
 
 const HOSTED_BLOCKED_CAPABILITY_IDS = new Set<string>([

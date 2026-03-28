@@ -22,7 +22,7 @@ This extension is intended to be used alongside:
 
 ```ts
 import { AgentOS } from '@framers/agentos';
-import { createExtensionPack } from '@framers/agentos-skills';
+import { createExtensionPack } from '@framers/agentos-ext-skills';
 
 const agentos = new AgentOS();
 await agentos.initialize({

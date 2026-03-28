@@ -3,7 +3,7 @@
  *
  * Tools for discovering and enabling curated `SKILL.md` prompt modules.
  *
- * @module @framers/agentos-skills
+ * @module @framers/agentos-ext-skills
  * @version 1.0.0
  * @license MIT
  */
@@ -33,7 +33,7 @@ export function createExtensionPack(context: ExtensionContext): ExtensionPack {
   const priority = options.priority ?? 30;
 
   return {
-    name: '@framers/agentos-skills',
+    name: '@framers/agentos-ext-skills',
     version: '1.0.0',
     descriptors: [
       { id: listTool.name, kind: 'tool', priority, payload: listTool },

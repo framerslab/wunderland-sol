@@ -107,7 +107,7 @@ export const TOOL_CATALOG: ExtensionInfo[] = [
     available: false,
   },
   {
-    packageName: '@framers/agentos-skills',
+    packageName: '@framers/agentos-ext-skills',
     name: 'skills',
     category: 'tool',
     displayName: 'Skills Registry',
