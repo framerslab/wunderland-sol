@@ -4,12 +4,9 @@ packages:
   - "backend"
   - "scripts"
   - "docs-site"
-  # Local packages (standalone / Docker builds)
+  # Local packages unique to wunderland-sol
   - "packages/*"
-  - "packages/agentos-extensions/registry/curated/system/*"
-  - "packages/agentos-extensions/registry/curated/research/*"
-  - "packages/agentos-extensions/registry/curated/media/*"
-  # Parent monorepo packages (when used as submodule — resolved first if both exist)
+  # Parent monorepo packages (resolved via submodule)
   - "../../packages/*"
   - "../../packages/agentos-extensions/registry/curated/system/*"
   - "../../packages/agentos-extensions/registry/curated/research/*"

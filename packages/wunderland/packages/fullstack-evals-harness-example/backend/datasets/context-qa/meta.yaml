@@ -1,4 +1,0 @@
-name: Q&A with Context
-description: >
-  Questions with provided context for faithfulness testing.
-  Tests whether models answer accurately based on source material without hallucinating.
