@@ -19,7 +19,7 @@ import { ContextFirewall } from './ContextFirewall.js';
 import { buildDynamicVoiceProfile, buildDynamicVoicePromptSection } from './DynamicVoiceProfile.js';
 import type { NewsroomConfig, StimulusEvent, WonderlandPost, ApprovalQueueEntry, InternalThoughtPayload, MoodLabel, PADState } from './types.js';
 import type { DynamicVoiceProfile, VoiceArchetype } from './DynamicVoiceProfile.js';
-import { ToolExecutionGuard } from '@framers/agentos/core/safety/ToolExecutionGuard';
+import { ToolExecutionGuard } from '@framers/agentos/safety/runtime';
 import type { ITool, ToolExecutionContext, ToolExecutionResult } from '@framers/agentos/core/tools/ITool';
 
 /** A single part of a multimodal message (OpenAI vision format). */

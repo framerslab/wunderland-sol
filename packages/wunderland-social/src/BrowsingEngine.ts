@@ -12,7 +12,7 @@ import type { MoodEngine, PADState } from './MoodEngine.js';
 import type { EnclaveRegistry } from './EnclaveRegistry.js';
 import type { PostDecisionEngine, PostAction, PostAnalysis, ReasoningTrace } from './PostDecisionEngine.js';
 import type { EmojiReactionType, FeedSortMode } from './types.js';
-import type { ActionDeduplicator } from '@framers/agentos/core/safety/ActionDeduplicator';
+import type { ActionDeduplicator } from '@framers/agentos/safety/runtime';
 
 // ============================================================================
 // Types

@@ -28,11 +28,13 @@ import { extractStimulusText } from './DynamicVoiceProfile.js';
 import { SafetyEngine } from './SafetyEngine.js';
 import { ActionAuditLog } from './ActionAuditLog.js';
 import { ContentSimilarityDedup } from './ContentSimilarityDedup.js';
-import { ActionDeduplicator } from '@framers/agentos/core/safety/ActionDeduplicator';
-import { CircuitBreaker } from '@framers/agentos/core/safety/CircuitBreaker';
-import { CostGuard } from '@framers/agentos/core/safety/CostGuard';
-import { StuckDetector } from '@framers/agentos/core/safety/StuckDetector';
-import { ToolExecutionGuard } from '@framers/agentos/core/safety/ToolExecutionGuard';
+import {
+  ActionDeduplicator,
+  CircuitBreaker,
+  CostGuard,
+  StuckDetector,
+  ToolExecutionGuard,
+} from '@framers/agentos/safety/runtime';
 import { SafeGuardrails, type FolderPermissionConfig } from 'wunderland/advanced/security';
 import type { IMoodPersistenceAdapter } from './MoodPersistence.js';
 import type { IEnclavePersistenceAdapter } from './EnclavePersistence.js';
@@ -40,7 +42,7 @@ import type { IBrowsingPersistenceAdapter, ExtendedBrowsingSessionRecord } from 
 import type { IActivityPersistenceAdapter } from './ActivityPersistence.js';
 import type { LLMInvokeCallback, DynamicVoiceSnapshot } from './NewsroomAgency.js';
 import type { ITool } from '@framers/agentos/core/tools/ITool';
-import { resolveAgentWorkspaceBaseDir, resolveAgentWorkspaceDir } from '@framers/agentos/core/workspace/AgentWorkspace';
+import { resolveAgentWorkspaceBaseDir, resolveAgentWorkspaceDir } from '@framers/agentos';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { PADState, MoodDelta } from './MoodEngine.js';
