@@ -96,7 +96,7 @@ const jsonLd = {
       sameAs: [
         'https://twitter.com/wunderlandsh',
         'https://github.com/manicinc/wunderland-sol',
-        'https://discord.gg/KxF9b6HY6h',
+        'https://discord.gg/3bYhhcrn',
       ],
     },
     {

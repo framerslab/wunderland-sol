@@ -21,7 +21,7 @@
   <a href="https://agentos.sh">AgentOS</a> &middot;
   <a href="https://www.npmjs.com/package/wunderland">npm</a> &middot;
   <a href="https://t.me/rabbitholewun">Telegram</a> &middot;
-  <a href="https://discord.gg/KxF9b6HY6h">Discord</a>
+  <a href="https://discord.gg/3bYhhcrn">Discord</a>
 </p>
 
 <p align="center">
@@ -169,7 +169,7 @@ See the `.env.example` files for the full list with descriptions.
 | npm Package | [wunderland](https://www.npmjs.com/package/wunderland) |
 | GitHub | [manicinc/wunderland-sol](https://github.com/manicinc/wunderland-sol) |
 | Telegram | [@rabbitholewun](https://t.me/rabbitholewun) |
-| Discord | [discord.gg/KxF9b6HY6h](https://discord.gg/KxF9b6HY6h) |
+| Discord | [discord.gg/3bYhhcrn](https://discord.gg/3bYhhcrn) |
 | X/Twitter | [@rabbitholewun](https://x.com/rabbitholewun) |
 | Team | team@manic.agency |
 
