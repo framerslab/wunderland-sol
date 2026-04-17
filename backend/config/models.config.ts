@@ -48,21 +48,44 @@ export interface ModelConfig {
  * @constant MODEL_PRICING
  * @description A map holding pricing information for various models.
  */
+// Pricing verified against openai.com/api/pricing, anthropic.com/pricing,
+// and openrouter.ai/models on 2026-04-16. Costs are per 1K tokens.
 export const MODEL_PRICING: Record<string, ModelConfig> = {
-  // OpenAI Models
+  // OpenAI: GPT-5.4 family (current flagship + mini + nano)
+  'gpt-5.4': { inputCostPer1K: 0.0025, outputCostPer1K: 0.015, displayName: 'GPT-5.4', provider: 'openai' },
+  'gpt-5.4-mini': { inputCostPer1K: 0.00075, outputCostPer1K: 0.0045, displayName: 'GPT-5.4 Mini', provider: 'openai' },
+  'gpt-5.4-nano': { inputCostPer1K: 0.0002, outputCostPer1K: 0.00125, displayName: 'GPT-5.4 Nano', provider: 'openai' },
+  'gpt-5.4-pro': { inputCostPer1K: 0.030, outputCostPer1K: 0.180, displayName: 'GPT-5.4 Pro', provider: 'openai' },
+  // OpenAI: GPT-4.1 family (legacy but still referenced)
+  'gpt-4.1': { inputCostPer1K: 0.002, outputCostPer1K: 0.008, displayName: 'GPT-4.1', provider: 'openai' },
+  'gpt-4.1-mini': { inputCostPer1K: 0.0004, outputCostPer1K: 0.0016, displayName: 'GPT-4.1 Mini', provider: 'openai' },
+  'gpt-4.1-nano': { inputCostPer1K: 0.0001, outputCostPer1K: 0.0004, displayName: 'GPT-4.1 Nano', provider: 'openai' },
+  // OpenAI: GPT-4o family (repriced to current $2.50/$10 per 1M; old 5/15 entry was stale)
   'gpt-4o-mini': { inputCostPer1K: 0.00015, outputCostPer1K: 0.00060, displayName: 'GPT-4o Mini', provider: 'openai' },
-  'gpt-4o': { inputCostPer1K: 0.005, outputCostPer1K: 0.015, displayName: 'GPT-4o', provider: 'openai' },
+  'gpt-4o': { inputCostPer1K: 0.0025, outputCostPer1K: 0.010, displayName: 'GPT-4o', provider: 'openai' },
+  // Legacy OpenAI
   'gpt-4-turbo': { inputCostPer1K: 0.01, outputCostPer1K: 0.03, displayName: 'GPT-4 Turbo', provider: 'openai' },
   'gpt-3.5-turbo': { inputCostPer1K: 0.0005, outputCostPer1K: 0.0015, displayName: 'GPT-3.5 Turbo', provider: 'openai' },
   'gpt-3.5-turbo-16k': { inputCostPer1K: 0.003, outputCostPer1K: 0.004, displayName: 'GPT-3.5 Turbo 16k', provider: 'openai' },
   'text-embedding-3-small': { inputCostPer1K: 0.00002, outputCostPer1K: 0, displayName: 'Text Embedding 3 Small', provider: 'openai'},
   'text-embedding-3-large': { inputCostPer1K: 0.00013, outputCostPer1K: 0, displayName: 'Text Embedding 3 Large', provider: 'openai'},
 
+  // Anthropic (direct)
+  'claude-opus-4-7': { inputCostPer1K: 0.005, outputCostPer1K: 0.025, displayName: 'Claude Opus 4.7', provider: 'openrouter' },
+  'claude-sonnet-4-6': { inputCostPer1K: 0.003, outputCostPer1K: 0.015, displayName: 'Claude Sonnet 4.6', provider: 'openrouter' },
+  'claude-haiku-4-5-20251001': { inputCostPer1K: 0.001, outputCostPer1K: 0.005, displayName: 'Claude Haiku 4.5', provider: 'openrouter' },
+
   // OpenRouter Models
+  'openai/gpt-5.4': { inputCostPer1K: 0.0025, outputCostPer1K: 0.015, displayName: 'OpenRouter: GPT-5.4', provider: 'openrouter' },
+  'openai/gpt-5.4-mini': { inputCostPer1K: 0.00075, outputCostPer1K: 0.0045, displayName: 'OpenRouter: GPT-5.4 Mini', provider: 'openrouter' },
   'openai/gpt-4o-mini': { inputCostPer1K: 0.00015, outputCostPer1K: 0.00060, displayName: 'OpenRouter: GPT-4o Mini', provider: 'openrouter' },
-  'openai/gpt-4o': { inputCostPer1K: 0.005, outputCostPer1K: 0.015, displayName: 'OpenRouter: GPT-4o', provider: 'openrouter' },
+  'openai/gpt-4o': { inputCostPer1K: 0.0025, outputCostPer1K: 0.010, displayName: 'OpenRouter: GPT-4o', provider: 'openrouter' },
   'openai/gpt-4-turbo': { inputCostPer1K: 0.01, outputCostPer1K: 0.03, displayName: 'OpenRouter: GPT-4 Turbo', provider: 'openrouter' },
   'openai/gpt-3.5-turbo': { inputCostPer1K: 0.0005, outputCostPer1K: 0.0015, displayName: 'OpenRouter: GPT-3.5 Turbo', provider: 'openrouter' },
+  'anthropic/claude-opus-4-7': { inputCostPer1K: 0.005, outputCostPer1K: 0.025, displayName: 'OpenRouter: Claude Opus 4.7', provider: 'openrouter' },
+  'anthropic/claude-sonnet-4-6': { inputCostPer1K: 0.003, outputCostPer1K: 0.015, displayName: 'OpenRouter: Claude Sonnet 4.6', provider: 'openrouter' },
+  'anthropic/claude-haiku-4-5': { inputCostPer1K: 0.001, outputCostPer1K: 0.005, displayName: 'OpenRouter: Claude Haiku 4.5', provider: 'openrouter' },
+  // Legacy Claude 3 still referenced by older tests/configs
   'anthropic/claude-3-haiku-20240307': { inputCostPer1K: 0.00025, outputCostPer1K: 0.00125, displayName: 'OpenRouter: Claude 3 Haiku', provider: 'openrouter' },
   'anthropic/claude-3-sonnet-20240229': { inputCostPer1K: 0.003, outputCostPer1K: 0.015, displayName: 'OpenRouter: Claude 3 Sonnet', provider: 'openrouter' },
   'anthropic/claude-3-opus-20240229': { inputCostPer1K: 0.015, outputCostPer1K: 0.075, displayName: 'OpenRouter: Claude 3 Opus', provider: 'openrouter' },
