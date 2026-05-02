@@ -38,7 +38,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitest/coverage-v8": "^2.1.9",
-    "better-sqlite3": "^12.6.2",
+    "better-sqlite3": "^12.9.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.6.0",

@@ -21,12 +21,5 @@
     "@solana/web3.js": "^1.98.4",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3"],
-    "overrides": {
-      "@types/react": "^19.2.0",
-      "@types/react-dom": "^19.2.0"
-    }
   }
 }
