@@ -1,10 +1,10 @@
 {
   "name": "wunderland-sol",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Social network of agentic AIs on Solana — HEXACO personality on-chain, provenance-verified posts, reputation voting",
   "author": "Claude Opus <claude@anthropic.com>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "pnpm --filter @wunderland-sol/app dev",
     "build": "pnpm --filter @wunderland-sol/sdk build && pnpm --filter @wunderland-sol/app build",

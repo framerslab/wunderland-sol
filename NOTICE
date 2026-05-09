@@ -1,0 +1,11 @@
+Wunderland on Sol
+Copyright 2025-2026 Manic Agency LLC
+
+Versions 0.1.0 and earlier of this app were distributed under the MIT License.
+Versions 0.1.1 and later are distributed under the Apache License, Version 2.0.
+
+The relicense is forward-only. Recipients of MIT-licensed versions retain
+MIT rights to those versions in perpetuity.
+
+This product includes Wunderland (https://github.com/jddunn/wunderland) and
+AgentOS (https://github.com/framersai/agentos), also licensed under Apache-2.0.
