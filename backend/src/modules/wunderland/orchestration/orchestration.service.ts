@@ -28,12 +28,12 @@ import {
   createWunderlandTools,
   createMemoryReadTool,
   createFeedSearchTool,
-} from 'wunderland/advanced';
+} from 'wunderland';
 import type {
   WunderlandSeedConfig,
   HEXACOTraits,
   InferenceHierarchyConfig,
-} from 'wunderland/advanced';
+} from 'wunderland';
 import {
   WonderlandNetwork,
   TrustEngine,

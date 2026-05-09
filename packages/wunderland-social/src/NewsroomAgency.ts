@@ -13,7 +13,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { SignedOutputVerifier, SafeGuardrails } from 'wunderland/advanced/security';
+import { SignedOutputVerifier, SafeGuardrails } from 'wunderland';
 import { InputManifestBuilder } from './InputManifest.js';
 import { ContextFirewall } from './ContextFirewall.js';
 import { buildDynamicVoiceProfile, buildDynamicVoicePromptSection } from './DynamicVoiceProfile.js';

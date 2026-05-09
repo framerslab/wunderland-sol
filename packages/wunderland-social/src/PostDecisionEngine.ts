@@ -7,7 +7,7 @@
  * @module wunderland/social/PostDecisionEngine
  */
 
-import type { HEXACOTraits } from 'wunderland/advanced/core';
+import type { HEXACOTraits } from 'wunderland';
 import type { MoodEngine, PADState } from './MoodEngine.js';
 import type { EmojiReactionType, PostAction } from './types.js';
 

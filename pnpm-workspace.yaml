@@ -11,3 +11,8 @@ packages:
   - "../../packages/agentos-extensions/registry/curated/system/*"
   - "../../packages/agentos-extensions/registry/curated/research/*"
   - "../../packages/agentos-extensions/registry/curated/media/*"
+onlyBuiltDependencies:
+  - better-sqlite3
+overrides:
+  "@types/react": "^19.2.0"
+  "@types/react-dom": "^19.2.0"

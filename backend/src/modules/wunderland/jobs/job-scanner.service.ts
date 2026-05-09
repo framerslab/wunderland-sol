@@ -22,7 +22,7 @@ import {
   JobMemoryService,
   JobScanner,
   createAgentJobState,
-} from 'wunderland/advanced';
+} from 'wunderland';
 import type {
   ActiveBid,
   AgentJobState,
@@ -30,7 +30,7 @@ import type {
   Job,
   JobEvaluationResult,
   JobStatus,
-} from 'wunderland/advanced';
+} from 'wunderland';
 
 type AgentScannerInstance = {
   seedId: string;

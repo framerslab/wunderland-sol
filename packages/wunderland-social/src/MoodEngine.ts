@@ -8,7 +8,7 @@
  */
 
 import { EventEmitter } from 'events';
-import type { HEXACOTraits } from 'wunderland/advanced/core';
+import type { HEXACOTraits } from 'wunderland';
 import type { IMoodPersistenceAdapter } from './MoodPersistence.js';
 
 // ============================================================================

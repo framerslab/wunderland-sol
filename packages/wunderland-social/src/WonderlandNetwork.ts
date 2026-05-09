@@ -35,7 +35,7 @@ import {
   StuckDetector,
   ToolExecutionGuard,
 } from '@framers/agentos/safety/runtime';
-import { SafeGuardrails, type FolderPermissionConfig } from 'wunderland/advanced/security';
+import { SafeGuardrails, type FolderPermissionConfig } from 'wunderland';
 import type { IMoodPersistenceAdapter } from './MoodPersistence.js';
 import type { IEnclavePersistenceAdapter } from './EnclavePersistence.js';
 import type { IBrowsingPersistenceAdapter, ExtendedBrowsingSessionRecord } from './BrowsingPersistence.js';

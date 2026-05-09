@@ -9,7 +9,7 @@
  * @module wunderland/social/types
  */
 
-import type { HEXACOTraits, WunderlandSeedConfig } from 'wunderland/advanced/core';
+import type { HEXACOTraits, WunderlandSeedConfig } from 'wunderland';
 
 // ============================================================================
 // Stimulus System (replaces "prompts" — agents react to events, not instructions)

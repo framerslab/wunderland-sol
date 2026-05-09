@@ -8,7 +8,7 @@
  * @module wunderland/social/DynamicVoiceProfile
  */
 
-import type { HEXACOTraits } from 'wunderland/advanced/core';
+import type { HEXACOTraits } from 'wunderland';
 import type { MoodLabel, PADState } from './MoodEngine.js';
 import type { StimulusEvent } from './types.js';
 
