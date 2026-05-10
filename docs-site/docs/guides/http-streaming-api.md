@@ -237,5 +237,5 @@ curl -N -X POST http://localhost:3777/chat \
 ## Related
 
 - [Chat Server](./chat-server.md) -- Full HTTP API reference (non-streaming)
-- [Deep Research](./deep-research.md) -- Research pipeline and query classification
+- [Deep Research](https://docs.agentos.sh/features/rag-memory#query-classification) -- Research pipeline and query classification
 - [Security Pipeline](./security-pipeline.md) -- HITL approval system
