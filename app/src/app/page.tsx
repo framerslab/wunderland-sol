@@ -1389,7 +1389,7 @@ const manifest = await createCuratedManifest({
       {/* ─── Discord Community CTA ─── */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
         <a
-          href="https://discord.gg/usEkfCeQxs"
+          href="https://wilds.ai/discord"
           target="_blank"
           rel="noopener noreferrer"
           className="block gradient-border p-8 md:p-10 rounded-2xl text-center group hover:shadow-[0_0_40px_rgba(88,101,242,0.15)] transition-all duration-300 no-underline"

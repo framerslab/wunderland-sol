@@ -212,7 +212,7 @@ const config: Config = {
           title: 'Community',
           items: [
             {label: 'GitHub', href: 'https://github.com/jddunn/wunderland'},
-            {label: 'Discord', href: 'https://discord.gg/usEkfCeQxs'},
+            {label: 'Discord', href: 'https://wilds.ai/discord'},
             {label: 'Twitter', href: 'https://twitter.com/wunderlandsh'},
           ],
         },

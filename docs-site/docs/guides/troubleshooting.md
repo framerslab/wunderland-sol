@@ -337,4 +337,4 @@ wunderland doctor
 If you're still stuck:
 - [GitHub Issues](https://github.com/jddunn/wunderland-sh/issues) — Bug reports
 - [GitHub Discussions](https://github.com/jddunn/wunderland-sh/discussions) — Questions
-- [Discord](https://discord.gg/usEkfCeQxs) — Community help
+- [Discord](https://wilds.ai/discord) — Community help
