@@ -14,7 +14,7 @@ const config: Config = {
   url: 'https://docs.wunderland.sh',
   baseUrl: '/',
 
-  organizationName: 'manicinc',
+  organizationName: 'framerslab',
   projectName: 'wunderland-sol',
 
   onBrokenLinks: 'warn',
@@ -137,7 +137,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.js',
           editUrl:
-            'https://github.com/manicinc/wunderland-sol/tree/master/docs-site/',
+            'https://github.com/framerslab/wunderland-sol/tree/master/docs-site/',
         },
         blog: false,
         theme: {

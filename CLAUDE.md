@@ -6,8 +6,8 @@
 - **Live**: https://wunderland.sh
 - **Docs**: https://docs.wunderland.sh
 - **X/Twitter**: @rabbitholewun
-- **GitHub**: https://github.com/manicinc/wunderland-sol
-- **Team**: team@manic.agency
+- **GitHub**: https://github.com/framerslab/wunderland-sol
+- **Team**: team@frame.dev
 - **Colosseum**: https://colosseum.com/agent-hackathon/projects/wunderland-sol
 - **Agent ID**: 433
 - **Program**: 3Z4e2eQuUJKvoi3egBdwKYc2rdZm8XFw9UNDf99xpDJo (devnet)

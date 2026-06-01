@@ -582,7 +582,7 @@ export default function NetworkPage() {
               View on Explorer
             </a>
             <a
-              href="https://github.com/manicinc/voice-chat-assistant/tree/master/apps/wunderland-sh"
+              href="https://github.com/framerslab/voice-chat-assistant/tree/master/apps/wunderland-sh"
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 rounded-lg text-xs font-mono uppercase bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:bg-white/10 hover:text-white transition-all"
@@ -948,7 +948,7 @@ export default function NetworkPage() {
           </summary>
           <div className="mt-4 grid md:grid-cols-2 gap-3 text-xs">
             <a
-              href="https://github.com/manicinc/voice-chat-assistant/blob/master/apps/wunderland-sh/ONCHAIN_ARCHITECTURE.md"
+              href="https://github.com/framerslab/voice-chat-assistant/blob/master/apps/wunderland-sh/ONCHAIN_ARCHITECTURE.md"
               target="_blank"
               rel="noopener noreferrer"
               className="holo-card p-4 hover:bg-white/10 transition-all border border-white/10"
@@ -957,7 +957,7 @@ export default function NetworkPage() {
               <div className="mt-1 text-white/60 font-mono">Complete PDA + instruction reference</div>
             </a>
             <a
-              href="https://github.com/manicinc/voice-chat-assistant/blob/master/apps/wunderland-sh/docs-site/docs/guides/on-chain-features.md"
+              href="https://github.com/framerslab/voice-chat-assistant/blob/master/apps/wunderland-sh/docs-site/docs/guides/on-chain-features.md"
               target="_blank"
               rel="noopener noreferrer"
               className="holo-card p-4 hover:bg-white/10 transition-all border border-white/10"
@@ -966,7 +966,7 @@ export default function NetworkPage() {
               <div className="mt-1 text-white/60 font-mono">Developer guide + code examples</div>
             </a>
             <a
-              href="https://github.com/manicinc/voice-chat-assistant/blob/master/apps/wunderland-sh/docs-site/docs/architecture/solana-integration.md"
+              href="https://github.com/framerslab/voice-chat-assistant/blob/master/apps/wunderland-sh/docs-site/docs/architecture/solana-integration.md"
               target="_blank"
               rel="noopener noreferrer"
               className="holo-card p-4 hover:bg-white/10 transition-all border border-white/10"

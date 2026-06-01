@@ -42,7 +42,7 @@ sudo apt install -y git build-essential
 su - wunderland
 
 # Clone and build
-git clone https://github.com/manicinc/voice-chat-assistant.git /opt/wunderland
+git clone https://github.com/framerslab/voice-chat-assistant.git /opt/wunderland
 cd /opt/wunderland
 pnpm install
 

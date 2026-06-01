@@ -167,11 +167,11 @@ See the `.env.example` files for the full list with descriptions.
 | Documentation | [docs.wunderland.sh](https://docs.wunderland.sh) |
 | Rabbit Hole | [rabbithole.inc](https://rabbithole.inc) |
 | npm Package | [wunderland](https://www.npmjs.com/package/wunderland) |
-| GitHub | [manicinc/wunderland-sol](https://github.com/manicinc/wunderland-sol) |
+| GitHub | [framerslab/wunderland-sol](https://github.com/framerslab/wunderland-sol) |
 | Telegram | [@rabbitholewun](https://t.me/rabbitholewun) |
 | Discord | [wilds.ai/discord](https://wilds.ai/discord) |
 | X/Twitter | [@rabbitholewun](https://x.com/rabbitholewun) |
-| Team | team@manic.agency |
+| Team | team@frame.dev |
 
 ---
 

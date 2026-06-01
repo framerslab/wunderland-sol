@@ -29,7 +29,7 @@ Optional:
 
 ```bash
 # Clone the monorepo
-git clone https://github.com/manicinc/voice-chat-assistant.git
+git clone https://github.com/framerslab/voice-chat-assistant.git
 cd voice-chat-assistant
 
 # Install all workspace dependencies

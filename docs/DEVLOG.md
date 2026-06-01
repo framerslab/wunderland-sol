@@ -240,7 +240,7 @@ When ready to deploy to mainnet:
    - Previously blocked: OpenRouterFallback.test.ts, WonderlandNetwork.test.ts, cli-commands.e2e.test.ts
 
 4. **Cross-Repo Coordination**
-   - Pushed fixes to 3 repos: framerslab/agentos, jddunn/wunderland, manicinc/voice-chat-assistant
+   - Pushed fixes to 3 repos: framerslab/agentos, jddunn/wunderland, framerslab/voice-chat-assistant
    - Resolved git rebase conflicts (agentos 0.1.22 → 0.1.23 version bump)
    - Updated all submodule pointers in parent monorepo
 
@@ -730,7 +730,7 @@ The key differentiator from ZNAP and other "social network for AI agents" projec
 
 ### Completed
 - Registered on Colosseum (Agent ID: 433, Project ID: 203)
-- Created GitHub repo: https://github.com/manicinc/wunderland-sol
+- Created GitHub repo: https://github.com/framerslab/wunderland-sol
 - Installed Rust 1.93.0, Solana CLI and Anchor installing in background
 - Built SDK types + client (PDA derivation, account decoding)
 - Created SynInt Framework orchestrator prompt
@@ -783,7 +783,7 @@ Posted on Colosseum forum prematurely before project had substance. Future forum
 - **Local deploy verification**: Program deploys and runs on `solana-test-validator`
   - Program ID confirmed: `3Z4e2eQuUJKvoi3egBdwKYc2rdZm8XFw9UNDf99xpDJo`
   - Signature: `3MWTgusdEM3uKJVWy5TaR172yDokbFU15vB3gpJJG1NUbbujG8yCzbUePurkjKe977t8F2iSncF1M7cs3k8cJ9E1`
-- **Repo verified public**: https://github.com/manicinc/wunderland-sol
+- **Repo verified public**: https://github.com/framerslab/wunderland-sol
 
 ### Blockers
 - **Devnet airdrop rate-limited**: Solana devnet faucet returning 429. Need manual airdrop via https://faucet.solana.com (requires GitHub OAuth in browser). Wallet: `65xUZajxCNsHxU32zG8zvQDCD19778DJRDd6fvCuH3kB`
@@ -1793,7 +1793,7 @@ Migrated Discord and Telegram bots from backend NestJS modules to `apps/rabbitho
 
 ### Bug Fixes During QA
 - **Wrong npm package**: `@anthropic/wunderland` → `wunderland` (hallucinated in previous session)
-- **Wrong GitHub URLs**: `github.com/anthropic/wunderland` → `github.com/jddunn/wunderland` + `github.com/manicinc/wunderland-sol`
+- **Wrong GitHub URLs**: `github.com/anthropic/wunderland` → `github.com/jddunn/wunderland` + `github.com/framerslab/wunderland-sol`
 - **Telegram MarkdownV2 400**: Double-escaping in template literals produced `\\-` at runtime instead of `\-`
 - **Discord /clear "Unknown command"**: `instrumentation.ts` runs once on start — HMR doesn't restart bots, needed full server restart
 - **Telegram /clear silent failure**: Channel post regex didn't handle `@BotName` suffix (`/clear@RabbitHoleIncBot`)

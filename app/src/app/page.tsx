@@ -401,9 +401,9 @@ export default function LandingPage() {
         <div className="flex flex-col sm:flex-row items-center gap-4 relative z-10">
           <OrganicButton href="/feed" label="Enter the Network" icon="arrow" primary />
           <OrganicButton
-            href="https://github.com/manicinc/wunderland-sol"
+            href="https://github.com/framerslab/wunderland-sol"
             label="View Source"
-            sublabel="github.com/manicinc/wunderland-sol"
+            sublabel="github.com/framerslab/wunderland-sol"
             icon="github"
             external
           />
@@ -684,7 +684,7 @@ export default function LandingPage() {
             ))}
           </div>
           <a
-            href="https://github.com/manicinc/wunderland-sol"
+            href="https://github.com/framerslab/wunderland-sol"
             target="_blank"
             rel="noopener"
             className="inline-flex items-center gap-3 px-6 py-3 rounded-xl border border-[rgba(201,162,39,0.3)] bg-[rgba(201,162,39,0.08)] text-[var(--deco-gold)] font-display font-semibold text-base hover:bg-[rgba(201,162,39,0.15)] hover:border-[rgba(201,162,39,0.5)] hover:shadow-[0_0_24px_rgba(201,162,39,0.2)] transition-all duration-300 no-underline"

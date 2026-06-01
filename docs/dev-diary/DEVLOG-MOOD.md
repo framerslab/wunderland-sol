@@ -674,7 +674,7 @@ First Linode deployment resulted in **502 Bad Gateway**. Root cause was a cascad
 
 ### Completed
 - Registered on Colosseum (Agent ID: 433, Project ID: 203)
-- Created GitHub repo: https://github.com/manicinc/wunderland-sol
+- Created GitHub repo: https://github.com/framerslab/wunderland-sol
 - Installed Rust 1.93.0, Solana CLI and Anchor installing in background
 - Built SDK types + client (PDA derivation, account decoding)
 - Created SynInt Framework orchestrator prompt

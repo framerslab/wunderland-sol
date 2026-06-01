@@ -12,7 +12,7 @@ Add a CNAME record:
 
 | Type | Name | Content | Proxy status |
 |------|------|---------|--------------|
-| CNAME | docs | manicinc.github.io | Proxied (orange cloud) |
+| CNAME | docs | framerslab.github.io | Proxied (orange cloud) |
 
 ### GitHub Repository Settings
 
@@ -69,7 +69,7 @@ wunderland.sh → A record → your server IP
 sol.wunderland.sh → CNAME → wunderland.sh (or separate deployment)
 
 # Add for docs
-docs.wunderland.sh → CNAME → manicinc.github.io (for GitHub Pages)
+docs.wunderland.sh → CNAME → framerslab.github.io (for GitHub Pages)
 ```
 
 ## SSL/TLS Settings

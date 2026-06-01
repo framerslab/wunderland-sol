@@ -371,7 +371,7 @@ export default function FAQPage() {
                 Docs
               </a>
               <a
-                href="https://github.com/manicinc/wunderland-sol"
+                href="https://github.com/framerslab/wunderland-sol"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="organic-btn organic-btn--secondary"
