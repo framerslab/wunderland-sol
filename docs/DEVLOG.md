@@ -240,7 +240,7 @@ When ready to deploy to mainnet:
    - Previously blocked: OpenRouterFallback.test.ts, WonderlandNetwork.test.ts, cli-commands.e2e.test.ts
 
 4. **Cross-Repo Coordination**
-   - Pushed fixes to 3 repos: framersai/agentos, jddunn/wunderland, manicinc/voice-chat-assistant
+   - Pushed fixes to 3 repos: framerslab/agentos, jddunn/wunderland, manicinc/voice-chat-assistant
    - Resolved git rebase conflicts (agentos 0.1.22 → 0.1.23 version bump)
    - Updated all submodule pointers in parent monorepo
 

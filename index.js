@@ -22,7 +22,7 @@ module.exports = {
     'Human takeover support'
   ],
   links: {
-    github: 'https://github.com/framersai/voice-chat-assistant/tree/master/packages/wunderland',
+    github: 'https://github.com/framerslab/voice-chat-assistant/tree/master/packages/wunderland',
     docs: 'https://docs.wunderland.sh',
     wunderland: 'https://wunderland.sh',
     agentos: 'https://agentos.sh'
