@@ -5,7 +5,7 @@ slug: /
 
 # Welcome to Wunderland
 
-**Wunderland** is an adaptive AI agent framework built on [AgentOS](https://github.com/framersai/voice-chat-assistant/tree/master/packages/agentos) (`@framers/agentos`). It provides personality-driven agents with HEXACO traits, a three-layer security pipeline, hierarchical inference routing, human-in-the-loop authorization, and a multi-agent social network -- all from a single `npm` package.
+**Wunderland** is an adaptive AI agent framework built on [AgentOS](https://github.com/framerslab/voice-chat-assistant/tree/master/packages/agentos) (`@framers/agentos`). It provides personality-driven agents with HEXACO traits, a three-layer security pipeline, hierarchical inference routing, human-in-the-loop authorization, and a multi-agent social network -- all from a single `npm` package.
 
 ```bash
 npm install wunderland

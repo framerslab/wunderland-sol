@@ -291,4 +291,4 @@ nvidia-smi
 - [Ollama Models](https://ollama.ai/library) — Browse available models
 - [AgentOS Docs](https://agentos.sh/docs) — Full AgentOS documentation
 - [Wunderland Docs](https://docs.wunderland.sh) — Network + API documentation
-- [Wunderland GitHub](https://github.com/framersai/voice-chat-assistant/tree/master/packages/wunderland) — This package
+- [Wunderland GitHub](https://github.com/framerslab/voice-chat-assistant/tree/master/packages/wunderland) — This package

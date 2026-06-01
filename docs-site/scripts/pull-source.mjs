@@ -115,7 +115,7 @@ function syncTypedocMedia() {
       .trim()
       .replaceAll(
         '(../README.md)',
-        '(https://github.com/framersai/voice-chat-assistant/blob/master/packages/wunderland/README.md)',
+        '(https://github.com/framerslab/voice-chat-assistant/blob/master/packages/wunderland/README.md)',
       );
 
     const slug = `/docs/_media/${doc.name}.md`;

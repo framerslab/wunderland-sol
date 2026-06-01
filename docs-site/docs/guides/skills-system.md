@@ -33,7 +33,7 @@ const snapshot = await createCuratedSkillSnapshot({ skills: 'all', platform: 'da
 
 ## Curated Skills Reference
 
-All curated skills ship with [`@framers/agentos-skills-registry`](https://www.npmjs.com/package/@framers/agentos-skills-registry) and are maintained in the [agentos-skills-registry](https://github.com/framersai/agentos-skills-registry) GitHub repository.
+All curated skills ship with [`@framers/agentos-skills-registry`](https://www.npmjs.com/package/@framers/agentos-skills-registry) and are maintained in the [agentos-skills-registry](https://github.com/framerslab/agentos-skills-registry) GitHub repository.
 
 ### Information
 
@@ -659,12 +659,12 @@ const community = getCommunitySkills();
 
 To contribute a skill to the catalog:
 
-1. **Fork** the [`agentos-skills`](https://github.com/framersai/agentos-skills) repository.
+1. **Fork** the [`agentos-skills`](https://github.com/framerslab/agentos-skills) repository.
 2. **Create** a new directory under `registry/community/<your-skill>/` containing a `SKILL.md` file with valid YAML frontmatter and markdown instructions.
 3. **Validate** your skill locally by running the registry build and ensuring it appears in `registry.json`.
 4. **Open a PR** against the `main` branch. The CI pipeline will validate your SKILL.md format automatically.
 
-See the full [`CONTRIBUTING.md`](https://github.com/framersai/agentos-skills/blob/main/CONTRIBUTING.md) for the SKILL.md format spec, naming conventions, and review criteria.
+See the full [`CONTRIBUTING.md`](https://github.com/framerslab/agentos-skills/blob/main/CONTRIBUTING.md) for the SKILL.md format spec, naming conventions, and review criteria.
 
 ## Semantic Discovery
 

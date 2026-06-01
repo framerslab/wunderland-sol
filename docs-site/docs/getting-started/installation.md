@@ -179,7 +179,7 @@ If you are developing within the voice-chat-assistant monorepo:
 
 ```bash
 # Clone the repo
-git clone https://github.com/framersai/voice-chat-assistant.git
+git clone https://github.com/framerslab/voice-chat-assistant.git
 cd voice-chat-assistant
 
 # Install all workspace dependencies

@@ -224,8 +224,8 @@ export function CatalogBrowser() {
   };
 
   const getGithubUrl = (item: any): string => {
-    if (activeTab === 'skills') return `https://github.com/framersai/agentos-skills/tree/main/${item.skillPath}`;
-    return 'https://github.com/framersai/agentos-extensions';
+    if (activeTab === 'skills') return `https://github.com/framerslab/agentos-skills/tree/main/${item.skillPath}`;
+    return 'https://github.com/framerslab/agentos-extensions';
   };
 
   return (
