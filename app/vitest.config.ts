@@ -2,6 +2,8 @@ import { defineConfig } from 'vitest/config';
 import path from 'path';
 
 export default defineConfig({
+  // tsconfig.json keeps `jsx: preserve` for Next; .tsx tests need JSX compiled.
+  esbuild: { jsx: 'automatic' },
   test: {
     globals: true,
     environment: 'node',

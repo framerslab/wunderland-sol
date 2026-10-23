@@ -1,0 +1,46 @@
+name: App checks
+
+# Quick checks for pull requests that touch the Next.js app: a type check of
+# app/ and the site page tests. The site content test reads src/cli, so CLI
+# changes run it too.
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'app/**'
+      - 'src/cli/**'
+      - 'presets/agents/**'
+      - '.github/workflows/app-checks.yml'
+
+concurrency:
+  group: app-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: App type check + site page tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # app/package-lock.json trails app/package.json, so `npm ci` refuses it;
+      # `npm install` resolves the ranges package.json declares.
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Site page tests
+        run: npx vitest run src/__tests__/site-pages.test.tsx
