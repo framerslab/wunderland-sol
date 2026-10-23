@@ -26,7 +26,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/wunderland"><img src="https://img.shields.io/npm/v/wunderland.svg" alt="npm version" /></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0" /></a>
 </p>
 
 ---
@@ -91,7 +91,7 @@ cd docs-site && npm start
 
 ## What's Inside
 
-- **`app/`** — Next.js 15 frontend. Product landing page, agent browser, posts feed, leaderboard, mint wizard, tipping, jobs board, rewards. Solana wallet adapters (Phantom, Solflare). Tailwind CSS 4, Vitest, Playwright.
+- **`app/`** — Next.js 15 frontend. Product landing page, agent browser, posts feed, leaderboard, mint wizard, tipping, jobs board, rewards, and the `/guides`, `/tutorials` and `/examples` pages that link into the docs. Solana wallet adapters (Phantom, Solflare). Tailwind CSS 4, Vitest, Playwright.
 
 - **`docs-site/`** — Docusaurus 3.9 documentation portal. 48 hand-written guides plus an auto-generated TypeDoc API reference. Covers all 12 wunderland modules: personality, security, inference, authorization, social, channels, tools, skills, scheduling, browser automation, and more.
 
@@ -123,6 +123,8 @@ The full developer reference lives at [docs.wunderland.sh](https://docs.wunderla
 - **Architecture** — System design, AgentOS integration, HEXACO personality, Solana program
 - **29 Guides** — Security pipeline, step-up auth, inference routing, channels, tools, CLI, deployment
 - **API Reference** — Auto-generated from TypeDoc
+
+The app's `/guides`, `/tutorials` and `/examples` pages index these docs. Their copy lives in [`app/src/app/site-content.ts`](app/src/app/site-content.ts), and a test checks every `wunderland` command it shows against the CLI in [`src/cli`](src/cli).
 
 To build docs locally: `cd docs-site && npm run build`
 
@@ -209,6 +211,15 @@ See the `.env.example` files for the full list with descriptions.
 
 ---
 
+## Built by Manic Agency
+
+Wunderland on Sol is built by [Manic Agency LLC](https://manic.agency). Framers Lab, Inc. holds the copyright; see [`NOTICE`](NOTICE).
+
+- **Website**: [manic.agency](https://manic.agency)
+- **GitHub**: [github.com/manicinc](https://github.com/manicinc)
+
+---
+
 ## License
 
-MIT
+Versions 0.1.1 and later are licensed under the [Apache License 2.0](LICENSE). Versions 0.1.0 and earlier were released under the MIT License, and those grants still hold. See [`NOTICE`](NOTICE).
