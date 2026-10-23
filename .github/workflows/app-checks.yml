@@ -37,10 +37,14 @@ jobs:
       # app/package-lock.json trails app/package.json, so `npm ci` refuses it;
       # `npm install` resolves the ranges package.json declares.
       - name: Install app dependencies
+        id: install
         run: npm install --no-audit --no-fund
 
+      # Both checks run once the install succeeds, so one push reports both.
       - name: Type check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npx tsc --noEmit
 
       - name: Site page tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npx vitest run src/__tests__/site-pages.test.tsx
