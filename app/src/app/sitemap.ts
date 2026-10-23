@@ -58,6 +58,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/rewards`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${SITE_URL}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${SITE_URL}/faq`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${SITE_URL}/guides`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${SITE_URL}/tutorials`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${SITE_URL}/examples`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
   ];
 
   // ── Dynamic routes: Enclaves ──
