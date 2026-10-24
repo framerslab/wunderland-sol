@@ -8,7 +8,7 @@
  */
 
 import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
+import { isIPv6, type AddressInfo } from 'node:net';
 
 /** The address `wunderland start` listens on when `--host` is not given. */
 export const DEFAULT_LISTEN_HOST = '127.0.0.1';
@@ -16,6 +16,8 @@ export const DEFAULT_LISTEN_HOST = '127.0.0.1';
 /**
  * Resolves the `--host` flag. No flag means the loopback default; a flag
  * given without an address is an error, so a typo never widens the server.
+ * A bracketed IPv6 address (`[::1]`, URL notation) comes back bare, the form
+ * server.listen takes.
  */
 export function resolveListenHost(flag: string | boolean | undefined): string {
   if (flag === undefined || flag === false) return DEFAULT_LISTEN_HOST;
@@ -23,7 +25,8 @@ export function resolveListenHost(flag: string | boolean | undefined): string {
   if (!host) {
     throw new Error('--host needs an address, for example --host 127.0.0.1 or --host 0.0.0.0');
   }
-  return host;
+  const bracketed = /^\[(.*)\]$/.exec(host);
+  return bracketed && isIPv6(bracketed[1]) ? bracketed[1] : host;
 }
 
 /** True when only this machine can reach the address. */
