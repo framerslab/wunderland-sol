@@ -47,6 +47,12 @@ describe('wunderland start listen address', () => {
     expect(address.address).toBe('0.0.0.0');
   });
 
+  it('drops the brackets from an IPv6 --host, which server.listen cannot resolve', () => {
+    expect(resolveListenHost('[::1]')).toBe('::1');
+    expect(resolveListenHost('::1')).toBe('::1');
+    expect(resolveListenHost('[not-an-address]')).toBe('[not-an-address]');
+  });
+
   it('refuses --host without an address instead of guessing one', () => {
     expect(() => resolveListenHost(true)).toThrow(/--host needs an address/);
     expect(() => resolveListenHost('  ')).toThrow(/--host needs an address/);
