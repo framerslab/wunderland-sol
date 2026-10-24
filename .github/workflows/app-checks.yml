@@ -1,14 +1,17 @@
 name: App checks
 
 # Quick checks for pull requests that touch the Next.js app: a type check of
-# app/ and the site page tests. The site content test reads src/cli, so CLI
-# changes run it too.
+# app/, the site page tests, and the tests of the CLI pieces the pages
+# describe (where `wunderland start` listens, what PresetLoader returns).
+# The CLI's own dependencies live in the parent monorepo, so those tests run
+# here with the app's vitest.
 on:
   pull_request:
     branches: [master]
     paths:
       - 'app/**'
       - 'src/cli/**'
+      - 'src/core/PresetLoader.ts'
       - 'presets/agents/**'
       - '.github/workflows/app-checks.yml'
 
@@ -21,7 +24,7 @@ permissions:
 
 jobs:
   app:
-    name: App type check + site page tests
+    name: App type check + site and CLI tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -49,6 +52,10 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npx tsc --noEmit
 
-      - name: Site page tests
+      - name: Site page and CLI tests
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npx vitest run src/__tests__/site-pages.test.tsx
+        run: >-
+          npx vitest run
+          src/__tests__/site-pages.test.tsx
+          src/__tests__/cli-start-listen.test.ts
+          src/__tests__/preset-loader.test.ts
