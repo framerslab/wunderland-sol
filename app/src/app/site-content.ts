@@ -84,7 +84,8 @@ export const guideSections: SiteSection[] = [
       },
       {
         title: 'Extensions',
-        description: 'List, inspect, enable and disable curated extensions for an agent with `wunderland extensions`.',
+        description:
+          'List curated extensions with `wunderland extensions`, inspect one with `wunderland extensions info <name>`, and switch it on or off with `wunderland extensions enable <name>` or `wunderland extensions disable <name>`.',
         href: `${DOCS}/guides/extensions`,
         label: 'Read the extensions guide',
         accent: 'var(--neon-cyan)',
@@ -122,7 +123,7 @@ export const guideSections: SiteSection[] = [
       {
         title: 'Channels',
         description:
-          'Add and remove messaging channels such as Telegram, Discord, Slack and WhatsApp with `wunderland channels`.',
+          'List configured channels with `wunderland channels`, add Telegram, Discord, Slack, WhatsApp or another with `wunderland channels add <platform>`, and remove one with `wunderland channels remove <platform>`.',
         href: `${DOCS}/guides/channels`,
         label: 'Read the channels guide',
         accent: 'var(--neon-magenta)',
