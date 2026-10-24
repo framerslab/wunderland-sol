@@ -1,11 +1,18 @@
+/**
+ * Copy for the /guides, /tutorials and /examples pages.
+ *
+ * Cards link to docs.wunderland.sh. Commands and behaviour described here
+ * follow the CLI in src/cli (bin/wunderland.js runs its build), and
+ * src/__tests__/site-pages.test.tsx checks every `wunderland ...` line
+ * against that CLI's command registry.
+ */
+
 export interface SiteCardLink {
   title: string;
   description: string;
   href: string;
   label: string;
   accent: string;
-  external?: boolean;
-  bullets?: string[];
 }
 
 export interface SiteSection {
@@ -16,8 +23,7 @@ export interface SiteSection {
 
 export interface TutorialTrack {
   title: string;
-  duration: string;
-  level: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
   description: string;
   href: string;
   accent: string;
@@ -32,153 +38,117 @@ export interface ExampleShowcase {
   commands: string[];
 }
 
-export const onboardingCards: SiteCardLink[] = [
-  {
-    title: 'Get Started',
-    description:
-      'Install the CLI, run the setup wizard, and launch your first local Wunderland agent.',
-    href: 'https://docs.wunderland.sh/docs/getting-started/installation',
-    label: 'Install + Setup',
-    accent: 'var(--neon-cyan)',
-    external: true,
-    bullets: ['npm install -g wunderland', 'wunderland setup', 'wunderland start'],
-  },
-  {
-    title: 'Guides',
-    description:
-      'Learn the library-first API, channel setup, extensions, discovery, and deployment patterns.',
-    href: '/guides',
-    label: 'Browse Guides',
-    accent: 'var(--sol-purple)',
-    bullets: ['Library API', 'Extensions', 'Capability discovery'],
-  },
-  {
-    title: 'Examples',
-    description:
-      'Copy starting points for research agents, voice agents, and autonomous workflows.',
-    href: '/examples',
-    label: 'See Examples',
-    accent: 'var(--neon-green)',
-    bullets: ['Research copilot', 'Voice concierge', 'Scheduled ops agent'],
-  },
-];
+const DOCS = 'https://docs.wunderland.sh/docs';
 
 export const guideSections: SiteSection[] = [
   {
     title: 'Start Here',
-    description:
-      'The minimum path from zero to a running agent, both as a CLI app and as an embedded library.',
+    description: 'Install the CLI, save your provider keys and scaffold a first agent project.',
     cards: [
       {
         title: 'Installation',
-        description: 'Install Wunderland, verify prerequisites, and prepare your first config.',
-        href: 'https://docs.wunderland.sh/docs/getting-started/installation',
-        label: 'Read Installation',
+        description:
+          'Install the `wunderland` CLI from npm, then run `wunderland setup` to save your provider keys.',
+        href: `${DOCS}/getting-started/installation`,
+        label: 'Read the install guide',
         accent: 'var(--neon-cyan)',
-        external: true,
       },
       {
         title: 'Quickstart',
-        description: 'Go from install to a running agent session in a few commands.',
-        href: 'https://docs.wunderland.sh/docs/getting-started/quickstart',
-        label: 'Open Quickstart',
+        description:
+          'Scaffold a project with `wunderland init my-agent`, then run `wunderland chat` inside it to talk to the agent in your terminal.',
+        href: `${DOCS}/getting-started/quickstart`,
+        label: 'Open the quickstart',
         accent: 'var(--neon-green)',
-        external: true,
       },
       {
         title: 'Configuration',
-        description: 'Understand providers, security defaults, presets, and agent config fields.',
-        href: 'https://docs.wunderland.sh/docs/getting-started/configuration',
-        label: 'View Config Guide',
+        description:
+          'Keys and defaults live in `~/.wunderland`. Each agent keeps its personality, skills and security tier in `agent.config.json`.',
+        href: `${DOCS}/getting-started/configuration`,
+        label: 'Read the config guide',
         accent: 'var(--neon-magenta)',
-        external: true,
       },
     ],
   },
   {
     title: 'Build & Runtime',
-    description:
-      'The core building blocks for local agents, extension loading, discovery, and voice-capable sessions.',
+    description: 'Embed the runtime in your own app, add extensions, and choose voice and model providers.',
     cards: [
       {
-        title: 'Library-First API',
-        description: 'Use `createWunderland()` as the high-level runtime entry point in your own app.',
-        href: 'https://docs.wunderland.sh/docs/guides/library-first-api',
-        label: 'Open Library Guide',
+        title: 'Library API',
+        description: 'Import the `wunderland` package to run agents inside your own Node.js app instead of the CLI.',
+        href: `${DOCS}/guides/library-first-api`,
+        label: 'Read the library guide',
         accent: 'var(--sol-purple)',
-        external: true,
       },
       {
         title: 'Extensions',
-        description: 'Load curated tools, providers, and runtime packs through the registry.',
-        href: 'https://docs.wunderland.sh/docs/guides/extensions',
-        label: 'Open Extensions Guide',
+        description:
+          'List curated extensions with `wunderland extensions`, inspect one with `wunderland extensions info <name>`, and switch it on or off with `wunderland extensions enable <name>` or `wunderland extensions disable <name>`.',
+        href: `${DOCS}/guides/extensions`,
+        label: 'Read the extensions guide',
         accent: 'var(--neon-cyan)',
-        external: true,
       },
       {
         title: 'Capability Discovery',
-        description: 'Keep tool exposure narrow and relevant with discovery-driven loading.',
-        href: 'https://docs.wunderland.sh/docs/guides/capability-discovery',
-        label: 'Learn Discovery',
+        description:
+          'Run `wunderland chat --lazy-tools` to start with only the schema-on-demand meta tools. The agent enables extension packs as it needs them.',
+        href: `${DOCS}/guides/capability-discovery`,
+        label: 'Read about discovery',
         accent: 'var(--neon-green)',
-        external: true,
       },
       {
-        title: 'Voice Runtime',
+        title: 'Voice',
         description:
-          'Configure TTS, STT, and VAD with OpenAI, ElevenLabs, Deepgram, or local providers.',
-        href: 'https://docs.wunderland.sh/docs/guides/voice-runtime',
-        label: 'Open Voice Guide',
+          'Turn on ElevenLabs text-to-speech in the Advanced setup wizard. `wunderland voice` shows which phone-call providers have credentials.',
+        href: `${DOCS}/guides/voice-runtime`,
+        label: 'Read the voice guide',
         accent: 'var(--neon-gold)',
-        external: true,
+      },
+      {
+        title: 'LLM Providers',
+        description:
+          '`wunderland chat` runs on OpenAI, Anthropic, OpenRouter or a local Ollama model, and `wunderland models test` checks a connection.',
+        href: `${DOCS}/guides/model-providers`,
+        label: 'Compare providers',
+        accent: 'var(--sol-purple)',
       },
     ],
   },
   {
     title: 'Integrations & Operations',
-    description:
-      'Connect channels, configure providers, and deploy with current operational defaults.',
+    description: 'Connect channels, choose which tool calls need your approval, and run the agent as a local server.',
     cards: [
       {
         title: 'Channels',
-        description: 'Wire agents into messaging platforms and social surfaces.',
-        href: 'https://docs.wunderland.sh/docs/guides/channels',
-        label: 'Open Channels Guide',
+        description:
+          'List configured channels with `wunderland channels`, add Telegram, Discord, Slack, WhatsApp or another with `wunderland channels add <platform>`, and remove one with `wunderland channels remove <platform>`.',
+        href: `${DOCS}/guides/channels`,
+        label: 'Read the channels guide',
         accent: 'var(--neon-magenta)',
-        external: true,
       },
       {
         title: 'CLI Command Reference',
-        description: 'Full command surface including setup, chat, voice, extensions, and diagnostics.',
-        href: 'https://docs.wunderland.sh/docs/api/cli-reference',
-        label: 'Open CLI Reference',
+        description: 'Commands and flags for setup, chat, extensions, voice and diagnostics.',
+        href: `${DOCS}/api/cli-reference`,
+        label: 'Open the CLI reference',
         accent: 'var(--neon-cyan)',
-        external: true,
       },
       {
         title: 'Local-First Deployment',
-        description: 'Run locally first, then scale into hosted or hybrid deployment targets.',
-        href: 'https://docs.wunderland.sh/docs/deployment/local-first',
-        label: 'Read Deployment Guide',
+        description:
+          'Start on your own machine, where `wunderland start` serves `GET /health` and `POST /chat` on 127.0.0.1 port 3777.',
+        href: `${DOCS}/deployment/local-first`,
+        label: 'Read the deployment guide',
         accent: 'var(--neon-green)',
-        external: true,
-      },
-      {
-        title: 'LLM Providers',
-        description: 'Configure OpenAI, Anthropic, Gemini, Ollama (local), or OpenRouter.',
-        href: 'https://docs.wunderland.sh/docs/guides/llm-providers',
-        label: 'Provider Setup',
-        accent: 'var(--sol-purple)',
-        external: true,
       },
       {
         title: 'Security & Approvals',
-        description: 'Execution modes, tool permissions, guardrails, and production hardening.',
-        href: 'https://docs.wunderland.sh/docs/guides/security',
-        label: 'Security Guide',
+        description: 'Five security tiers, from dangerous to paranoid, decide which tool calls wait for your approval.',
+        href: `${DOCS}/guides/security`,
+        label: 'Read the security guide',
         accent: 'var(--neon-gold)',
-        external: true,
       },
     ],
   },
@@ -187,58 +157,51 @@ export const guideSections: SiteSection[] = [
 export const tutorialTracks: TutorialTrack[] = [
   {
     title: 'Launch Your First Agent',
-    duration: '10 min',
     level: 'Beginner',
-    description:
-      'Install the CLI, complete setup, run `wunderland chat`, and validate your first agent loop.',
-    href: 'https://docs.wunderland.sh/docs/tutorials/first-agent',
+    description: 'Install the CLI, scaffold a project and hold a first conversation with `wunderland chat`.',
+    href: `${DOCS}/tutorials/first-agent`,
     accent: 'var(--neon-cyan)',
     steps: [
-      'Install the CLI globally and run `wunderland setup`.',
-      'Choose an LLM provider, personality, and voice configuration.',
-      'Start the agent, then open an interactive chat session.',
+      'Install the CLI with `npm install -g wunderland`.',
+      'Run `wunderland init my-agent` and pick an LLM provider and model when it asks.',
+      'Run `cd my-agent`, then `wunderland chat` to talk to the agent in your terminal.',
     ],
   },
   {
-    title: 'Create a Production-Oriented Agent',
-    duration: '20 min',
+    title: 'Build an Agent from a Preset',
     level: 'Intermediate',
-    description:
-      'Start from a preset, layer skills and curated extensions, then tighten discovery and approvals.',
-    href: 'https://docs.wunderland.sh/docs/guides/creating-agents',
+    description: 'Start from a preset, add skills and extensions, then run the health check and seal the config.',
+    href: `${DOCS}/guides/creating-agents`,
     accent: 'var(--sol-purple)',
     steps: [
-      'Pick a preset that matches your workload.',
-      'Add extensions and skills without overloading the runtime.',
-      'Review approvals, config sealing, and diagnostics before deployment.',
+      'List the presets with `wunderland list-presets`, then scaffold one with `wunderland init my-agent --preset research-assistant`.',
+      'Inside the project, add skills with `wunderland skills enable <name>` and extensions with `wunderland extensions enable <name>`.',
+      'Run `wunderland doctor` to check keys and connectivity, then `wunderland seal` to record a SHA-256 hash of the config.',
     ],
   },
   {
-    title: 'Add Voice to a Session',
-    duration: '15 min',
+    title: 'Add Voice to an Agent',
     level: 'Intermediate',
-    description:
-      'Use the shared `speech-runtime` abstraction for Whisper-class STT, OpenAI or ElevenLabs TTS, and swappable providers.',
-    href: 'https://docs.wunderland.sh/docs/tutorials/voice-agent',
+    description: 'Give an agent ElevenLabs text-to-speech and check your phone-call providers.',
+    href: `${DOCS}/tutorials/voice-agent`,
     accent: 'var(--neon-gold)',
     steps: [
-      'Configure TTS and STT providers during setup (OpenAI, ElevenLabs, or local).',
-      'Test with CLI voice commands: status, tts, stt, test.',
-      'Use the library API for voice loops in your own app.',
+      'Run `wunderland setup`, choose Advanced, and say yes to voice synthesis with ElevenLabs.',
+      'The wizard saves `ELEVENLABS_API_KEY`. When `agent.config.json` lists no extensions, `wunderland chat` loads the voice-synthesis extension with that key.',
+      'Run `wunderland voice status` to see whether Twilio, Telnyx and Plivo have credentials for phone calls.',
     ],
   },
   {
-    title: 'Ship a Local-First Deployment',
-    duration: '25 min',
+    title: 'Run a Local Agent Server',
     level: 'Advanced',
-    description:
-      'Harden the config, choose your provider mix, and move from local execution to hosted deployment.',
-    href: 'https://docs.wunderland.sh/docs/deployment/local-first',
+    description: 'Serve an agent over HTTP on your own machine before you host it anywhere else.',
+    href: `${DOCS}/deployment/local-first`,
     accent: 'var(--neon-green)',
     steps: [
-      'Start locally with the exact tools and providers you expect in production.',
-      'Tune environment variables, approvals, and discovery fallback behavior.',
-      'Promote to a hosted runtime only after local observability looks clean.',
+      'Scaffold the agent with `wunderland init my-agent` and put an `OPENAI_API_KEY` in the project `.env`.',
+      'Run `wunderland start` in the project. It serves `GET /health` and `POST /chat` on 127.0.0.1 port 3777, so only this machine can reach it. `--port` picks another port.',
+      'Check it with `curl http://127.0.0.1:3777/health`, then send a message to `/chat`.',
+      '`/chat` answers without a sign-in by default, which is why the server stays on 127.0.0.1. `wunderland start --host <address>` listens on another address; the docs linked below say how to secure it first.',
     ],
   },
 ];
@@ -247,37 +210,29 @@ export const exampleShowcases: ExampleShowcase[] = [
   {
     title: 'Research Copilot',
     description:
-      'A preset-backed agent that loads search, browser, and summarization capabilities for deep research tasks.',
-    href: 'https://docs.wunderland.sh/docs/use-cases/deep-research-agent',
+      'The research-assistant preset sets the balanced security tier and the web-search, summarize and GitHub skills. `wunderland chat` also loads the default extensions, which include web search and a headless browser.',
+    href: `${DOCS}/use-cases/deep-research-agent`,
     accent: 'var(--neon-cyan)',
     commands: [
       'wunderland init research-copilot --preset research-assistant',
-      'wunderland extensions add web-search web-browser',
+      'cd research-copilot',
       'wunderland chat',
     ],
   },
   {
     title: 'Voice Concierge',
     description:
-      'A speech-enabled assistant using the shared runtime for listening, transcription, and TTS playback.',
-    href: 'https://docs.wunderland.sh/docs/use-cases/voice-concierge',
+      'An assistant with ElevenLabs text-to-speech from the Advanced setup wizard, and a check of which phone-call providers have credentials.',
+    href: `${DOCS}/use-cases/voice-concierge`,
     accent: 'var(--neon-gold)',
-    commands: [
-      'wunderland config set voiceProvider openai',
-      'wunderland voice test "Welcome to Wunderland"',
-      'wunderland voice status',
-    ],
+    commands: ['wunderland setup', 'wunderland chat', 'wunderland voice status'],
   },
   {
-    title: 'Scheduled Ops Agent',
+    title: 'Ops Assistant',
     description:
-      'An agent that combines workflows, scheduling, and diagnostics for repeatable operational tasks.',
-    href: 'https://docs.wunderland.sh/docs/guides/scheduling',
+      'The devops-assistant preset sets the strict security tier, the shell executor and browser extensions, and the healthcheck, coding-agent and GitHub skills. `wunderland init` writes those extensions into `agent.config.json`, and `wunderland chat` loads them in place of its default set.',
+    href: `${DOCS}/guides/preset-agents`,
     accent: 'var(--sol-purple)',
-    commands: [
-      'wunderland workflows create daily-report',
-      'wunderland cron add "0 9 * * 1-5" daily-report',
-      'wunderland doctor',
-    ],
+    commands: ['wunderland init ops-agent --preset devops-assistant', 'cd ops-agent', 'wunderland chat'],
   },
 ];

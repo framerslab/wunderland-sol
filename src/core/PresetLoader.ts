@@ -12,6 +12,17 @@ import { fileURLToPath } from 'node:url';
 // ============================================================================
 
 /**
+ * Extension packs a preset asks for, by category. `wunderland init` writes
+ * them into agent.config.json as `extensions`, and `wunderland chat` loads
+ * that list in place of its default set.
+ */
+export interface PresetExtensions {
+  tools?: string[];
+  voice?: string[];
+  productivity?: string[];
+}
+
+/**
  * A loaded agent preset, combining the JSON config with the PERSONA.md contents.
  */
 export interface AgentPreset {
@@ -42,6 +53,15 @@ export interface AgentPreset {
 
   /** Suggested channel platform IDs for this agent */
   suggestedChannels: string[];
+
+  /** Extension packs for this agent; unset when the preset names none */
+  suggestedExtensions?: PresetExtensions;
+
+  /** Per-extension overrides (enabled, priority, options) */
+  extensionOverrides?: Record<string, { enabled?: boolean; priority?: number; options?: unknown }>;
+
+  /** Tool access profile name, e.g. "assistant" */
+  toolAccessProfile?: string;
 
   /** Full contents of the PERSONA.md file */
   persona: string;
@@ -263,6 +283,9 @@ export class PresetLoader {
       securityTier: config.securityTier as string,
       suggestedSkills: (config.suggestedSkills as string[]) ?? [],
       suggestedChannels: (config.suggestedChannels as string[]) ?? [],
+      suggestedExtensions: config.suggestedExtensions as AgentPreset['suggestedExtensions'],
+      extensionOverrides: config.extensionOverrides as AgentPreset['extensionOverrides'],
+      toolAccessProfile: config.toolAccessProfile as AgentPreset['toolAccessProfile'],
       persona,
     };
   }

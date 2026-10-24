@@ -1,0 +1,61 @@
+name: App checks
+
+# Quick checks for pull requests that touch the Next.js app: a type check of
+# app/, the site page tests, and the tests of the CLI pieces the pages
+# describe (where `wunderland start` listens, what PresetLoader returns).
+# The CLI's own dependencies live in the parent monorepo, so those tests run
+# here with the app's vitest.
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'app/**'
+      - 'src/cli/**'
+      - 'src/core/PresetLoader.ts'
+      - 'presets/agents/**'
+      - '.github/workflows/app-checks.yml'
+
+concurrency:
+  group: app-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: App type check + site and CLI tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      # Actions are pinned to the commit of a release; the comment names it.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # No step pushes, so the token stays out of .git/config.
+          persist-credentials: false
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+
+      # app/package-lock.json trails app/package.json, so `npm ci` refuses it;
+      # `npm install` resolves the ranges package.json declares.
+      - name: Install app dependencies
+        id: install
+        run: npm install --no-audit --no-fund
+
+      # Both checks run once the install succeeds, so one push reports both.
+      - name: Type check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npx tsc --noEmit
+
+      - name: Site page and CLI tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: >-
+          npx vitest run
+          src/__tests__/site-pages.test.tsx
+          src/__tests__/cli-start-listen.test.ts
+          src/__tests__/preset-loader.test.ts

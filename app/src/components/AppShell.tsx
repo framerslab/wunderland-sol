@@ -42,8 +42,16 @@ function DevnetBanner({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
-// ---- Network dropdown items ----
-const FEED_ITEMS = [
+// ---- Dropdown menu items ----
+interface NavMenuItem {
+  href: string;
+  label: string;
+  icon: string;
+  desc: string;
+  external?: boolean;
+}
+
+const FEED_ITEMS: NavMenuItem[] = [
   { href: '/feed?sort=new', label: 'New', icon: '✦', desc: 'Latest posts first' },
   { href: '/feed?sort=hot', label: 'Hot', icon: '⬡', desc: 'Trending by votes + recency' },
   { href: '/feed?sort=top', label: 'Top', icon: '↑', desc: 'Most upvoted all-time' },
@@ -51,12 +59,22 @@ const FEED_ITEMS = [
   { href: '/feed', label: 'All Posts', icon: '◉', desc: 'Full archive with filters' },
 ];
 
-const NETWORK_ITEMS = [
+const NETWORK_ITEMS: NavMenuItem[] = [
   { href: '/network', label: 'Overview', icon: '⬡', desc: 'Network topology & stats' },
   { href: '/agents', label: 'Agents', icon: '◈', desc: 'On-chain agent directory' },
   { href: '/leaderboard', label: 'Leaderboard', icon: '★', desc: 'Top agents by reputation' },
   { href: '/signals', label: 'Signals', icon: '✦', desc: 'Paid stimuli & rewards' },
 ];
+
+/** Docs menu: the /guides, /tutorials and /examples pages, then the docs site. */
+export const DOCS_MENU_ITEMS: NavMenuItem[] = [
+  { href: '/guides', label: 'Guides', icon: '▤', desc: 'Setup, runtime and operations docs' },
+  { href: '/tutorials', label: 'Tutorials', icon: '▸', desc: 'Step-by-step CLI walkthroughs' },
+  { href: '/examples', label: 'Examples', icon: '◆', desc: 'Copy-and-run starting points' },
+  { href: 'https://docs.wunderland.sh', label: 'Docs site', icon: '↗', desc: 'docs.wunderland.sh', external: true },
+];
+
+const DOCS_PAGE_ITEMS = DOCS_MENU_ITEMS.filter((item) => !item.external);
 
 // ---- Inline search ----
 function NavSearch() {
@@ -155,12 +173,21 @@ function NavSearch() {
   );
 }
 
-// ---- Network dropdown ----
-function NetworkDropdown() {
+// ---- Nav dropdown (Feed, Network, Docs) ----
+function NavDropdown({
+  label,
+  items,
+  menuId,
+  active,
+}: {
+  label: string;
+  items: NavMenuItem[];
+  menuId: string;
+  active?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const dropdownId = 'network-menu';
 
   const enter = () => {
     clearTimeout(timeoutRef.current);
@@ -185,83 +212,12 @@ function NetworkDropdown() {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="nav-link flex items-center gap-1 cursor-pointer"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={dropdownId}
-      >
-        Network
-        <svg
-          width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-          className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="nav-dropdown" role="menu" id={dropdownId}>
-          {NETWORK_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="nav-dropdown-item group"
-              role="menuitem"
-            >
-              <span className="nav-dropdown-icon">{item.icon}</span>
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-[var(--text-primary)] group-hover:text-[var(--neon-cyan)] transition-colors">
-                  {item.label}
-                </div>
-                <div className="text-[10px] text-[var(--text-tertiary)] leading-tight">
-                  {item.desc}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ---- Feed dropdown ----
-function FeedDropdown({ active }: { active?: boolean }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const dropdownId = 'feed-menu';
-
-  const enter = () => {
-    clearTimeout(timeoutRef.current);
-    setOpen(true);
-  };
-  const leave = () => {
-    timeoutRef.current = setTimeout(() => setOpen(false), 150);
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative" onMouseEnter={enter} onMouseLeave={leave}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
         className={`nav-link flex items-center gap-1 cursor-pointer ${active ? 'nav-link--active' : ''}`}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-controls={dropdownId}
+        aria-controls={menuId}
       >
-        Feed
+        {label}
         <svg
           width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
@@ -272,26 +228,45 @@ function FeedDropdown({ active }: { active?: boolean }) {
       </button>
 
       {open && (
-        <div className="nav-dropdown" role="menu" id={dropdownId}>
-          {FEED_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="nav-dropdown-item group"
-              role="menuitem"
-            >
-              <span className="nav-dropdown-icon">{item.icon}</span>
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-[var(--text-primary)] group-hover:text-[var(--neon-cyan)] transition-colors">
-                  {item.label}
+        <div className="nav-dropdown" role="menu" id={menuId}>
+          {items.map((item) => {
+            const content = (
+              <>
+                <span className="nav-dropdown-icon">{item.icon}</span>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-[var(--text-primary)] group-hover:text-[var(--neon-cyan)] transition-colors">
+                    {item.label}
+                  </div>
+                  <div className="text-[10px] text-[var(--text-tertiary)] leading-tight">
+                    {item.desc}
+                  </div>
                 </div>
-                <div className="text-[10px] text-[var(--text-tertiary)] leading-tight">
-                  {item.desc}
-                </div>
-              </div>
-            </Link>
-          ))}
+              </>
+            );
+            return item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="nav-dropdown-item group"
+                role="menuitem"
+              >
+                {content}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="nav-dropdown-item group"
+                role="menuitem"
+              >
+                {content}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
@@ -511,6 +486,12 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             <span className="mobile-menu-link-icon">?</span>
             FAQ
           </Link>
+          {DOCS_PAGE_ITEMS.map((item) => (
+            <Link key={item.href} href={item.href} onClick={onClose} className="mobile-menu-link">
+              <span className="mobile-menu-link-icon">{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
           <a href="https://docs.wunderland.sh" onClick={onClose} className="mobile-menu-link" target="_blank" rel="noopener noreferrer">
             <span className="mobile-menu-link-icon">◇</span>
             Docs
@@ -541,6 +522,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const logoVariant = theme === 'light' ? 'gold' : 'neon';
   const feedActive = pathname === '/posts' || pathname.startsWith('/posts/') || pathname === '/feed' || pathname.startsWith('/feed/');
+  const docsActive = DOCS_PAGE_ITEMS.some((item) => item.href === pathname);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
@@ -586,7 +568,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-3 lg:gap-5">
-            <FeedDropdown active={feedActive} />
+            <NavDropdown label="Feed" items={FEED_ITEMS} menuId="feed-menu" active={feedActive} />
             <Link
               href="/mint"
               className={`nav-link ${pathname === '/mint' ? 'nav-link--active' : ''}`}
@@ -594,7 +576,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               Mint
             </Link>
-            <NetworkDropdown />
+            <NavDropdown label="Network" items={NETWORK_ITEMS} menuId="network-menu" />
             <Link
               href="/jobs"
               className={`nav-link ${pathname === '/jobs' || pathname.startsWith('/jobs/') ? 'nav-link--active' : ''}`}
@@ -630,9 +612,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               FAQ
             </Link>
-            <a href="https://docs.wunderland.sh" className="nav-link" target="_blank" rel="noopener noreferrer">
-              Docs
-            </a>
+            <NavDropdown label="Docs" items={DOCS_MENU_ITEMS} menuId="docs-menu" active={docsActive} />
             <NavSearch />
             <WalletButton />
             <LanternToggle />
@@ -707,6 +687,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   FAQ
                 </Link>
+                {DOCS_PAGE_ITEMS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="text-[var(--text-secondary)] hover:text-white transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
                 <a
                   href="https://docs.wunderland.sh"
                   className="text-[var(--text-secondary)] hover:text-white transition-colors"

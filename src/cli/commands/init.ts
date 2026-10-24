@@ -176,7 +176,7 @@ export default async function cmdInit(
       : resolvedTierName === 'paranoid'
         ? 'human-all'
         : 'human-dangerous';
-  const toolAccessProfile = (agentPreset as any)?.toolAccessProfile || 'assistant';
+  const toolAccessProfile = agentPreset?.toolAccessProfile || 'assistant';
   const wrapToolOutputs = resolvedTierName !== 'dangerous';
   const security = {
     tier: tierConfig.name,
@@ -235,8 +235,8 @@ export default async function cmdInit(
     },
     skills: agentPreset?.suggestedSkills ?? [],
     suggestedChannels: agentPreset?.suggestedChannels ?? [],
-    extensions: (agentPreset as any)?.suggestedExtensions,
-    extensionOverrides: (agentPreset as any)?.extensionOverrides,
+    extensions: agentPreset?.suggestedExtensions,
+    extensionOverrides: agentPreset?.extensionOverrides,
     toolAccessProfile,
     presetId: agentPreset?.id,
     skillsDir: './skills',
@@ -297,7 +297,7 @@ export default async function cmdInit(
     if (agentPreset.suggestedChannels.length > 0) {
       fmt.kvPair('Channels', agentPreset.suggestedChannels.join(', '));
     }
-    const presetExtensions = (agentPreset as any)?.suggestedExtensions;
+    const presetExtensions = agentPreset.suggestedExtensions;
     if (presetExtensions) {
       const extensionParts: string[] = [];
       if (presetExtensions.tools?.length) extensionParts.push(`tools: ${presetExtensions.tools.join(', ')}`);
