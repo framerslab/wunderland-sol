@@ -5,9 +5,10 @@
 ### Added
 - app: `/guides`, `/tutorials` and `/examples` pages built from `app/src/app/site-content.ts`, a Docs menu in the nav that links them, links in the mobile menu and footer, and sitemap entries. Ported from the `main` line (6c5a306f).
 - docs: a "Built by Manic Agency" README section, ported from the `main` line (e64b11cc).
-- ci: an App checks workflow that type-checks `app/` and runs the site page tests on pull requests that touch the app.
+- ci: an App checks workflow that type-checks `app/` and runs the site page tests, and the tests of the CLI pieces those pages describe, on pull requests that touch them. Its actions are pinned to release commits and its checkout keeps the job token out of `.git/config`.
 
 ### Fixed
+- cli: `wunderland start` listened on 0.0.0.0, so any machine that could reach port 3777 could send `POST /chat`, which has no authentication, and spend the agent's model key. It listens on 127.0.0.1 unless `--host` names another address, prints the address it listens on, and warns when other machines can connect. `wunderland --help` lists `--host`, and the local-server tutorial says how the server listens.
 - app: `site-content.ts` showed CLI commands that `src/cli` does not handle (`extensions add`, `voice test`, `workflows create`, `cron add`) and voice, provider and library claims the CLI does not back. The copy now follows `src/cli`, and a test checks every command it shows.
 - app: the JSON-LD license links pointed at `blob/main/LICENSE`, a branch with no LICENSE file. They point at master.
 - app: `tweetnacl` is declared in `app/package.json`. `SolanaWalletProvider` imports the test wallet adapter that uses it, so the app built only when a workspace install hoisted it from another package.

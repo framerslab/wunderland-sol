@@ -93,6 +93,7 @@ function printHelp(): void {
 
   ${c('Command Options:')}
     ${d('--port <number>')}        Server port (default: PORT env or 3777)
+    ${d('--host <address>')}       Server address (default: 127.0.0.1; 0.0.0.0 lets other machines in)
     ${d('--model <id>')}           LLM model override
     ${d('--preset <name>')}        Personality preset for init
     ${d('--security-tier <tier>')} Security tier (dangerous/permissive/balanced/strict/paranoid)

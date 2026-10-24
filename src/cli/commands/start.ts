@@ -13,6 +13,7 @@ import { accent, success as sColor, info as iColor, warn as wColor } from '../ui
 import * as fmt from '../ui/format.js';
 import { loadDotEnvIntoProcessUpward } from '../config/env-manager.js';
 import { resolveAgentWorkspaceBaseDir, sanitizeAgentWorkspaceId } from '../config/workspace.js';
+import { displayHost, isLoopbackHost, listenOn, resolveListenHost } from '../config/listen-host.js';
 import { isOllamaRunning, startOllama, detectOllamaInstall } from '../ollama/ollama-manager.js';
 import { SkillRegistry, resolveDefaultSkillsDirs } from '../../skills/index.js';
 import { createAuthorizationManager, runToolCallingTurn, type ToolInstance } from '../openai/tool-calling.js';
@@ -129,6 +130,15 @@ export default async function cmdStart(
 
   const portRaw = typeof flags['port'] === 'string' ? flags['port'] : (process.env['PORT'] || '');
   const port = Number(portRaw) || 3777;
+  // POST /chat has no authentication: listen on loopback unless --host says otherwise.
+  let host: string;
+  try {
+    host = resolveListenHost(flags['host']);
+  } catch (err) {
+    fmt.errorBlock('Invalid --host', err instanceof Error ? err.message : String(err));
+    process.exitCode = 1;
+    return;
+  }
   const apiKey = process.env['OPENAI_API_KEY'] || '';
   const model = typeof flags['model'] === 'string' ? flags['model'] : (process.env['OPENAI_MODEL'] || 'gpt-4o-mini');
 
@@ -399,9 +409,9 @@ export default async function cmdStart(
     }
   });
 
-  await new Promise<void>((resolve) => {
-    server.listen(port, '0.0.0.0', () => resolve());
-  });
+  await listenOn(server, port, host);
+  const localOnly = isLoopbackHost(host);
+  const baseUrl = `http://${displayHost(host)}:${port}`;
 
   // Status display
   fmt.section('Agent Server Running');
@@ -409,6 +419,7 @@ export default async function cmdStart(
   fmt.kvPair('Seed ID', seedId);
   fmt.kvPair('Model', model);
   fmt.kvPair('API Key', apiKey ? sColor('set') : wColor('not set'));
+  fmt.kvPair('Listening', localOnly ? sColor(`${host} (this machine only)`) : wColor(`${host} (other machines can connect)`));
   fmt.kvPair('Port', String(port));
   fmt.kvPair('Tools', `${toolMap.size} loaded`);
   fmt.kvPair('Authorization', autoApproveToolCalls ? wColor('fully autonomous (all auto-approved)') : sColor('tiered (safe tools only)'));
@@ -416,7 +427,10 @@ export default async function cmdStart(
     fmt.kvPair('Ollama', sColor('http://localhost:11434'));
   }
   fmt.blank();
-  fmt.ok(`Health: ${iColor(`http://localhost:${port}/health`)}`);
-  fmt.ok(`Chat:   ${iColor(`POST http://localhost:${port}/chat`)}`);
+  fmt.ok(`Health: ${iColor(`${baseUrl}/health`)}`);
+  fmt.ok(`Chat:   ${iColor(`POST ${baseUrl}/chat`)}`);
+  if (!localOnly) {
+    fmt.warning('POST /chat has no authentication. Anyone who can reach this address can use the agent and its model key.');
+  }
   fmt.blank();
 }

@@ -137,7 +137,7 @@ export const guideSections: SiteSection[] = [
       {
         title: 'Local-First Deployment',
         description:
-          'Start on your own machine, where `wunderland start` serves `GET /health` and `POST /chat` on port 3777.',
+          'Start on your own machine, where `wunderland start` serves `GET /health` and `POST /chat` on 127.0.0.1 port 3777.',
         href: `${DOCS}/deployment/local-first`,
         label: 'Read the deployment guide',
         accent: 'var(--neon-green)',
@@ -198,8 +198,9 @@ export const tutorialTracks: TutorialTrack[] = [
     accent: 'var(--neon-green)',
     steps: [
       'Scaffold the agent with `wunderland init my-agent` and put an `OPENAI_API_KEY` in the project `.env`.',
-      'Run `wunderland start` in the project. It serves `GET /health` and `POST /chat` on port 3777, and `--port` picks another.',
-      'Check it with `curl http://localhost:3777/health`, then send a message to `/chat`.',
+      'Run `wunderland start` in the project. It serves `GET /health` and `POST /chat` on 127.0.0.1 port 3777, so only this machine can reach it. `--port` picks another port.',
+      'Check it with `curl http://127.0.0.1:3777/health`, then send a message to `/chat`.',
+      '`/chat` has no sign-in, so anyone who can reach the port can use the agent and its model key. `wunderland start --host 0.0.0.0` lets other machines connect; do that only on a network you trust.',
     ],
   },
 ];
