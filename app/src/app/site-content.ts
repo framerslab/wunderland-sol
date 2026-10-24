@@ -229,7 +229,7 @@ export const exampleShowcases: ExampleShowcase[] = [
   {
     title: 'Ops Assistant',
     description:
-      'The devops-assistant preset sets the strict security tier, the shell executor and browser extensions, and the healthcheck, coding-agent and GitHub skills. `wunderland chat` loads the extensions the preset lists.',
+      'The devops-assistant preset sets the strict security tier, the shell executor and browser extensions, and the healthcheck, coding-agent and GitHub skills. `wunderland init` writes those extensions into `agent.config.json`, and `wunderland chat` loads them in place of its default set.',
     href: `${DOCS}/guides/preset-agents`,
     accent: 'var(--sol-purple)',
     commands: ['wunderland init ops-agent --preset devops-assistant', 'cd ops-agent', 'wunderland chat'],

@@ -8,6 +8,7 @@
 - ci: an App checks workflow that type-checks `app/` and runs the site page tests, and the tests of the CLI pieces those pages describe, on pull requests that touch them. Its actions are pinned to release commits and its checkout keeps the job token out of `.git/config`.
 
 ### Fixed
+- cli: PresetLoader dropped a preset's `suggestedExtensions`, `extensionOverrides` and `toolAccessProfile`, so `wunderland init --preset devops-assistant` (or `data-analyst`) wrote no `extensions` into `agent.config.json` and `wunderland chat` loaded its default set instead of the shell executor and browser the preset names. The loader returns all three, and the Ops Assistant example says what init writes and chat loads.
 - cli: `wunderland start` listened on 0.0.0.0, so any machine that could reach port 3777 could send `POST /chat`, which has no authentication, and spend the agent's model key. It listens on 127.0.0.1 unless `--host` names another address, prints the address it listens on, and warns when other machines can connect. `wunderland --help` lists `--host`, and the local-server tutorial says how the server listens.
 - app: `site-content.ts` showed CLI commands that `src/cli` does not handle (`extensions add`, `voice test`, `workflows create`, `cron add`) and voice, provider and library claims the CLI does not back. The copy now follows `src/cli`, and a test checks every command it shows.
 - app: the JSON-LD license links pointed at `blob/main/LICENSE`, a branch with no LICENSE file. They point at master.
