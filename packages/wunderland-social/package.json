@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@framers/agentos": "^0.15.63",
-    "wunderland": "^0.86.1"
+    "wunderland": "^0.87.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
