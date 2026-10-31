@@ -18,7 +18,7 @@ import {
   resolveAllowedTools,
   isValidToolAccessProfile,
   TOOL_CATEGORY_MAP,
-} from 'wunderland';
+} from 'wunderland/tools';
 
 /**
  * Default tools available in each mode.

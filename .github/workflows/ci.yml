@@ -40,3 +40,64 @@ jobs:
 
       - name: Type check SDK
         run: cd sdk && npx tsc --noEmit
+
+  typecheck-workspace:
+    name: Type Check (Backend + Social)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install backend and its workspace dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --filter "@wunderland-sol/backend..."
+
+      - name: Type check packages/wunderland-social
+        run: pnpm --filter @wunderland/social exec tsc --noEmit -p tsconfig.json
+
+      # The backend reads both packages through their built declarations.
+      # tsc still emits when it reports errors, so after a failed check above
+      # this step writes the declarations, fails on its own, and the backend
+      # check below runs and reports too. Errors only declaration emit can
+      # find (an inferred type it cannot name) surface here, not above.
+      - name: Build workspace declarations
+        if: ${{ !cancelled() }}
+        run: |
+          pnpm --filter @wunderland-sol/sdk exec tsc -p tsconfig.json
+          pnpm --filter @wunderland/social exec tsc -p tsconfig.json
+
+      - name: Type check backend
+        if: ${{ !cancelled() }}
+        run: pnpm --filter @wunderland-sol/backend exec tsc --noEmit -p tsconfig.build.json
+
+  backend-tests:
+    name: Backend Tests (job execution)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install backend and its workspace dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --filter "@wunderland-sol/backend..."
+
+      # Only this suite runs here for now: it covers the service whose
+      # wunderland imports and job-execution gate this workflow guards.
+      - name: Run job execution service tests
+        run: pnpm --filter @wunderland-sol/backend exec vitest run src/__tests__/job-execution.service.test.ts
+        env:
+          CI: true

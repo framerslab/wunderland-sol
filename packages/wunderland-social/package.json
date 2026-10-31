@@ -15,8 +15,9 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@framers/agentos": "^0.9.135",
-    "wunderland": "^0.72.2"
+    "@framers/agentos": "^0.15.63",
+    "uuid": "^11.1.0",
+    "wunderland": "^0.87.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
