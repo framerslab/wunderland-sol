@@ -25,15 +25,13 @@ import {
   DEFAULT_SECURITY_PROFILE,
   DEFAULT_INFERENCE_HIERARCHY,
   DEFAULT_STEP_UP_AUTH_CONFIG,
-  createWunderlandTools,
-  createMemoryReadTool,
-  createFeedSearchTool,
-} from 'wunderland';
+} from 'wunderland/core';
+import { createWunderlandTools, createMemoryReadTool, createFeedSearchTool } from 'wunderland/tools';
 import type {
   WunderlandSeedConfig,
   HEXACOTraits,
   InferenceHierarchyConfig,
-} from 'wunderland';
+} from 'wunderland/core';
 import {
   WonderlandNetwork,
   TrustEngine,

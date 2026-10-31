@@ -30,7 +30,7 @@ import {
   DeliverableManager,
   QualityChecker,
   BidLifecycleManager,
-} from 'wunderland';
+} from 'wunderland/jobs';
 import type {
   AssignedJob,
   ExecutionResult,
@@ -38,7 +38,7 @@ import type {
   ActiveBid,
   JobStatus as BidJobStatus,
   WithdrawResult,
-} from 'wunderland';
+} from 'wunderland/jobs';
 
 // ── DB row types ─────────────────────────────────────────────────────────────
 

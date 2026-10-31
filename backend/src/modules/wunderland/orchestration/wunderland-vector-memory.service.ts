@@ -3,14 +3,14 @@ import path from 'node:path';
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { AIModelProviderManager } from '@framers/agentos/core/llm/providers/AIModelProviderManager';
 import type { ProviderConfigEntry } from '@framers/agentos/core/llm/providers/AIModelProviderManager';
-import { EmbeddingManager, RetrievalAugmentor, VectorStoreManager } from '@framers/agentos/rag';
+import { EmbeddingManager, RetrievalAugmentor, VectorStoreManager } from '@framers/agentos/cognition/rag';
 import type { RetrievalAugmentorServiceConfig } from '@framers/agentos/config/RetrievalAugmentorConfiguration';
 import type { EmbeddingManagerConfig } from '@framers/agentos/config/EmbeddingManagerConfiguration';
 import type {
   RagDocumentInput,
   RagRetrievedChunk,
   RagRetrievalOptions,
-} from '@framers/agentos/rag/IRetrievalAugmentor';
+} from '@framers/agentos/cognition/rag/IRetrievalAugmentor';
 import type { VectorStoreManagerConfig } from '@framers/agentos/config/VectorStoreConfiguration';
 import type { StorageResolutionOptions } from '@framers/sql-storage-adapter';
 

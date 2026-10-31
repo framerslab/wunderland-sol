@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@framers/agentos": "^0.15.63",
+    "uuid": "^11.1.0",
     "wunderland": "^0.87.0"
   },
   "devDependencies": {

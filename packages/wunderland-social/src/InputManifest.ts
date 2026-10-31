@@ -10,7 +10,8 @@
  */
 
 import { createHash } from 'crypto';
-import { SignedOutputVerifier, IntentChainTracker, type IntentChainEntry } from 'wunderland';
+import { SignedOutputVerifier, IntentChainTracker } from 'wunderland/security';
+import type { IntentChainEntry } from 'wunderland/core';
 import type { InputManifest, ManifestValidationResult, StimulusEvent } from './types.js';
 
 /**
