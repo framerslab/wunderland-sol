@@ -9,6 +9,11 @@
  * Enabled via `ENABLE_JOB_EXECUTION=true`. When disabled, the service is a no-op
  * and all public methods return safe defaults.
  *
+ * Job execution also needs `OPENAI_API_KEY` or `OPENROUTER_API_KEY`. Without
+ * one, JobExecutor would build a placeholder deliverable and submit it, so the
+ * executor is not started, assigned jobs stay untouched, and manual triggers
+ * are refused. Bid withdrawal still runs.
+ *
  * ## Lifecycle
  *
  * - `onModuleInit` — starts execution and bid-withdrawal loops for each agent
@@ -66,6 +71,13 @@ type JobStatusRow = {
   assigned_agent_pda: string | null;
 };
 
+const NO_LLM_PROVIDER_ERROR =
+  'Job execution needs OPENAI_API_KEY or OPENROUTER_API_KEY';
+
+function hasLlmProvider(): boolean {
+  return Boolean(process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY);
+}
+
 // ── Service ──────────────────────────────────────────────────────────────────
 
 @Injectable()
@@ -106,8 +118,29 @@ export class JobExecutionService implements OnModuleInit, OnModuleDestroy {
       `Initializing job execution for agent ${this.agentId} (poll: ${this.pollIntervalMs}ms).`,
     );
 
-    // ── Wire up JobExecutor ─────────────────────────────────────────────
+    if (hasLlmProvider()) {
+      this.startJobExecutor();
+    } else {
+      this.logger.warn(
+        `${NO_LLM_PROVIDER_ERROR}; the executor is not started and assigned jobs are left untouched.`,
+      );
+    }
 
+    // ── Wire up BidLifecycleManager ─────────────────────────────────────
+
+    this.bidLifecycleManager = new BidLifecycleManager({
+      pollIntervalMs: this.pollIntervalMs,
+      fetchActiveBids: (agentId) => this.fetchActiveBids(agentId),
+      getJobStatus: (jobId) => this.getJobStatus(jobId),
+      withdrawBid: (params) => this.withdrawBid(params),
+      onBidInactive: (params) => this.onBidInactive(params),
+      onWorkloadDecrement: (_agentId) => Promise.resolve(),
+    });
+
+    this.bidLifecycleManager.start(this.agentId);
+  }
+
+  private startJobExecutor(): void {
     const deliverableManager = new DeliverableManager({
       onPersist: (stored) => this.persistDeliverable(stored),
       onSubmit: (params) => this.submitJobOnChain(params),
@@ -135,19 +168,6 @@ export class JobExecutionService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.jobExecutor.start(this.agentId);
-
-    // ── Wire up BidLifecycleManager ─────────────────────────────────────
-
-    this.bidLifecycleManager = new BidLifecycleManager({
-      pollIntervalMs: this.pollIntervalMs,
-      fetchActiveBids: (agentId) => this.fetchActiveBids(agentId),
-      getJobStatus: (jobId) => this.getJobStatus(jobId),
-      withdrawBid: (params) => this.withdrawBid(params),
-      onBidInactive: (params) => this.onBidInactive(params),
-      onWorkloadDecrement: (_agentId) => Promise.resolve(),
-    });
-
-    this.bidLifecycleManager.start(this.agentId);
   }
 
   onModuleDestroy(): void {
@@ -186,7 +206,11 @@ export class JobExecutionService implements OnModuleInit, OnModuleDestroy {
    */
   async triggerExecution(jobPda: string): Promise<ExecutionResult> {
     if (!this.jobExecutor) {
-      return { success: false, error: 'Job execution not enabled' };
+      const providerMissing = this.enabled && !!this.agentId && !hasLlmProvider();
+      return {
+        success: false,
+        error: providerMissing ? NO_LLM_PROVIDER_ERROR : 'Job execution not enabled',
+      };
     }
 
     if (!this.agentId) {
