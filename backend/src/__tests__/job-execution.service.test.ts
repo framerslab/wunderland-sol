@@ -40,7 +40,7 @@ const mockBidLifecycleManager = {
 const MockJobExecutorCtor = vi.fn(() => mockJobExecutor);
 const MockBidLifecycleManagerCtor = vi.fn(() => mockBidLifecycleManager);
 
-vi.mock('wunderland/advanced', () => ({
+vi.mock('wunderland/jobs', () => ({
   JobExecutor: MockJobExecutorCtor,
   DeliverableManager: vi.fn(),
   QualityChecker: vi.fn(() => ({})),
@@ -125,11 +125,20 @@ describe('JobExecutionService', () => {
   let savedEnableJobExecution: string | undefined;
   let savedAgentId: string | undefined;
   let savedPollInterval: string | undefined;
+  let savedOpenAiKey: string | undefined;
+  let savedOpenRouterKey: string | undefined;
 
   beforeEach(() => {
     savedEnableJobExecution = process.env.ENABLE_JOB_EXECUTION;
     savedAgentId = process.env.JOB_EXECUTION_AGENT_ID;
     savedPollInterval = process.env.JOB_EXECUTION_POLL_INTERVAL_MS;
+    savedOpenAiKey = process.env.OPENAI_API_KEY;
+    savedOpenRouterKey = process.env.OPENROUTER_API_KEY;
+
+    // Most suites need a configured LLM provider; the provider suite below
+    // clears these to exercise the fail-closed path.
+    process.env.OPENAI_API_KEY = 'test-openai-key';
+    delete process.env.OPENROUTER_API_KEY;
 
     vi.clearAllMocks();
     MockJobExecutorCtor.mockClear();
@@ -148,6 +157,60 @@ describe('JobExecutionService', () => {
     restore('ENABLE_JOB_EXECUTION', savedEnableJobExecution);
     restore('JOB_EXECUTION_AGENT_ID', savedAgentId);
     restore('JOB_EXECUTION_POLL_INTERVAL_MS', savedPollInterval);
+    restore('OPENAI_API_KEY', savedOpenAiKey);
+    restore('OPENROUTER_API_KEY', savedOpenRouterKey);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LLM provider gate
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe('without an LLM provider', () => {
+    beforeEach(() => {
+      process.env.ENABLE_JOB_EXECUTION = 'true';
+      process.env.JOB_EXECUTION_AGENT_ID = 'agent-1';
+      delete process.env.OPENAI_API_KEY;
+      delete process.env.OPENROUTER_API_KEY;
+    });
+
+    // With no executeJob callback and no key, JobExecutor builds a placeholder
+    // deliverable that passes its quality check and is submitted on chain.
+    it('does not start the job executor, so no placeholder is submitted', async () => {
+      const svc = await createServiceInstance(db, sol);
+      svc.onModuleInit();
+
+      expect(MockJobExecutorCtor).not.toHaveBeenCalled();
+      expect(mockJobExecutor.start).not.toHaveBeenCalled();
+      expect(svc.getStatus().executor).toBeNull();
+    });
+
+    it('still runs the bid lifecycle loop', async () => {
+      const svc = await createServiceInstance(db, sol);
+      svc.onModuleInit();
+
+      expect(mockBidLifecycleManager.start).toHaveBeenCalledWith('agent-1');
+    });
+
+    it('refuses a manual trigger without touching the job', async () => {
+      const svc = await createServiceInstance(db, sol);
+      svc.onModuleInit();
+
+      const result = await svc.triggerExecution('job-pda-1');
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/OPENAI_API_KEY|OPENROUTER_API_KEY/);
+      expect(db.get).not.toHaveBeenCalled();
+      expect(db.run).not.toHaveBeenCalled();
+      expect(mockJobExecutor.executeJob).not.toHaveBeenCalled();
+    });
+
+    it('starts the job executor when only OPENROUTER_API_KEY is set', async () => {
+      process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
+      const svc = await createServiceInstance(db, sol);
+      svc.onModuleInit();
+
+      expect(MockJobExecutorCtor).toHaveBeenCalledTimes(1);
+      expect(mockJobExecutor.start).toHaveBeenCalledWith('agent-1');
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

@@ -76,3 +76,28 @@ jobs:
       - name: Type check backend
         if: ${{ !cancelled() }}
         run: pnpm --filter @wunderland-sol/backend exec tsc --noEmit -p tsconfig.build.json
+
+  backend-tests:
+    name: Backend Tests (job execution)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install backend and its workspace dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --filter "@wunderland-sol/backend..."
+
+      # Only this suite runs here for now: it covers the service whose
+      # wunderland imports and job-execution gate this workflow guards.
+      - name: Run job execution service tests
+        run: pnpm --filter @wunderland-sol/backend exec vitest run src/__tests__/job-execution.service.test.ts
+        env:
+          CI: true
