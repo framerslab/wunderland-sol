@@ -210,6 +210,8 @@ Railway provides a public URL like `https://your-app.up.railway.app`. Point `NEX
 
 ### Build and Deploy Workflow
 
+The workflow below is a template for your own deployment. It is not this repository's `.github/workflows/deploy.yml`, which runs only by manual dispatch and refuses to connect until a pinned host key is set. Set `fingerprint:` on every SSH step so the runner checks the server's host key; get the value with `ssh-keyscan -t ed25519 your-linode-ip | ssh-keygen -lf -` and store the `SHA256:...` part.
+
 Create `.github/workflows/deploy.yml`:
 
 ```yaml
@@ -262,6 +264,7 @@ jobs:
           host: ${{ secrets.LINODE_HOST }}
           username: ${{ secrets.LINODE_USER }}
           key: ${{ secrets.LINODE_SSH_KEY }}
+          fingerprint: ${{ secrets.LINODE_HOST_FINGERPRINT }}
           script: |
             cd /opt/wunderland
             git pull origin master
@@ -303,6 +306,7 @@ jobs:
 | `LINODE_HOST` | IP address of your Linode server |
 | `LINODE_USER` | SSH username (e.g., `wunderland`) |
 | `LINODE_SSH_KEY` | Private SSH key for deployment |
+| `LINODE_HOST_FINGERPRINT` | SHA256 fingerprint of the server's host key (`SHA256:...`) |
 | `VERCEL_TOKEN` | Vercel API token from [vercel.com/account/tokens](https://vercel.com/account/tokens) |
 | `VERCEL_ORG_ID` | Found in `.vercel/project.json` after first deploy |
 | `VERCEL_PROJECT_ID` | Found in `.vercel/project.json` after first deploy |

@@ -3,8 +3,10 @@ name: Deploy to Linode
 # Manual dispatch only. The Linode this workflow deployed to has been deleted,
 # and its old address now belongs to a server we do not own, so a push to master
 # must not try to sign in to it. A deploy waits for a new host: set LINODE_HOST
-# and SSH_PRIVATE_KEY for that host and pin its host key (fingerprint:) on both
-# SSH steps before running this again or restoring the push trigger.
+# and SSH_PRIVATE_KEY for that host and LINODE_HOST_FINGERPRINT to its SHA256
+# host key fingerprint. Until LINODE_HOST_FINGERPRINT is set, the first step
+# fails and no SSH connection is made. Restore the push trigger only after a
+# dispatched deploy to the new host has succeeded.
 on:
   workflow_dispatch:
 
@@ -15,6 +17,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Require a pinned host key
+        env:
+          HOST_FINGERPRINT: ${{ secrets.LINODE_HOST_FINGERPRINT }}
+        run: |
+          if [ -z "$HOST_FINGERPRINT" ]; then
+            echo "::error::LINODE_HOST_FINGERPRINT is not set. The deploy host is gone; set up a new host and pin its key first."
+            exit 1
+          fi
+
       - uses: actions/checkout@v5
 
       - name: Create deployment archive
@@ -54,6 +65,7 @@ jobs:
           host: ${{ secrets.LINODE_HOST }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.LINODE_HOST_FINGERPRINT }}
           source: deploy.tar.gz
           target: /tmp/
 
@@ -63,6 +75,7 @@ jobs:
           host: ${{ secrets.LINODE_HOST }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.LINODE_HOST_FINGERPRINT }}
           command_timeout: 30m
           script: |
             set -euo pipefail
