@@ -1,8 +1,11 @@
 name: Deploy to Linode
 
+# Manual dispatch only. The Linode this workflow deployed to has been deleted,
+# and its old address now belongs to a server we do not own, so a push to master
+# must not try to sign in to it. A deploy waits for a new host: set LINODE_HOST
+# and SSH_PRIVATE_KEY for that host and pin its host key (fingerprint:) on both
+# SSH steps before running this again or restoring the push trigger.
 on:
-  push:
-    branches: [master]
   workflow_dispatch:
 
 env:
