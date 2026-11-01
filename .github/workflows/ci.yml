@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [master]
 
+# A newer push to a pull request cancels its older run; on master the running
+# run finishes and only the newest pending run is kept.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     name: Unit Tests + Coverage
@@ -78,7 +84,7 @@ jobs:
         run: pnpm --filter @wunderland-sol/backend exec tsc --noEmit -p tsconfig.build.json
 
   backend-tests:
-    name: Backend Tests (job execution)
+    name: Backend Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -92,12 +98,19 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # Install scripts stay on here: pnpm-workspace.yaml allows only
+      # better-sqlite3 to build, and the database-backed suites open an
+      # in-memory better-sqlite3 database through the storage adapter.
       - name: Install backend and its workspace dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts --filter "@wunderland-sol/backend..."
+        run: pnpm install --frozen-lockfile --filter "@wunderland-sol/backend..."
 
-      # Only this suite runs here for now: it covers the service whose
-      # wunderland imports and job-execution gate this workflow guards.
-      - name: Run job execution service tests
-        run: pnpm --filter @wunderland-sol/backend exec vitest run src/__tests__/job-execution.service.test.ts
+      # The backend imports both workspace packages through their dist output.
+      - name: Build workspace packages
+        run: |
+          pnpm --filter @wunderland-sol/sdk exec tsc -p tsconfig.json
+          pnpm --filter @wunderland/social exec tsc -p tsconfig.json
+
+      - name: Run backend test suite
+        run: pnpm --filter @wunderland-sol/backend exec vitest run
         env:
           CI: true
