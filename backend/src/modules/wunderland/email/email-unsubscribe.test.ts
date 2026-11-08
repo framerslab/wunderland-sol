@@ -13,6 +13,7 @@ import {
 import { DatabaseService } from '../../../database/database.service.js';
 import { CredentialsService } from '../credentials/credentials.service.js';
 import { EmailIntegrationService } from './email.service.js';
+import { EmailUnsubscribeService } from './email-unsubscribe.service.js';
 import { buildMessage, type SmtpSendParams } from './smtp-client.js';
 
 /**
@@ -486,6 +487,39 @@ describe('the unsubscribe route', () => {
     expect(rows).toHaveLength(2);
     // The unsubscribe the old link made still holds.
     await expect(sendAgentMail()).rejects.toThrow(/turned off/i);
+  });
+
+  it('drops tokens older than two years when the server starts and once a day, with no further mail', async () => {
+    const day = 24 * 60 * 60 * 1000;
+    const hash = (token: string) => createHash('sha256').update(token).digest('hex');
+    await sendAgentMail();
+    await sendAgentMail(AGENT_B);
+    const [first, second] = sent.map((mail) => hash(tokenFrom(unsubscribeUrl(mail.raw))));
+    const age = (tokenHash: string, days: number) =>
+      db.run('UPDATE wunderland_email_unsubscribe_tokens SET created_at = ? WHERE token_hash = ?', [
+        Date.now() - days * day,
+        tokenHash,
+      ]);
+    const stored = async () =>
+      (
+        await db.all<{ token_hash: string }>('SELECT token_hash FROM wunderland_email_unsubscribe_tokens')
+      ).map((row) => String(row.token_hash));
+
+    await age(first, 731);
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    const service = new EmailUnsubscribeService(db);
+    try {
+      await service.onModuleInit();
+      expect(await stored()).toEqual([second]);
+
+      await age(second, 731);
+      await vi.advanceTimersByTimeAsync(day);
+      await vi.waitFor(async () => expect(await stored()).toEqual([]));
+    } finally {
+      service.onModuleDestroy();
+      vi.useRealTimers();
+    }
+    expect(transport).toHaveBeenCalledTimes(2);
   });
 
   it('an unknown token is refused and changes nothing', async () => {
