@@ -239,10 +239,10 @@ describe('agent mail carries an unsubscribe link and the one-click headers', () 
 
   it('never sends to a do-not-contact address', async () => {
     process.env.MAIL_DO_NOT_CONTACT = 'blocked@example.com, other@example.org';
-    await expect(sendAgentMail(AGENT_A, ' Blocked@Example.COM ')).rejects.toThrow();
+    await expect(sendAgentMail(AGENT_A, ' Blocked@Example.COM ')).rejects.toThrow(/turned off/i);
     await expect(
       email.sendTestEmail(OWNER, { seedId: AGENT_B, to: 'other@example.org' })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/turned off/i);
     expect(transport).not.toHaveBeenCalled();
   });
 });
@@ -306,10 +306,10 @@ describe('the unsubscribe route', () => {
     expect(res.status).toBe(200);
     expect(transport.mock.calls.length).toBe(callsBefore);
 
-    await expect(sendAgentMail(AGENT_A, 'reader.person@example.com')).rejects.toThrow();
+    await expect(sendAgentMail(AGENT_A, 'reader.person@example.com')).rejects.toThrow(/turned off/i);
     await expect(
       email.sendTestEmail(OWNER, { seedId: AGENT_A, to: RECIPIENT })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/turned off/i);
     expect(transport.mock.calls.length).toBe(callsBefore);
 
     // Another agent may still write to the address.
@@ -332,8 +332,8 @@ describe('the unsubscribe route', () => {
     expect(res.status).toBe(200);
 
     const callsBefore = transport.mock.calls.length;
-    await expect(sendAgentMail(AGENT_A)).rejects.toThrow();
-    await expect(sendAgentMail(AGENT_B)).rejects.toThrow();
+    await expect(sendAgentMail(AGENT_A)).rejects.toThrow(/turned off/i);
+    await expect(sendAgentMail(AGENT_B)).rejects.toThrow(/turned off/i);
     expect(transport.mock.calls.length).toBe(callsBefore);
   });
 
