@@ -9,7 +9,7 @@
  * unsubscribing never sends a confirmation.
  */
 
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { DatabaseService } from '../../../database/database.service.js';
 import {
   MailLinkConfigError,
@@ -33,6 +33,8 @@ const KEY_CHANGED_MESSAGE =
  */
 export const UNSUBSCRIBE_LINK_LIFETIME_MS = 730 * 24 * 60 * 60 * 1000;
 
+const PRUNE_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
 export type UnsubscribeScope = 'agent' | 'all';
 
 export type UnsubscribeTokenRecord = {
@@ -48,8 +50,48 @@ export type UnsubscribeState = UnsubscribeTokenRecord & {
 };
 
 @Injectable()
-export class EmailUnsubscribeService {
+export class EmailUnsubscribeService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(EmailUnsubscribeService.name);
+  private pruneTimer: NodeJS.Timeout | null = null;
+
   constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}
+
+  /**
+   * Drops expired tokens when the server starts and once a day after, so a
+   * server that sends no further mail still keeps none past two years.
+   */
+  async onModuleInit(): Promise<void> {
+    await this.pruneQuietly();
+    if (!this.pruneTimer) {
+      this.pruneTimer = setInterval(() => void this.pruneQuietly(), PRUNE_INTERVAL_MS);
+      this.pruneTimer.unref?.();
+    }
+  }
+
+  onModuleDestroy(): void {
+    if (this.pruneTimer) {
+      clearInterval(this.pruneTimer);
+      this.pruneTimer = null;
+    }
+  }
+
+  /** Deletes tokens older than the link lifetime; the unsubscribes they made stay. */
+  async pruneExpiredTokens(now = Date.now()): Promise<void> {
+    await this.db.run('DELETE FROM wunderland_email_unsubscribe_tokens WHERE created_at < ?', [
+      now - UNSUBSCRIBE_LINK_LIFETIME_MS,
+    ]);
+  }
+
+  private async pruneQuietly(): Promise<void> {
+    try {
+      await this.pruneExpiredTokens();
+    } catch (err) {
+      // Not fatal: the next run, or the next mail, drops them.
+      this.logger.warn(
+        `Expired unsubscribe tokens were not dropped: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  }
 
   /**
    * Refuses to go on when the address key differs from the one the stored
@@ -92,9 +134,7 @@ export class EmailUnsubscribeService {
   async issueToken(params: { recipient: string; seedId: string; agentName: string }): Promise<string> {
     await this.bindAddressKey();
     const now = Date.now();
-    await this.db.run('DELETE FROM wunderland_email_unsubscribe_tokens WHERE created_at < ?', [
-      now - UNSUBSCRIBE_LINK_LIFETIME_MS,
-    ]);
+    await this.pruneExpiredTokens(now);
     const token = newUnsubscribeToken();
     await this.db.run(
       `

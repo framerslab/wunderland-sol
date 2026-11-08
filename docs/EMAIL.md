@@ -69,8 +69,12 @@ since every anonymous request through the site shares one address; a request
 that only names that path in its query or deeper in another route is limited
 as usual. Request logs show the token as `[token]`. nginx
 (`deployment/nginx.conf`) does not log these requests and limits them to 5 a
-second per connecting address (a burst of 20, then `429`); behind Cloudflare
-that address is the edge's. Its refusals are logged at `info`
+second per client (a burst of 20, then `429`). The client is the
+`CF-Connecting-IP` Cloudflare sends, so people behind one Cloudflare edge do
+not share a limit, or the connecting address when that header is absent. A
+looser limit per connecting address (50 a second, a burst of 200) holds a
+caller that reaches the server directly and invents that header. Its
+refusals are logged at `info`
 ([`limit_req_log_level`](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_log_level)),
 below the `notice` level of the `nginx:alpine` image's error log
 ([its `nginx.conf`](https://github.com/nginx/pkg-oss/blob/master/alpine/alpine/nginx.conf)),
@@ -78,8 +82,8 @@ so the token stays out of that log too.
 
 A link works for two years after its mail, well past the 30 days CAN-SPAM
 asks for ([15 U.S.C. 7704(a)(3)(A)(ii)](https://www.law.cornell.edu/uscode/text/15/7704)).
-Older tokens are dropped when the next mail is sent; the unsubscribe a link
-made never lapses.
+Older tokens are dropped when the backend starts, once a day after that, and
+before each new token is stored; the unsubscribe a link made never lapses.
 
 ## Before every send
 
@@ -141,8 +145,9 @@ made never lapses.
 - `backend/src/modules/wunderland/email/email-unsubscribe.test.ts` sends the
   test mail and an agent mail through the service with only the SMTP
   connection replaced, reads the message the client writes after `DATA`
-  (non-ASCII mail included), and drives the unsubscribe route over HTTP,
-  expired links included.
+  (non-ASCII mail included), drives the unsubscribe route over HTTP, expired
+  links included, and checks that expired tokens are dropped at start and
+  daily with no further mail.
 - `backend/src/modules/wunderland/email/smtp-client.test.ts` sends through a
   local SMTP server and reads both headers on the wire.
 - `app/src/__tests__/unsubscribe-route.test.ts` checks that the site hands GET
