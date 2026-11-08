@@ -68,7 +68,8 @@ only an HTML reply as the page. The route's own path,
 since every anonymous request through the site shares one address; a request
 that only names that path in its query or deeper in another route is limited
 as usual. Request logs show the token as `[token]`. nginx
-(`deployment/nginx.conf`) does not log these requests and limits them to 5 a
+(`deployment/nginx.conf`) does not log these requests, on port 443 or in the
+port 80 redirect (a `308`, so a one-click POST stays a POST), and limits them to 5 a
 second per client (a burst of 20, then `429`). The client is the
 `CF-Connecting-IP` Cloudflare sends, so people behind one Cloudflare edge do
 not share a limit, or the connecting address when that header is absent. A
