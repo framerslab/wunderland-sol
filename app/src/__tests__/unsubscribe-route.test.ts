@@ -13,6 +13,8 @@ type Seen = { method: string; url: string; contentType: string; body: string };
 
 const TOKEN = 'Tk_' + 'a'.repeat(40);
 const UNKNOWN = 'Z'.repeat(43);
+const JSON_ERROR = 'J'.repeat(43);
+const REFLECTED = '<p/onclick=alert(1)>';
 
 let server: http.Server;
 let seen: Seen[] = [];
@@ -32,6 +34,12 @@ beforeAll(async () => {
         contentType: String(req.headers['content-type'] ?? ''),
         body,
       });
+      if ((req.url ?? '').endsWith(`/${JSON_ERROR}`)) {
+        // A JSON error that repeats what the request sent, as a body parser's error does.
+        res.writeHead(400, { 'content-type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ statusCode: 400, message: `Unexpected token in JSON at ${REFLECTED}` }));
+        return;
+      }
       const status = (req.url ?? '').endsWith(`/${UNKNOWN}`) ? 404 : 200;
       res.writeHead(status, { 'content-type': 'text/html; charset=utf-8' });
       res.end(status === 200 ? '<form method="post">Unsubscribe</form>' : '<p>This link is not valid.</p>');
@@ -101,6 +109,38 @@ describe('GET and POST /api/email/unsubscribe/[token]', () => {
       ctx(UNKNOWN)
     );
     expect(res.status).toBe(404);
+  });
+
+  it('never serves a non-HTML backend reply as a page', async () => {
+    const { POST } = await import('@/app/api/email/unsubscribe/[token]/route');
+    const res = await POST(
+      new Request(`https://wunderland.test/api/email/unsubscribe/${JSON_ERROR}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: 'List-Unsubscribe=One-Click',
+      }),
+      ctx(JSON_ERROR)
+    );
+    const html = await res.text();
+    expect(res.headers.get('content-type')).toMatch(/text\/html/);
+    expect(html).not.toContain(REFLECTED);
+    expect(html).not.toContain('Unexpected token');
+  });
+
+  it('sends the backend a form body whatever content type arrives', async () => {
+    const { POST } = await import('@/app/api/email/unsubscribe/[token]/route');
+    const res = await POST(
+      new Request(`https://wunderland.test/api/email/unsubscribe/${TOKEN}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{"scope":"all"}',
+      }),
+      ctx(TOKEN)
+    );
+    expect(res.status).toBe(200);
+    expect(seen).toHaveLength(1);
+    expect(seen[0].contentType).toMatch(/^application\/x-www-form-urlencoded/);
+    expect(seen[0].body).toBe('');
   });
 
   it('a malformed token never reaches the backend', async () => {

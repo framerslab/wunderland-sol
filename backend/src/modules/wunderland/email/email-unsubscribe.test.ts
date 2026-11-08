@@ -130,6 +130,8 @@ const ENV_KEYS = [
   'FRONTEND_URL',
   'NODE_ENV',
   'MAIL_DO_NOT_CONTACT',
+  'WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY',
+  'JWT_SECRET',
 ];
 
 let db: DatabaseService;
@@ -145,6 +147,8 @@ beforeEach(async () => {
   process.env.FRONTEND_URL = SITE;
   process.env.NODE_ENV = 'test';
   delete process.env.MAIL_DO_NOT_CONTACT;
+  process.env.WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY = 'test-server-key-1';
+  delete process.env.JWT_SECRET;
 
   __setAppDatabaseAdapterResolverForTests(async () =>
     resolveStorageAdapter({ priority: ['better-sqlite3'], filePath: ':memory:' })
@@ -226,6 +230,40 @@ describe('agent mail carries an unsubscribe link and the one-click headers', () 
     expect(stored).not.toContain(token);
     expect(stored.toLowerCase()).not.toContain(RECIPIENT.toLowerCase());
     expect(rows[0].token_hash).toBe(createHash('sha256').update(token).digest('hex'));
+
+    // Someone holding only the database cannot confirm a guessed address by hashing it.
+    const guess = 'reader.person@example.com';
+    for (const unkeyed of [
+      createHash('sha256').update(guess).digest('hex'),
+      createHash('sha256').update(`wunderland-mail:${guess}`).digest('hex'),
+    ]) {
+      expect(stored).not.toContain(unkeyed);
+    }
+  });
+
+  it('declares its timestamps BIGINT, so millisecond times fit on Postgres too', async () => {
+    const tables = await db.all<{ name: string; sql: string }>(
+      `SELECT name, sql FROM sqlite_master
+        WHERE type = 'table'
+          AND name IN ('wunderland_email_unsubscribe_tokens', 'wunderland_email_suppressions')`
+    );
+    expect(tables).toHaveLength(2);
+    for (const table of tables) expect(table.sql).toMatch(/created_at\s+BIGINT/i);
+  });
+
+  it('refuses to send once the server key changes, so stored unsubscribes never lapse', async () => {
+    await sendAgentMail();
+    process.env.WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY = 'test-server-key-2';
+    await expect(sendAgentMail(AGENT_B, 'someone.else@example.com')).rejects.toThrow(/key/i);
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses to send in production without a server key', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY;
+    delete process.env.JWT_SECRET;
+    await expect(sendAgentMail()).rejects.toThrow(/WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY/);
+    expect(transport).not.toHaveBeenCalled();
   });
 
   it('refuses to send when the site address is not https in production', async () => {
@@ -337,6 +375,24 @@ describe('the unsubscribe route', () => {
     expect(transport.mock.calls.length).toBe(callsBefore);
   });
 
+  it('an agent whose id is "*" is unsubscribed alone, not every agent', async () => {
+    await insertAgent(db, '*', 'Star');
+    await addSmtpCredentials(credentials, '*');
+    await sendAgentMail('*');
+    const token = tokenFrom(unsubscribeUrl(sent[0].raw));
+
+    const res = await fetch(`${base}/${token}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: 'List-Unsubscribe=One-Click',
+    });
+    expect(res.status).toBe(200);
+
+    await expect(sendAgentMail('*')).rejects.toThrow(/turned off/i);
+    await sendAgentMail(AGENT_A);
+    expect(transport).toHaveBeenCalledTimes(2);
+  });
+
   it('an unknown token is refused and changes nothing', async () => {
     const fake = 'A'.repeat(43);
     expect((await fetch(`${base}/${fake}`)).status).toBe(404);
@@ -359,5 +415,7 @@ describe('request logs never carry an unsubscribe token', () => {
     expect(logged).toBe('/api/wunderland/email/unsubscribe/[token]?x=1');
     expect(redactMailTokens(`/api/email/unsubscribe/${token}`)).toBe('/api/email/unsubscribe/[token]');
     expect(redactMailTokens('/api/wunderland/agents')).toBe('/api/wunderland/agents');
+    // Express matches routes without regard to case.
+    expect(redactMailTokens(`/API/Wunderland/Email/UNSUBSCRIBE/${token}`)).not.toContain(token);
   });
 });
