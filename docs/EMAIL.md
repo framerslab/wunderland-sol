@@ -56,11 +56,14 @@ request to the backend's `/api/wunderland/email/unsubscribe/<token>`.
 
 No sign-in is needed, and no mail is sent to confirm an unsubscribe. The page
 is `no-store` and `noindex`. The site passes the backend a form body only
-(any other body is dropped, which stops mail from that one agent) and serves
-only an HTML reply as the page. The route is outside the public rate limit,
-since every anonymous request through the site shares one address. Request
-logs show the token as `[token]`, and nginx (`deployment/nginx.conf`) does not
-log these requests.
+(any other body is dropped unread, which stops mail from that one agent),
+refuses a form body over 8 KB with `413` without reading the rest, and serves
+only an HTML reply as the page. The route's own path,
+`/api/wunderland/email/unsubscribe/<token>`, is outside the public rate limit,
+since every anonymous request through the site shares one address; a request
+that only names that path in its query or deeper in another route is limited
+as usual. Request logs show the token as `[token]`, and nginx
+(`deployment/nginx.conf`) does not log these requests.
 
 ## Before every send
 
@@ -68,7 +71,10 @@ log these requests.
    first send stores a check value of it; if the secret changes later, every
    send is refused with `503` until the old one is restored, so stored
    unsubscribes never stop matching unnoticed. In production a send without
-   any secret is refused the same way.
+   any secret is refused the same way. Outside production (`NODE_ENV` other
+   than `production`) a missing secret falls back to a fixed development key,
+   so a server holding real addresses runs with `NODE_ENV=production`, as
+   `docker-compose.yml` and both Dockerfiles set it.
 2. The recipient is checked against `MAIL_DO_NOT_CONTACT` and against the
    suppressions for this agent and for every agent. A match refuses the send
    with `409` and "The recipient has turned off this mail. Nothing was sent."
@@ -119,7 +125,8 @@ log these requests.
 - `backend/src/modules/wunderland/email/smtp-client.test.ts` sends through a
   local SMTP server and reads both headers on the wire.
 - `app/src/__tests__/unsubscribe-route.test.ts` checks that the site hands GET
-  and POST to the backend, sends it a form body only, and never serves a
-  non-HTML reply as the page.
+  and POST to the backend, sends it a form body only, refuses an oversized
+  body without forwarding it, and never serves a non-HTML reply as the page.
 - `backend/src/__tests__/rate-limit.unsubscribe.test.ts` checks that the
-  public rate limit never stops an unsubscribe.
+  public rate limit never stops an unsubscribe and still limits every other
+  path.

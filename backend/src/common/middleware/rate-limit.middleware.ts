@@ -11,7 +11,8 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
 import { rateLimiter } from '../../../middleware/ratelimiter.js';
 
-const UNSUBSCRIBE_PATH = /\/email\/unsubscribe\//i;
+/** The unsubscribe route's own path, /api/wunderland/email/unsubscribe/:token, in any case. */
+const UNSUBSCRIBE_ROUTE = /^\/api\/wunderland\/email\/unsubscribe\/[^/]+\/?$/i;
 
 /** Cached Express middleware function from the rate limiter. */
 let rateLimitMiddlewareFn: ((req: Request, res: Response, next: NextFunction) => void) | null =
@@ -20,7 +21,8 @@ let rateLimitMiddlewareFn: ((req: Request, res: Response, next: NextFunction) =>
 @Injectable()
 export class RateLimitMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
-    if (UNSUBSCRIBE_PATH.test(req.originalUrl || req.url || '')) {
+    const path = (req.originalUrl || req.url || '').split('?')[0];
+    if (UNSUBSCRIBE_ROUTE.test(path)) {
       next();
       return;
     }

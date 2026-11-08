@@ -11,6 +11,9 @@ import { getBackendApiBaseUrl } from '@/lib/backend-url';
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
+/** A one-click body is 26 bytes and the page's form adds a scope; nothing larger is read. */
+const MAX_FORM_BYTES = 8 * 1024;
+
 type RouteContext = { params: Promise<{ token: string }> };
 
 const PAGE_HEADERS: Record<string, string> = {
@@ -27,6 +30,28 @@ function page(status: number, title: string, text: string): Response {
   return new Response(html, { status, headers: PAGE_HEADERS });
 }
 
+/** The body as text, or null once it passes `limit` bytes (the rest is never read). */
+async function readBounded(req: Request, limit: number): Promise<string | null> {
+  const declared = Number(req.headers.get('content-length') ?? '');
+  if (Number.isFinite(declared) && declared > limit) return null;
+  if (!req.body) return '';
+  const reader = req.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let text = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) {
+      await reader.cancel().catch(() => undefined);
+      return null;
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
+}
+
 async function forward(req: Request, ctx: RouteContext, method: 'GET' | 'POST'): Promise<Response> {
   const { token } = await ctx.params;
   if (!TOKEN_PATTERN.test(token)) {
@@ -36,11 +61,18 @@ async function forward(req: Request, ctx: RouteContext, method: 'GET' | 'POST'):
   const init: RequestInit = { method, redirect: 'manual' };
   if (method === 'POST') {
     // RFC 8058 posts "List-Unsubscribe=One-Click" as a form; any other body
-    // is dropped, and an empty form stops mail from that one agent.
+    // is dropped unread, and an empty form stops mail from that one agent.
     const incoming = req.headers.get('content-type') || '';
-    const body = await req.text();
+    let body = '';
+    if (/^application\/x-www-form-urlencoded\b/i.test(incoming)) {
+      const form = await readBounded(req, MAX_FORM_BYTES);
+      if (form === null) {
+        return page(413, 'This request is too large', 'Open the Unsubscribe link at the bottom of the mail you received and use its button.');
+      }
+      body = form;
+    }
     init.headers = { 'content-type': 'application/x-www-form-urlencoded' };
-    init.body = /^application\/x-www-form-urlencoded\b/i.test(incoming) ? body : '';
+    init.body = body;
   }
 
   let upstream: Response;
