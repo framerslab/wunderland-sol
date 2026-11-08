@@ -283,6 +283,64 @@ describe('agent mail carries an unsubscribe link and the one-click headers', () 
     ).rejects.toThrow(/turned off/i);
     expect(transport).not.toHaveBeenCalled();
   });
+
+  it('a send refused before any link exists ties no server key, so the setup can still be corrected', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.FRONTEND_URL = 'http://wunderland.test';
+    await expect(sendAgentMail()).rejects.toThrow(/https/i);
+    process.env.FRONTEND_URL = SITE;
+    process.env.MAIL_DO_NOT_CONTACT = 'blocked@example.com';
+    await expect(sendAgentMail(AGENT_A, 'blocked@example.com')).rejects.toThrow(/turned off/i);
+    expect(transport).not.toHaveBeenCalled();
+
+    process.env.WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY = 'test-server-key-2';
+    await sendAgentMail();
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses a site address with a path, since the site serves the link at its root', async () => {
+    process.env.FRONTEND_URL = 'https://wunderland.test/site';
+    await expect(sendAgentMail()).rejects.toThrow(/FRONTEND_URL/);
+    expect(transport).not.toHaveBeenCalled();
+
+    process.env.FRONTEND_URL = 'https://wunderland.test/';
+    await sendAgentMail();
+    expect(unsubscribeUrl(sent[0].raw)).toMatch(
+      /^https:\/\/wunderland\.test\/api\/email\/unsubscribe\/[A-Za-z0-9_-]{43}$/
+    );
+  });
+
+  it('a mail with a non-ASCII agent name or subject is sent 7-bit clean and decodes back', async () => {
+    const agent = 'seed_mail_agent_unicode';
+    await insertAgent(db, agent, 'Zoë 北');
+    await addSmtpCredentials(credentials, agent);
+    await sendAgentMail(agent, RECIPIENT, 'Café notes, 第一');
+    const { raw } = sent[0];
+
+    expect(/^[\x00-\x7f]*$/.test(raw)).toBe(true);
+    expect(headerValues(raw, 'Content-Transfer-Encoding')).toEqual(['base64']);
+
+    const unfolded = raw.split('\r\n\r\n')[0].replace(/\r\n[ \t]+/g, ' ');
+    const subject = /^Subject: (.*)$/m.exec(unfolded)?.[1] ?? '';
+    const words = [...subject.matchAll(/=\?UTF-8\?B\?([A-Za-z0-9+/=]*)\?=/gi)];
+    expect(words.length).toBeGreaterThan(0);
+    expect(Buffer.concat(words.map((m) => Buffer.from(m[1], 'base64'))).toString('utf8')).toBe(
+      'Café notes, 第一'
+    );
+
+    const lines = bodyOf(raw).split('\r\n');
+    expect(lines.every((line) => line.length <= 76)).toBe(true);
+    const text = Buffer.from(lines.join(''), 'base64').toString('utf8');
+    expect(text).toContain('Here are this week\'s notes.');
+    expect(text).toContain('"Zoë 北"');
+    expect(text).toContain(`Unsubscribe: ${unsubscribeUrl(raw)}`);
+  });
+
+  it('an ASCII mail stays 7bit, readable as sent', async () => {
+    await sendAgentMail();
+    expect(headerValues(sent[0].raw, 'Content-Transfer-Encoding')).toEqual(['7bit']);
+    expect(headerValues(sent[0].raw, 'Subject')).toEqual(['Weekly notes']);
+  });
 });
 
 describe('the unsubscribe route', () => {
@@ -391,6 +449,43 @@ describe('the unsubscribe route', () => {
     await expect(sendAgentMail('*')).rejects.toThrow(/turned off/i);
     await sendAgentMail(AGENT_A);
     expect(transport).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a link for two years, then drops its token and keeps its unsubscribe', async () => {
+    const day = 24 * 60 * 60 * 1000;
+    await sendAgentMail();
+    await sendAgentMail(AGENT_B);
+    const oldToken = tokenFrom(unsubscribeUrl(sent[0].raw));
+    const recentToken = tokenFrom(unsubscribeUrl(sent[1].raw));
+    const hash = (token: string) => createHash('sha256').update(token).digest('hex');
+
+    const unsubscribed = await fetch(`${base}/${oldToken}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: 'List-Unsubscribe=One-Click',
+    });
+    expect(unsubscribed.status).toBe(200);
+
+    await db.run('UPDATE wunderland_email_unsubscribe_tokens SET created_at = ? WHERE token_hash = ?', [
+      Date.now() - 731 * day,
+      hash(oldToken),
+    ]);
+    await db.run('UPDATE wunderland_email_unsubscribe_tokens SET created_at = ? WHERE token_hash = ?', [
+      Date.now() - 700 * day,
+      hash(recentToken),
+    ]);
+
+    await sendAgentMail(AGENT_B, 'someone.else@example.com');
+
+    expect((await fetch(`${base}/${oldToken}`)).status).toBe(404);
+    expect((await fetch(`${base}/${recentToken}`)).status).toBe(200);
+    const rows = await db.all<{ token_hash: string }>(
+      'SELECT token_hash FROM wunderland_email_unsubscribe_tokens'
+    );
+    expect(rows.map((row) => String(row.token_hash))).not.toContain(hash(oldToken));
+    expect(rows).toHaveLength(2);
+    // The unsubscribe the old link made still holds.
+    await expect(sendAgentMail()).rejects.toThrow(/turned off/i);
   });
 
   it('an unknown token is refused and changes nothing', async () => {
