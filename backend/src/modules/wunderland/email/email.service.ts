@@ -119,6 +119,7 @@ export class EmailIntegrationService {
     });
   }
 
+  /** A trimmed address with one @ and a dot after it, and none of the characters that would end an SMTP path. */
   private validateEmail(value: string, field: string): string {
     const trimmed = value.trim();
     if (!trimmed) throw new BadRequestException(`${field} is required.`);

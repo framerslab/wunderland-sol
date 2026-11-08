@@ -13,10 +13,12 @@ export const UNSUBSCRIBE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 /** The site path the link in every mail points at; the site hands it to the backend. */
 export const PUBLIC_UNSUBSCRIBE_PATH = '/api/email/unsubscribe';
 
+/** A new token for one mail. */
 export function newUnsubscribeToken(): string {
   return randomBytes(32).toString('base64url');
 }
 
+/** The SHA-256 a token is stored and looked up under. */
 export function hashUnsubscribeToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
@@ -115,6 +117,7 @@ export function siteBaseUrl(): string {
   return url.origin;
 }
 
+/** The link a mail carries in its footer and List-Unsubscribe header. */
 export function unsubscribeLink(token: string, site: string = siteBaseUrl()): string {
   return `${site}${PUBLIC_UNSUBSCRIBE_PATH}/${token}`;
 }

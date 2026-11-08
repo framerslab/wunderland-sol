@@ -15,6 +15,7 @@ const logger = createLogger('Http');
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
+  /** Logs each request's method, path (mail tokens shown as [token]), status and time. */
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const ctx = context.switchToHttp();
     const request = ctx.getRequest<Request>();

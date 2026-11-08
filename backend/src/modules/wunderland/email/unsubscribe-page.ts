@@ -6,6 +6,7 @@
 
 import type { UnsubscribeState } from './email-unsubscribe.service.js';
 
+/** Escapes the five HTML special characters. */
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -15,6 +16,7 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/** The page around `content`: readable at phone width, light and dark. */
 function shell(title: string, content: string): string {
   return `<!doctype html>
 <html lang="en">
@@ -50,6 +52,7 @@ ${content}
 </html>`;
 }
 
+/** The button that stops mail from every Wunderland agent. */
 function everyAgentForm(): string {
   return `<form method="post"><button class="secondary" type="submit" name="scope" value="all">Unsubscribe from every Wunderland agent</button></form>`;
 }
@@ -105,6 +108,7 @@ ${everyAgentForm()}`
   );
 }
 
+/** An unknown, malformed or expired token. */
 export function renderNotFoundPage(): string {
   return shell(
     'Link not valid',

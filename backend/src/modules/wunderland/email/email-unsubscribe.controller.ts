@@ -15,6 +15,7 @@ import type { Response } from 'express';
 import { EmailUnsubscribeService, type UnsubscribeScope } from './email-unsubscribe.service.js';
 import { renderAskPage, renderDonePage, renderNotFoundPage } from './unsubscribe-page.js';
 
+/** Sends an unsubscribe page: no-store, noindex, no referrer, a strict CSP. */
 function sendPage(res: Response, status: number, html: string): void {
   res
     .status(status)
@@ -29,6 +30,7 @@ function sendPage(res: Response, status: number, html: string): void {
     .send(html);
 }
 
+/** 'all' only when the form asks for every agent; a one-click body or anything else stops one agent. */
 function scopeFrom(body: unknown): UnsubscribeScope {
   const scope = body && typeof body === 'object' ? (body as Record<string, unknown>).scope : undefined;
   return scope === 'all' ? 'all' : 'agent';

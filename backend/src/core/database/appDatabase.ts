@@ -39,6 +39,7 @@ const ensureDirectory = (): void => {
   }
 };
 
+/** Creates every table and index the backend uses, if missing, on SQLite or Postgres. */
 const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
   const isSQLite = SQLITE_KINDS.includes(db.kind);
 

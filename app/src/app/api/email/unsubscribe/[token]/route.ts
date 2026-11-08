@@ -25,6 +25,7 @@ const PAGE_HEADERS: Record<string, string> = {
     "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
 };
 
+/** A short no-store, noindex HTML page the site answers with itself. */
 function page(status: number, title: string, text: string): Response {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${title} | Wunderland</title><style>body{margin:0;font:17px/1.5 system-ui,sans-serif;padding:48px 16px;max-width:34rem;margin-inline:auto}@media (prefers-color-scheme:dark){body{background:#0f0f14;color:#f1f1f6}}</style></head><body><h1 style="font-size:24px">${title}</h1><p>${text}</p></body></html>`;
   return new Response(html, { status, headers: PAGE_HEADERS });
@@ -52,6 +53,11 @@ async function readBounded(req: Request, limit: number): Promise<string | null> 
   return text + decoder.decode();
 }
 
+/**
+ * Hands a GET or a POST for a well-formed token to the backend, with a form
+ * body of at most MAX_FORM_BYTES and no other body, and serves only an HTML
+ * reply from the backend as the page; anything else becomes a page of its own.
+ */
 async function forward(req: Request, ctx: RouteContext, method: 'GET' | 'POST'): Promise<Response> {
   const { token } = await ctx.params;
   if (!TOKEN_PATTERN.test(token)) {
@@ -91,10 +97,12 @@ async function forward(req: Request, ctx: RouteContext, method: 'GET' | 'POST'):
   return new Response(await upstream.text(), { status: upstream.status, headers: PAGE_HEADERS });
 }
 
+/** Opening the link: the backend's page asks and changes nothing. */
 export async function GET(req: Request, ctx: RouteContext): Promise<Response> {
   return forward(req, ctx, 'GET');
 }
 
+/** A one-click POST or the page's button: the backend suppresses at once. */
 export async function POST(req: Request, ctx: RouteContext): Promise<Response> {
   return forward(req, ctx, 'POST');
 }

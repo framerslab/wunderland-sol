@@ -68,6 +68,7 @@ export class EmailUnsubscribeService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /** Stops the daily drop when the server shuts down. */
   onModuleDestroy(): void {
     if (this.pruneTimer) {
       clearInterval(this.pruneTimer);
@@ -82,6 +83,7 @@ export class EmailUnsubscribeService implements OnModuleInit, OnModuleDestroy {
     ]);
   }
 
+  /** Drops expired tokens; a failure is logged, and the next daily run or mail retries. */
   private async pruneQuietly(): Promise<void> {
     try {
       await this.pruneExpiredTokens();

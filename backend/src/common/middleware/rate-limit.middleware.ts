@@ -20,6 +20,10 @@ let rateLimitMiddlewareFn: ((req: Request, res: Response, next: NextFunction) =>
 
 @Injectable()
 export class RateLimitMiddleware implements NestMiddleware {
+  /**
+   * Applies the public rate limit to every request except the unsubscribe
+   * route's own path, matched on the path alone (never the query).
+   */
   use(req: Request, res: Response, next: NextFunction): void {
     const path = (req.originalUrl || req.url || '').split('?')[0];
     if (UNSUBSCRIBE_ROUTE.test(path)) {
