@@ -4,22 +4,25 @@
  *
  * Every agent mail gets its own token. Only the token's SHA-256 is stored,
  * beside the keyed recipient address, a masked hint for the page, the agent
- * and its name. A suppression is either one agent (its seed id) or every
- * agent ('*') for a keyed address. Nothing here sends mail: unsubscribing
- * never sends a confirmation.
+ * and its name. A suppression covers one agent (scope 'agent', its seed id)
+ * or every agent (scope 'all') for a keyed address. Nothing here sends mail:
+ * unsubscribing never sends a confirmation.
  */
 
 import { Inject, Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../../database/database.service.js';
 import {
-  EVERY_AGENT,
+  MailLinkConfigError,
   UNSUBSCRIBE_TOKEN_PATTERN,
   addressKey,
+  addressKeyCheck,
   doNotContactKeys,
   hashUnsubscribeToken,
   maskAddress,
   newUnsubscribeToken,
 } from './unsubscribe-token.js';
+
+const KEY_CHECK_SETTING = 'address_key_check';
 
 export type UnsubscribeScope = 'agent' | 'all';
 
@@ -38,6 +41,32 @@ export type UnsubscribeState = UnsubscribeTokenRecord & {
 @Injectable()
 export class EmailUnsubscribeService {
   constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}
+
+  /**
+   * Stores a check value of the address key on first use and refuses to go
+   * on when the key has changed since: every stored unsubscribe would
+   * otherwise stop matching without a sound.
+   */
+  async assertAddressKeyUnchanged(): Promise<void> {
+    const current = addressKeyCheck();
+    await this.db.run(
+      `
+        INSERT INTO wunderland_email_settings (name, value)
+        VALUES (?, ?)
+        ON CONFLICT (name) DO NOTHING
+      `,
+      [KEY_CHECK_SETTING, current]
+    );
+    const row = await this.db.get<{ value: string }>(
+      'SELECT value FROM wunderland_email_settings WHERE name = ? LIMIT 1',
+      [KEY_CHECK_SETTING]
+    );
+    if (row && String(row.value) !== current) {
+      throw new MailLinkConfigError(
+        'The server key that unsubscribes are stored under has changed (WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY, or JWT_SECRET when it is unset). Restore it; no agent mail is sent until it matches.'
+      );
+    }
+  }
 
   /** Stores a new token for one mail and returns the raw token for its link. */
   async issueToken(params: { recipient: string; seedId: string; agentName: string }): Promise<string> {
@@ -73,10 +102,10 @@ export class EmailUnsubscribeService {
         SELECT address_key
           FROM wunderland_email_suppressions
          WHERE address_key = ?
-           AND seed_id IN (?, ?)
+           AND (scope = 'all' OR (scope = 'agent' AND seed_id = ?))
          LIMIT 1
       `,
-      [key, seedId, EVERY_AGENT]
+      [key, seedId]
     );
     return Boolean(row);
   }
@@ -100,24 +129,25 @@ export class EmailUnsubscribeService {
     );
     if (!row) return null;
 
-    const suppressions = await this.db.all<{ seed_id: string }>(
+    const suppressions = await this.db.all<{ scope: string }>(
       `
-        SELECT seed_id
+        SELECT scope
           FROM wunderland_email_suppressions
          WHERE address_key = ?
-           AND seed_id IN (?, ?)
+           AND (scope = 'all' OR (scope = 'agent' AND seed_id = ?))
       `,
-      [row.address_key, row.seed_id, EVERY_AGENT]
+      [row.address_key, row.seed_id]
     );
-    const seeds = new Set(suppressions.map((s) => String(s.seed_id)));
+    const allSuppressed = suppressions.some((s) => String(s.scope) === 'all');
+    const agentSuppressed = allSuppressed || suppressions.some((s) => String(s.scope) === 'agent');
 
     return {
       addressKey: String(row.address_key),
       addressHint: String(row.address_hint),
       seedId: String(row.seed_id),
       agentName: String(row.agent_name),
-      agentSuppressed: seeds.has(String(row.seed_id)) || seeds.has(EVERY_AGENT),
-      allSuppressed: seeds.has(EVERY_AGENT),
+      agentSuppressed,
+      allSuppressed,
     };
   }
 
@@ -125,14 +155,13 @@ export class EmailUnsubscribeService {
   async unsubscribe(token: string, scope: UnsubscribeScope): Promise<UnsubscribeState | null> {
     const state = await this.lookup(token);
     if (!state) return null;
-    const seedId = scope === 'all' ? EVERY_AGENT : state.seedId;
     await this.db.run(
       `
-        INSERT INTO wunderland_email_suppressions (address_key, seed_id, reason, created_at)
-        VALUES (?, ?, ?, ?)
-        ON CONFLICT (address_key, seed_id) DO NOTHING
+        INSERT INTO wunderland_email_suppressions (address_key, scope, seed_id, reason, created_at)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT (address_key, scope, seed_id) DO NOTHING
       `,
-      [state.addressKey, seedId, 'unsubscribe', Date.now()]
+      [state.addressKey, scope, scope === 'all' ? '' : state.seedId, 'unsubscribe', Date.now()]
     );
     return this.lookup(token);
   }

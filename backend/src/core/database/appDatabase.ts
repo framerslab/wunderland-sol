@@ -1335,7 +1335,8 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
 
   // ── Agent mail unsubscribe ──
   // One row per mail an agent sends: the SHA-256 of the link's token, the
-  // recipient's keyed address and a masked hint. No plain address is stored.
+  // recipient's keyed address (HMAC-SHA256) and a masked hint. No plain
+  // address is stored. Times are milliseconds, hence BIGINT.
   await db.exec(`
     CREATE TABLE IF NOT EXISTS wunderland_email_unsubscribe_tokens (
       token_hash TEXT PRIMARY KEY,
@@ -1343,17 +1344,26 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
       address_hint TEXT NOT NULL,
       seed_id TEXT NOT NULL,
       agent_name TEXT NOT NULL,
-      created_at INTEGER NOT NULL
+      created_at BIGINT NOT NULL
     );
   `);
-  // seed_id '*' stops mail from every agent to the address.
+  // scope 'agent' stops one agent (seed_id); scope 'all' stops every agent (seed_id '').
   await db.exec(`
     CREATE TABLE IF NOT EXISTS wunderland_email_suppressions (
       address_key TEXT NOT NULL,
+      scope TEXT NOT NULL,
       seed_id TEXT NOT NULL,
       reason TEXT NOT NULL,
-      created_at INTEGER NOT NULL,
-      PRIMARY KEY (address_key, seed_id)
+      created_at BIGINT NOT NULL,
+      PRIMARY KEY (address_key, scope, seed_id)
+    );
+  `);
+  // Holds a check value of the key addresses are stored under, so mail stops
+  // instead of silently missing every stored unsubscribe if that key changes.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS wunderland_email_settings (
+      name TEXT PRIMARY KEY,
+      value TEXT NOT NULL
     );
   `);
 

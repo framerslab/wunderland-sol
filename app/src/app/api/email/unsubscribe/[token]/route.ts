@@ -4,8 +4,9 @@ import { getBackendApiBaseUrl } from '@/lib/backend-url';
  * The unsubscribe link at the bottom of every agent mail
  * (https://<site>/api/email/unsubscribe/<token>, also in its List-Unsubscribe
  * header). The backend owns the page and the suppression; this route hands
- * the request over unchanged. GET only asks; POST (a mailbox provider's
- * one-click POST or the page's buttons) suppresses at once.
+ * the request over. GET only asks; POST (a mailbox provider's one-click POST
+ * or the page's buttons) suppresses at once. The backend always gets a form
+ * body, and only an HTML reply from it is served as the page.
  */
 
 const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
@@ -17,6 +18,8 @@ const PAGE_HEADERS: Record<string, string> = {
   'cache-control': 'no-store',
   'x-robots-tag': 'noindex',
   'referrer-policy': 'no-referrer',
+  'content-security-policy':
+    "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
 };
 
 function page(status: number, title: string, text: string): Response {
@@ -32,10 +35,12 @@ async function forward(req: Request, ctx: RouteContext, method: 'GET' | 'POST'):
 
   const init: RequestInit = { method, redirect: 'manual' };
   if (method === 'POST') {
-    init.headers = {
-      'content-type': req.headers.get('content-type') || 'application/x-www-form-urlencoded',
-    };
-    init.body = await req.text();
+    // RFC 8058 posts "List-Unsubscribe=One-Click" as a form; any other body
+    // is dropped, and an empty form stops mail from that one agent.
+    const incoming = req.headers.get('content-type') || '';
+    const body = await req.text();
+    init.headers = { 'content-type': 'application/x-www-form-urlencoded' };
+    init.body = /^application\/x-www-form-urlencoded\b/i.test(incoming) ? body : '';
   }
 
   let upstream: Response;
@@ -45,15 +50,13 @@ async function forward(req: Request, ctx: RouteContext, method: 'GET' | 'POST'):
     return page(503, 'Please try again', 'We could not reach Wunderland just now. Nothing has changed yet.');
   }
 
-  return new Response(await upstream.text(), {
-    status: upstream.status,
-    headers: {
-      ...PAGE_HEADERS,
-      ...(upstream.headers.get('content-security-policy')
-        ? { 'content-security-policy': upstream.headers.get('content-security-policy') as string }
-        : {}),
-    },
-  });
+  if (!/^text\/html\b/i.test(upstream.headers.get('content-type') || '')) {
+    return upstream.status === 404
+      ? page(404, 'This link is not valid', 'Open the Unsubscribe link at the bottom of the mail you received.')
+      : page(upstream.status >= 500 || upstream.status === 429 ? 503 : 400, 'Please try again', 'We could not finish that just now. Nothing has changed yet.');
+  }
+
+  return new Response(await upstream.text(), { status: upstream.status, headers: PAGE_HEADERS });
 }
 
 export async function GET(req: Request, ctx: RouteContext): Promise<Response> {

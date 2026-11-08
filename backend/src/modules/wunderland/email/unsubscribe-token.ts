@@ -5,16 +5,13 @@
  * public link, the do-not-contact list and the log redaction.
  */
 
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, createHmac, randomBytes } from 'node:crypto';
 
 /** A token is 32 random bytes in base64url: 43 characters, nothing else. */
 export const UNSUBSCRIBE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 
 /** The site path the link in every mail points at; the site hands it to the backend. */
 export const PUBLIC_UNSUBSCRIBE_PATH = '/api/email/unsubscribe';
-
-/** Seed id stored on a suppression that covers every agent. */
-export const EVERY_AGENT = '*';
 
 export function newUnsubscribeToken(): string {
   return randomBytes(32).toString('base64url');
@@ -29,12 +26,40 @@ export function canonicalAddress(address: string): string {
   return address.trim().replace(/^<+|>+$/g, '').trim().toLowerCase();
 }
 
+export class MailLinkConfigError extends Error {}
+
 /**
- * The key suppressions and tokens are stored under, so the tables never hold
- * a recipient's address in the clear.
+ * The server secret recipient addresses are keyed with: the Credential
+ * Vault's key (WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY, or JWT_SECRET when it
+ * is unset). Production refuses to send mail without one; elsewhere a fixed
+ * development key is used.
+ */
+function addressSecret(): Buffer {
+  const material =
+    process.env.WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY?.trim() || process.env.JWT_SECRET?.trim();
+  if (!material) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new MailLinkConfigError(
+        'Set WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY (or JWT_SECRET) before agents send mail: unsubscribes are stored under it.'
+      );
+    }
+    return createHash('sha256').update('wunderland-mail-address:development').digest();
+  }
+  return createHash('sha256').update(`wunderland-mail-address:${material}`).digest();
+}
+
+/**
+ * The key suppressions and tokens are stored under (HMAC-SHA256 with the
+ * server secret), so the tables never hold a recipient's address, and a copy
+ * of the database alone cannot confirm a guessed one.
  */
 export function addressKey(address: string): string {
-  return createHash('sha256').update(`wunderland-mail:${canonicalAddress(address)}`).digest('hex');
+  return createHmac('sha256', addressSecret()).update(canonicalAddress(address)).digest('hex');
+}
+
+/** A value that changes whenever the server secret does. */
+export function addressKeyCheck(): string {
+  return createHmac('sha256', addressSecret()).update('wunderland-mail-key-check').digest('hex');
 }
 
 /** "reader.person@example.com" -> "r***@example.com". */
@@ -58,8 +83,6 @@ export function doNotContactKeys(raw = process.env.MAIL_DO_NOT_CONTACT ?? ''): S
       .map((value) => addressKey(value))
   );
 }
-
-export class MailLinkConfigError extends Error {}
 
 /**
  * The site address the unsubscribe link is built on (FRONTEND_URL). In
@@ -92,5 +115,5 @@ export function unsubscribeLink(token: string, site: string = siteBaseUrl()): st
 
 /** Replaces the token in a logged request path with [token]. */
 export function redactMailTokens(url: string): string {
-  return url.replace(/(\/email\/unsubscribe\/)[^/?#\s]+/g, '$1[token]');
+  return url.replace(/(\/email\/unsubscribe\/)[^/?#\s]+/gi, '$1[token]');
 }

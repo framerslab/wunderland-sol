@@ -29,9 +29,10 @@ List-Unsubscribe-Post: List-Unsubscribe=One-Click
 
 - The link holds an opaque token: 32 random bytes, base64url, one per mail. It
   names no account, agent, address or time. The database keeps only its
-  SHA-256, beside a keyed hash of the recipient's address, a masked hint
-  (`r***@example.com`), the agent and its name. No plain recipient address is
-  stored.
+  SHA-256, beside the recipient's address keyed with the server secret
+  (HMAC-SHA256), a masked hint (`r***@example.com`), the agent and its name.
+  No plain recipient address is stored, and a copy of the database alone
+  cannot confirm a guessed address.
 - The subject is one header line: line breaks in it become spaces, so a
   subject cannot add or replace a header.
 - RFC 8058 section 4 requires a DKIM signature whose `h=` tag covers both
@@ -48,37 +49,49 @@ request to the backend's `/api/wunderland/email/unsubscribe/<token>`.
 
 | Request | What happens |
 |---|---|
-| `GET` | A page that asks. It shows the agent's name and the masked address and offers two buttons: **Unsubscribe from <agent>** and **Unsubscribe from every Wunderland agent**. A GET changes nothing, since link scanners open links. |
+| `GET` | A page that asks. It shows the agent's name and the masked address and offers two buttons: **Unsubscribe from** *the agent's name* and **Unsubscribe from every Wunderland agent**. A GET changes nothing, since link scanners open links. |
 | `POST` with `List-Unsubscribe=One-Click` (a mailbox provider) or `scope=agent` (the first button) | Stops mail from that agent to the address at once. |
 | `POST` with `scope=all` | Stops mail from every Wunderland agent to the address at once. |
 | Unknown or malformed token | `404`, nothing changes. |
 
 No sign-in is needed, and no mail is sent to confirm an unsubscribe. The page
-is `no-store` and `noindex`. Request logs show the token as `[token]`.
+is `no-store` and `noindex`. The site passes the backend a form body only
+(any other body is dropped, which stops mail from that one agent) and serves
+only an HTML reply as the page. The route is outside the public rate limit,
+since every anonymous request through the site shares one address. Request
+logs show the token as `[token]`, and nginx (`deployment/nginx.conf`) does not
+log these requests.
 
 ## Before every send
 
-1. The recipient is checked against `MAIL_DO_NOT_CONTACT` and against the
+1. The server secret must be the one unsubscribes were stored under. The
+   first send stores a check value of it; if the secret changes later, every
+   send is refused with `503` until the old one is restored, so stored
+   unsubscribes never stop matching unnoticed. In production a send without
+   any secret is refused the same way.
+2. The recipient is checked against `MAIL_DO_NOT_CONTACT` and against the
    suppressions for this agent and for every agent. A match refuses the send
    with `409` and "The recipient has turned off this mail. Nothing was sent."
    The words are the same for both, so the owner cannot tell an unsubscribe
    from the do-not-contact list.
-2. The site address must be valid: in production `FRONTEND_URL` must be a
+3. The site address must be valid: in production `FRONTEND_URL` must be a
    plain `https` address (no query, fragment or credentials), or the send is
    refused with `503` and nothing is stored or sent.
-3. A token is stored, then the mail goes out with its footer and headers.
+4. A token is stored, then the mail goes out with its footer and headers.
 
 ## Settings
 
 | Variable | Use |
 |---|---|
 | `FRONTEND_URL` | The site's public address. The unsubscribe link is built on it. `https` in production. |
+| `WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY` | The Credential Vault's key; recipient addresses are keyed with it (with `JWT_SECRET` when it is unset). Set it once: changing it stops agent mail until it is restored. |
 | `MAIL_DO_NOT_CONTACT` | Addresses that never receive agent mail, separated by commas, semicolons or spaces. Read at every send; compared after trimming and lower-casing. Set it on the server from the team's do-not-contact list; never commit the addresses. |
 
 ## Tables
 
-- `wunderland_email_unsubscribe_tokens`: `token_hash` (primary key), `address_key`, `address_hint`, `seed_id`, `agent_name`, `created_at`.
-- `wunderland_email_suppressions`: `address_key`, `seed_id` (`*` for every agent), `reason`, `created_at`; primary key `(address_key, seed_id)`.
+- `wunderland_email_unsubscribe_tokens`: `token_hash` (primary key), `address_key`, `address_hint`, `seed_id`, `agent_name`, `created_at` (`BIGINT`, milliseconds).
+- `wunderland_email_suppressions`: `address_key`, `scope` (`agent` or `all`), `seed_id` (empty for `all`), `reason`, `created_at`; primary key `(address_key, scope, seed_id)`.
+- `wunderland_email_settings`: `name`, `value`; holds the check value of the server secret.
 
 ## Limits
 
@@ -106,4 +119,7 @@ is `no-store` and `noindex`. Request logs show the token as `[token]`.
 - `backend/src/modules/wunderland/email/smtp-client.test.ts` sends through a
   local SMTP server and reads both headers on the wire.
 - `app/src/__tests__/unsubscribe-route.test.ts` checks that the site hands GET
-  and POST to the backend unchanged.
+  and POST to the backend, sends it a form body only, and never serves a
+  non-HTML reply as the page.
+- `backend/src/__tests__/rate-limit.unsubscribe.test.ts` checks that the
+  public rate limit never stops an unsubscribe.

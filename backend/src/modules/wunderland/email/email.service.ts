@@ -75,25 +75,25 @@ export class EmailIntegrationService {
     subject: string;
     text: string;
   }): Promise<{ ok: true; serverResponse: string }> {
-    if (await this.unsubscribe.isSuppressed(params.to, params.seedId)) {
-      throw new ConflictException(SUPPRESSED_MESSAGE);
-    }
-
-    // No mail goes out without a working https unsubscribe link.
-    let site: string;
+    let link: string;
     try {
-      site = siteBaseUrl();
+      // Stored unsubscribes must still match, and the mail needs a working
+      // https unsubscribe link; otherwise nothing is stored or sent.
+      await this.unsubscribe.assertAddressKeyUnchanged();
+      if (await this.unsubscribe.isSuppressed(params.to, params.seedId)) {
+        throw new ConflictException(SUPPRESSED_MESSAGE);
+      }
+      const site = siteBaseUrl();
+      const token = await this.unsubscribe.issueToken({
+        recipient: params.to,
+        seedId: params.seedId,
+        agentName: params.agentName,
+      });
+      link = unsubscribeLink(token, site);
     } catch (err) {
       if (err instanceof MailLinkConfigError) throw new ServiceUnavailableException(err.message);
       throw err;
     }
-
-    const token = await this.unsubscribe.issueToken({
-      recipient: params.to,
-      seedId: params.seedId,
-      agentName: params.agentName,
-    });
-    const link = unsubscribeLink(token, site);
 
     const footer = [
       '',
