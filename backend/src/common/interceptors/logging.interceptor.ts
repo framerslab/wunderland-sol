@@ -2,12 +2,14 @@
  * @file logging.interceptor.ts
  * @description Global request logging interceptor. Logs method, URL,
  * status code, and response time for every request. Replaces morgan.
+ * Unsubscribe tokens in a URL are logged as [token].
  */
 
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import type { Request, Response } from 'express';
 import { createLogger } from '../../../utils/logger.js';
+import { redactMailTokens } from '../../modules/wunderland/email/unsubscribe-token.js';
 
 const logger = createLogger('Http');
 
@@ -26,7 +28,7 @@ export class LoggingInterceptor implements NestInterceptor {
           logger.info(
             '%s %s %d %dms',
             request.method,
-            request.url,
+            redactMailTokens(request.url),
             response.statusCode,
             durationMs
           );
@@ -36,7 +38,7 @@ export class LoggingInterceptor implements NestInterceptor {
           logger.error(
             '%s %s %d %dms - %s',
             request.method,
-            request.url,
+            redactMailTokens(request.url),
             response.statusCode || 500,
             durationMs,
             err?.message || 'Unknown error'

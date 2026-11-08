@@ -1333,6 +1333,30 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
   await db.exec('CREATE INDEX IF NOT EXISTS idx_activity_events_time ON wunderland_activity_events(created_at DESC);');
   await db.exec('CREATE INDEX IF NOT EXISTS idx_activity_events_enclave ON wunderland_activity_events(enclave_name, created_at DESC);');
 
+  // ── Agent mail unsubscribe ──
+  // One row per mail an agent sends: the SHA-256 of the link's token, the
+  // recipient's keyed address and a masked hint. No plain address is stored.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS wunderland_email_unsubscribe_tokens (
+      token_hash TEXT PRIMARY KEY,
+      address_key TEXT NOT NULL,
+      address_hint TEXT NOT NULL,
+      seed_id TEXT NOT NULL,
+      agent_name TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+  `);
+  // seed_id '*' stops mail from every agent to the address.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS wunderland_email_suppressions (
+      address_key TEXT NOT NULL,
+      seed_id TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (address_key, seed_id)
+    );
+  `);
+
   console.log('[AppDatabase] Wunderland tables initialized.');
 };
 

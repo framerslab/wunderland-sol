@@ -17,7 +17,11 @@ export type SmtpSendParams = {
   heloHost?: string;
   timeoutMs?: number;
   requireTLS?: boolean;
+  /** Extra header lines, written after the standard ones (e.g. List-Unsubscribe). */
+  headers?: Record<string, string>;
 };
+
+export type SmtpMessage = Pick<SmtpSendParams, 'from' | 'to' | 'subject' | 'text' | 'headers'>;
 
 type SmtpResponse = { code: number; lines: string[] };
 
@@ -90,17 +94,37 @@ function dotStuff(text: string): string {
     .join('\r\n');
 }
 
-function buildMessage(params: { from: string; to: string; subject: string; text: string }): string {
+/** A subject is one header line: line breaks and other control characters become spaces. */
+export function headerSafeSubject(subject: string): string {
+  return subject.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Refuses extra headers whose name is not a plain token or whose value holds a
+ * line break, so no caller can start a new header line.
+ */
+function assertSafeHeaders(headers: Record<string, string> | undefined): void {
+  for (const [name, value] of Object.entries(headers ?? {})) {
+    if (!/^[A-Za-z0-9-]+$/.test(name) || /[\r\n]/.test(String(value))) {
+      throw new Error(`Refusing unsafe mail header "${name.replace(/[^A-Za-z0-9-]/g, '?')}"`);
+    }
+  }
+}
+
+/** The message the client writes after DATA, ahead of the closing dot line. */
+export function buildMessage(params: SmtpMessage): string {
+  assertSafeHeaders(params.headers);
   const messageId = `<${randomBytes(16).toString('hex')}@rabbithole.inc>`;
   const headers = [
     `From: ${params.from}`,
     `To: ${params.to}`,
-    `Subject: ${params.subject}`,
+    `Subject: ${headerSafeSubject(params.subject)}`,
     `Date: ${new Date().toUTCString()}`,
     `Message-ID: ${messageId}`,
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset="utf-8"',
     'Content-Transfer-Encoding: 7bit',
+    ...Object.entries(params.headers ?? {}).map(([name, value]) => `${name}: ${value}`),
   ];
   return `${headers.join('\r\n')}\r\n\r\n${dotStuff(params.text)}\r\n`;
 }
@@ -191,6 +215,7 @@ export async function sendSmtpMail(params: SmtpSendParams): Promise<{
   ok: true;
   serverResponse: string;
 }> {
+  assertSafeHeaders(params.headers);
   const timeoutMs = Number.isFinite(params.timeoutMs) ? Number(params.timeoutMs) : 20_000;
   const requireTLS = params.requireTLS !== false;
   const heloHost = params.heloHost?.trim() || 'localhost';
@@ -269,7 +294,13 @@ export async function sendSmtpMail(params: SmtpSendParams): Promise<{
     // DATA
     await sendCommand(socket, iter, 'DATA', [354], timeoutMs);
     socket.write(
-      buildMessage({ from: params.from, to: params.to, subject: params.subject, text: params.text })
+      buildMessage({
+        from: params.from,
+        to: params.to,
+        subject: params.subject,
+        text: params.text,
+        headers: params.headers,
+      })
     );
     socket.write('\r\n.\r\n');
     const dataRes = await readResponse(iter, timeoutMs);
