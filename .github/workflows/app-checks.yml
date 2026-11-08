@@ -1,8 +1,9 @@
 name: App checks
 
 # Quick checks for pull requests that touch the Next.js app: a type check of
-# app/, the site page tests, and the tests of the CLI pieces the pages
-# describe (where `wunderland start` listens, what PresetLoader returns).
+# app/, the site page tests, the mail unsubscribe link route test, and the
+# tests of the CLI pieces the pages describe (where `wunderland start`
+# listens, what PresetLoader returns).
 # The CLI's own dependencies live in the parent monorepo, so those tests run
 # here with the app's vitest.
 on:
@@ -59,3 +60,4 @@ jobs:
           src/__tests__/site-pages.test.tsx
           src/__tests__/cli-start-listen.test.ts
           src/__tests__/preset-loader.test.ts
+          src/__tests__/unsubscribe-route.test.ts

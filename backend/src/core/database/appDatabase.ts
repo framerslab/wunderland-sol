@@ -39,6 +39,7 @@ const ensureDirectory = (): void => {
   }
 };
 
+/** Creates every table and index the backend uses, if missing, on SQLite or Postgres. */
 const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
   const isSQLite = SQLITE_KINDS.includes(db.kind);
 
@@ -1332,6 +1333,45 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
   await db.exec('CREATE INDEX IF NOT EXISTS idx_activity_events_type_time ON wunderland_activity_events(activity_type, created_at DESC);');
   await db.exec('CREATE INDEX IF NOT EXISTS idx_activity_events_time ON wunderland_activity_events(created_at DESC);');
   await db.exec('CREATE INDEX IF NOT EXISTS idx_activity_events_enclave ON wunderland_activity_events(enclave_name, created_at DESC);');
+
+  // ── Agent mail unsubscribe ──
+  // One row per mail an agent sends: the SHA-256 of the link's token, the
+  // recipient's keyed address (HMAC-SHA256) and a masked hint. No plain
+  // address is stored. A link works for two years after its mail; the
+  // unsubscribe it made never lapses. Times are milliseconds, hence BIGINT.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS wunderland_email_unsubscribe_tokens (
+      token_hash TEXT PRIMARY KEY,
+      address_key TEXT NOT NULL,
+      address_hint TEXT NOT NULL,
+      seed_id TEXT NOT NULL,
+      agent_name TEXT NOT NULL,
+      created_at BIGINT NOT NULL
+    );
+  `);
+  // Tokens older than two years are dropped when the next one is issued.
+  await db.exec(
+    'CREATE INDEX IF NOT EXISTS idx_email_unsubscribe_tokens_created ON wunderland_email_unsubscribe_tokens(created_at);'
+  );
+  // scope 'agent' stops one agent (seed_id); scope 'all' stops every agent (seed_id '').
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS wunderland_email_suppressions (
+      address_key TEXT NOT NULL,
+      scope TEXT NOT NULL,
+      seed_id TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      created_at BIGINT NOT NULL,
+      PRIMARY KEY (address_key, scope, seed_id)
+    );
+  `);
+  // Holds a check value of the key addresses are stored under, so mail stops
+  // instead of silently missing every stored unsubscribe if that key changes.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS wunderland_email_settings (
+      name TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
 
   console.log('[AppDatabase] Wunderland tables initialized.');
 };

@@ -17,7 +17,11 @@ export type SmtpSendParams = {
   heloHost?: string;
   timeoutMs?: number;
   requireTLS?: boolean;
+  /** Extra header lines, written after the standard ones (e.g. List-Unsubscribe). */
+  headers?: Record<string, string>;
 };
+
+export type SmtpMessage = Pick<SmtpSendParams, 'from' | 'to' | 'subject' | 'text' | 'headers'>;
 
 type SmtpResponse = { code: number; lines: string[] };
 
@@ -90,19 +94,86 @@ function dotStuff(text: string): string {
     .join('\r\n');
 }
 
-function buildMessage(params: { from: string; to: string; subject: string; text: string }): string {
+/** A subject is one header line: line breaks and other control characters become spaces. */
+export function headerSafeSubject(subject: string): string {
+  return subject.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Refuses extra headers whose name is not a plain token or whose value holds a
+ * line break, so no caller can start a new header line.
+ */
+function assertSafeHeaders(headers: Record<string, string> | undefined): void {
+  for (const [name, value] of Object.entries(headers ?? {})) {
+    if (!/^[A-Za-z0-9-]+$/.test(name) || /[\r\n]/.test(String(value))) {
+      throw new Error(`Refusing unsafe mail header "${name.replace(/[^A-Za-z0-9-]/g, '?')}"`);
+    }
+  }
+}
+
+const ASCII_ONLY = /^[\x00-\x7f]*$/;
+
+/** A line 7bit can carry: ASCII without NUL or a bare CR or LF (RFC 2045). */
+const SEVEN_BIT_LINE = /^[\x01-\x09\x0b\x0c\x0e-\x7f]*$/;
+
+/**
+ * A header value as RFC 2047 encoded words when it holds anything outside
+ * ASCII: UTF-8, base64, at most 39 bytes (whole characters) a word, one word
+ * a folded line, so every line stays within 76 characters.
+ */
+export function encodeHeaderWords(value: string): string {
+  if (ASCII_ONLY.test(value)) return value;
+  const words: string[] = [];
+  let chunk: Buffer[] = [];
+  let size = 0;
+  for (const char of value) {
+    const bytes = Buffer.from(char, 'utf8');
+    if (size + bytes.length > 39) {
+      words.push(`=?UTF-8?B?${Buffer.concat(chunk).toString('base64')}?=`);
+      chunk = [];
+      size = 0;
+    }
+    chunk.push(bytes);
+    size += bytes.length;
+  }
+  if (chunk.length) words.push(`=?UTF-8?B?${Buffer.concat(chunk).toString('base64')}?=`);
+  return words.join('\r\n ');
+}
+
+/**
+ * The body and its transfer encoding: 7bit when it is ASCII with no NUL,
+ * no bare CR and no line over 998 characters (RFC 5322), otherwise base64 of its UTF-8 with CRLF
+ * line breaks, 76 characters a line (RFC 2045), so the message stays 7-bit
+ * clean for a server that does not offer 8BITMIME.
+ */
+function encodeBody(text: string): { encoding: '7bit' | 'base64'; body: string } {
+  const crlf = text.replace(/\r?\n/g, '\r\n');
+  const stuffed = dotStuff(crlf);
+  if (stuffed.split('\r\n').every((line) => SEVEN_BIT_LINE.test(line) && line.length <= 998)) {
+    return { encoding: '7bit', body: stuffed };
+  }
+  const encoded = Buffer.from(crlf, 'utf8').toString('base64');
+  const lines = encoded.match(/.{1,76}/g) ?? [''];
+  return { encoding: 'base64', body: lines.join('\r\n') };
+}
+
+/** The message the client writes after DATA, ahead of the closing dot line. */
+export function buildMessage(params: SmtpMessage): string {
+  assertSafeHeaders(params.headers);
   const messageId = `<${randomBytes(16).toString('hex')}@rabbithole.inc>`;
+  const { encoding, body } = encodeBody(params.text);
   const headers = [
     `From: ${params.from}`,
     `To: ${params.to}`,
-    `Subject: ${params.subject}`,
+    `Subject: ${encodeHeaderWords(headerSafeSubject(params.subject))}`,
     `Date: ${new Date().toUTCString()}`,
     `Message-ID: ${messageId}`,
     'MIME-Version: 1.0',
     'Content-Type: text/plain; charset="utf-8"',
-    'Content-Transfer-Encoding: 7bit',
+    `Content-Transfer-Encoding: ${encoding}`,
+    ...Object.entries(params.headers ?? {}).map(([name, value]) => `${name}: ${value}`),
   ];
-  return `${headers.join('\r\n')}\r\n\r\n${dotStuff(params.text)}\r\n`;
+  return `${headers.join('\r\n')}\r\n\r\n${body}\r\n`;
 }
 
 async function connectPlain(host: string, port: number, timeoutMs: number): Promise<net.Socket> {
@@ -191,6 +262,7 @@ export async function sendSmtpMail(params: SmtpSendParams): Promise<{
   ok: true;
   serverResponse: string;
 }> {
+  assertSafeHeaders(params.headers);
   const timeoutMs = Number.isFinite(params.timeoutMs) ? Number(params.timeoutMs) : 20_000;
   const requireTLS = params.requireTLS !== false;
   const heloHost = params.heloHost?.trim() || 'localhost';
@@ -269,7 +341,13 @@ export async function sendSmtpMail(params: SmtpSendParams): Promise<{
     // DATA
     await sendCommand(socket, iter, 'DATA', [354], timeoutMs);
     socket.write(
-      buildMessage({ from: params.from, to: params.to, subject: params.subject, text: params.text })
+      buildMessage({
+        from: params.from,
+        to: params.to,
+        subject: params.subject,
+        text: params.text,
+        headers: params.headers,
+      })
     );
     socket.write('\r\n.\r\n');
     const dataRes = await readResponse(iter, timeoutMs);

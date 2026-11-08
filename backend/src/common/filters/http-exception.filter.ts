@@ -7,6 +7,7 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { createLogger } from '../../../utils/logger.js';
+import { redactMailTokens } from '../../modules/wunderland/email/unsubscribe-token.js';
 
 const logger = createLogger('HttpExceptionFilter');
 
@@ -40,7 +41,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = 'Internal Server Error';
-      logger.error('Unhandled error on %s %s:', request.method, request.url, exception);
+      logger.error('Unhandled error on %s %s:', request.method, redactMailTokens(request.url), exception);
     }
 
     response.status(status).json({
@@ -51,7 +52,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? { stack: exception.stack }
         : {}),
       timestamp: new Date().toISOString(),
-      path: request.url,
+      path: redactMailTokens(request.url),
     });
   }
 }
