@@ -143,6 +143,21 @@ describe('GET and POST /api/email/unsubscribe/[token]', () => {
     expect(seen[0].body).toBe('');
   });
 
+  it('refuses an oversized form body without forwarding it', async () => {
+    const { POST } = await import('@/app/api/email/unsubscribe/[token]/route');
+    const res = await POST(
+      new Request(`https://wunderland.test/api/email/unsubscribe/${TOKEN}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: `List-Unsubscribe=One-Click&pad=${'x'.repeat(64 * 1024)}`,
+      }),
+      ctx(TOKEN)
+    );
+    expect(res.status).toBe(413);
+    expect(res.headers.get('content-type')).toMatch(/text\/html/);
+    expect(seen).toHaveLength(0);
+  });
+
   it('a malformed token never reaches the backend', async () => {
     const { GET } = await import('@/app/api/email/unsubscribe/[token]/route');
     const res = await GET(new Request('https://wunderland.test/api/email/unsubscribe/x'), ctx('../../agents'));

@@ -37,9 +37,32 @@ describe('RateLimitMiddleware and the unsubscribe route', () => {
     expect(res.statusCode).toBe(200);
   });
 
+  it('lets an unsubscribe through whatever its case or query', () => {
+    for (const url of [
+      `/API/Wunderland/Email/Unsubscribe/${'b'.repeat(43)}`,
+      `/api/wunderland/email/unsubscribe/${'c'.repeat(43)}?source=mail`,
+    ]) {
+      const { next, res } = run(url);
+      expect(next, url).toHaveBeenCalledTimes(1);
+      expect(res.statusCode, url).toBe(200);
+    }
+  });
+
   it('still limits other public requests', () => {
     const { next, res } = run('/api/wunderland/agents');
     expect(next).not.toHaveBeenCalled();
     expect(res.statusCode).toBe(429);
+  });
+
+  it('still limits a request that only names the unsubscribe path in its query or deeper in another route', () => {
+    for (const url of [
+      '/api/wunderland/agents?next=/email/unsubscribe/x',
+      '/api/wunderland/agents/email/unsubscribe/x',
+      `/api/wunderland/email/unsubscribe/${'d'.repeat(43)}/extra`,
+    ]) {
+      const { next, res } = run(url);
+      expect(next, url).not.toHaveBeenCalled();
+      expect(res.statusCode, url).toBe(429);
+    }
   });
 });
