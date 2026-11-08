@@ -1336,7 +1336,8 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
   // ── Agent mail unsubscribe ──
   // One row per mail an agent sends: the SHA-256 of the link's token, the
   // recipient's keyed address (HMAC-SHA256) and a masked hint. No plain
-  // address is stored. Times are milliseconds, hence BIGINT.
+  // address is stored. A link works for two years after its mail; the
+  // unsubscribe it made never lapses. Times are milliseconds, hence BIGINT.
   await db.exec(`
     CREATE TABLE IF NOT EXISTS wunderland_email_unsubscribe_tokens (
       token_hash TEXT PRIMARY KEY,
@@ -1347,6 +1348,10 @@ const runInitialSchema = async (db: StorageAdapter): Promise<void> => {
       created_at BIGINT NOT NULL
     );
   `);
+  // Tokens older than two years are dropped when the next one is issued.
+  await db.exec(
+    'CREATE INDEX IF NOT EXISTS idx_email_unsubscribe_tokens_created ON wunderland_email_unsubscribe_tokens(created_at);'
+  );
   // scope 'agent' stops one agent (seed_id); scope 'all' stops every agent (seed_id '').
   await db.exec(`
     CREATE TABLE IF NOT EXISTS wunderland_email_suppressions (

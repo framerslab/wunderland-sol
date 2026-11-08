@@ -85,9 +85,9 @@ export function doNotContactKeys(raw = process.env.MAIL_DO_NOT_CONTACT ?? ''): S
 }
 
 /**
- * The site address the unsubscribe link is built on (FRONTEND_URL). In
- * production it must be a plain https origin, optionally with a path, so a
- * mailbox provider can POST to the link.
+ * The site address the unsubscribe link is built on (FRONTEND_URL). It must
+ * be the site's bare origin (https in production), since the site serves the
+ * unsubscribe route at its root and a mailbox provider POSTs to the link.
  */
 export function siteBaseUrl(): string {
   const raw = (process.env.FRONTEND_URL || 'http://localhost:3000').trim();
@@ -100,13 +100,19 @@ export function siteBaseUrl(): string {
     );
   }
   const production = process.env.NODE_ENV === 'production';
-  const plain = !url.search && !url.hash && !url.username && !url.password && !raw.includes('#');
-  if ((production && url.protocol !== 'https:') || !plain || !/^https?:$/.test(url.protocol)) {
+  const bare =
+    url.pathname === '/' &&
+    !url.search &&
+    !url.hash &&
+    !url.username &&
+    !url.password &&
+    !/[?#]/.test(raw);
+  if ((production && url.protocol !== 'https:') || !bare || !/^https?:$/.test(url.protocol)) {
     throw new MailLinkConfigError(
-      'FRONTEND_URL must be the site\'s plain https address, so every mail can carry its https unsubscribe link.'
+      'FRONTEND_URL must be the site\'s bare https origin (no path, query or fragment), so every mail can carry its https unsubscribe link.'
     );
   }
-  return `${url.origin}${url.pathname.replace(/\/+$/, '')}`;
+  return url.origin;
 }
 
 export function unsubscribeLink(token: string, site: string = siteBaseUrl()): string {

@@ -24,6 +24,15 @@ import {
 
 const KEY_CHECK_SETTING = 'address_key_check';
 
+const KEY_CHANGED_MESSAGE =
+  'The server key that unsubscribes are stored under has changed (WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY, or JWT_SECRET when it is unset). Restore it; no agent mail is sent until it matches.';
+
+/**
+ * How long a mail's unsubscribe link works: two years, well past the 30 days
+ * CAN-SPAM asks for (15 U.S.C. 7704(a)(3)(A)(ii)).
+ */
+export const UNSUBSCRIBE_LINK_LIFETIME_MS = 730 * 24 * 60 * 60 * 1000;
+
 export type UnsubscribeScope = 'agent' | 'all';
 
 export type UnsubscribeTokenRecord = {
@@ -43,33 +52,49 @@ export class EmailUnsubscribeService {
   constructor(@Inject(DatabaseService) private readonly db: DatabaseService) {}
 
   /**
-   * Stores a check value of the address key on first use and refuses to go
-   * on when the key has changed since: every stored unsubscribe would
-   * otherwise stop matching without a sound.
+   * Refuses to go on when the address key differs from the one the stored
+   * tokens and unsubscribes were made under: every stored unsubscribe would
+   * otherwise stop matching without a sound. Stores nothing, so a send
+   * refused before any link exists ties no key.
    */
   async assertAddressKeyUnchanged(): Promise<void> {
     const current = addressKeyCheck();
+    const row = await this.db.get<{ value: string }>(
+      'SELECT value FROM wunderland_email_settings WHERE name = ? LIMIT 1',
+      [KEY_CHECK_SETTING]
+    );
+    if (row && String(row.value) !== current) {
+      throw new MailLinkConfigError(KEY_CHANGED_MESSAGE);
+    }
+  }
+
+  /**
+   * Records the address key the first token is made under, then checks it
+   * again, so two servers starting with different keys cannot both issue.
+   */
+  private async bindAddressKey(): Promise<void> {
     await this.db.run(
       `
         INSERT INTO wunderland_email_settings (name, value)
         VALUES (?, ?)
         ON CONFLICT (name) DO NOTHING
       `,
-      [KEY_CHECK_SETTING, current]
+      [KEY_CHECK_SETTING, addressKeyCheck()]
     );
-    const row = await this.db.get<{ value: string }>(
-      'SELECT value FROM wunderland_email_settings WHERE name = ? LIMIT 1',
-      [KEY_CHECK_SETTING]
-    );
-    if (row && String(row.value) !== current) {
-      throw new MailLinkConfigError(
-        'The server key that unsubscribes are stored under has changed (WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY, or JWT_SECRET when it is unset). Restore it; no agent mail is sent until it matches.'
-      );
-    }
+    await this.assertAddressKeyUnchanged();
   }
 
-  /** Stores a new token for one mail and returns the raw token for its link. */
+  /**
+   * Stores a new token for one mail and returns the raw token for its link.
+   * Tokens older than the link lifetime are dropped first; the unsubscribes
+   * they made stay.
+   */
   async issueToken(params: { recipient: string; seedId: string; agentName: string }): Promise<string> {
+    await this.bindAddressKey();
+    const now = Date.now();
+    await this.db.run('DELETE FROM wunderland_email_unsubscribe_tokens WHERE created_at < ?', [
+      now - UNSUBSCRIBE_LINK_LIFETIME_MS,
+    ]);
     const token = newUnsubscribeToken();
     await this.db.run(
       `
@@ -83,7 +108,7 @@ export class EmailUnsubscribeService {
         maskAddress(params.recipient),
         params.seedId,
         params.agentName,
-        Date.now(),
+        now,
       ]
     );
     return token;
@@ -123,9 +148,10 @@ export class EmailUnsubscribeService {
         SELECT address_key, address_hint, seed_id, agent_name
           FROM wunderland_email_unsubscribe_tokens
          WHERE token_hash = ?
+           AND created_at >= ?
          LIMIT 1
       `,
-      [hashUnsubscribeToken(token)]
+      [hashUnsubscribeToken(token), Date.now() - UNSUBSCRIBE_LINK_LIFETIME_MS]
     );
     if (!row) return null;
 

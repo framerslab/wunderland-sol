@@ -77,13 +77,14 @@ export class EmailIntegrationService {
   }): Promise<{ ok: true; serverResponse: string }> {
     let link: string;
     try {
-      // Stored unsubscribes must still match, and the mail needs a working
-      // https unsubscribe link; otherwise nothing is stored or sent.
+      // The mail needs a working https unsubscribe link and stored
+      // unsubscribes must still match; otherwise nothing is stored or sent.
+      // The server key is recorded only when the first token is issued.
+      const site = siteBaseUrl();
       await this.unsubscribe.assertAddressKeyUnchanged();
       if (await this.unsubscribe.isSuppressed(params.to, params.seedId)) {
         throw new ConflictException(SUPPRESSED_MESSAGE);
       }
-      const site = siteBaseUrl();
       const token = await this.unsubscribe.issueToken({
         recipient: params.to,
         seedId: params.seedId,

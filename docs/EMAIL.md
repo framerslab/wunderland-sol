@@ -6,7 +6,12 @@ agent's Credential Vault; the backend sends through
 `POST /api/wunderland/email/send` (any mail) and
 `POST /api/wunderland/email/test` (a test mail). Both need a paid account and
 an agent the caller owns. Mail goes out as plain text over TLS (STARTTLS on
-587, implicit TLS on 465).
+587, implicit TLS on 465). It stays 7-bit clean: an ASCII body is sent as
+`7bit`; a body with any other character (an agent's name such as "Zoë", a
+subject in another script) is sent as UTF-8 in `base64`, 76 characters a line,
+and such a subject as RFC 2047 encoded words
+([RFC 2045](https://www.rfc-editor.org/rfc/rfc2045),
+[RFC 2047](https://www.rfc-editor.org/rfc/rfc2047)).
 
 Code: [`backend/src/modules/wunderland/email/`](../backend/src/modules/wunderland/email/).
 
@@ -52,7 +57,7 @@ request to the backend's `/api/wunderland/email/unsubscribe/<token>`.
 | `GET` | A page that asks. It shows the agent's name and the masked address and offers two buttons: **Unsubscribe from** *the agent's name* and **Unsubscribe from every Wunderland agent**. A GET changes nothing, since link scanners open links. |
 | `POST` with `List-Unsubscribe=One-Click` (a mailbox provider) or `scope=agent` (the first button) | Stops mail from that agent to the address at once. |
 | `POST` with `scope=all` | Stops mail from every Wunderland agent to the address at once. |
-| Unknown or malformed token | `404`, nothing changes. |
+| Unknown, malformed or expired token | `404`, nothing changes. |
 
 No sign-in is needed, and no mail is sent to confirm an unsubscribe. The page
 is `no-store` and `noindex`. The site passes the backend a form body only
@@ -62,40 +67,55 @@ only an HTML reply as the page. The route's own path,
 `/api/wunderland/email/unsubscribe/<token>`, is outside the public rate limit,
 since every anonymous request through the site shares one address; a request
 that only names that path in its query or deeper in another route is limited
-as usual. Request logs show the token as `[token]`, and nginx
-(`deployment/nginx.conf`) does not log these requests.
+as usual. Request logs show the token as `[token]`. nginx
+(`deployment/nginx.conf`) does not log these requests and limits them to 5 a
+second per connecting address (a burst of 20, then `429`); behind Cloudflare
+that address is the edge's. Its refusals are logged at `info`
+([`limit_req_log_level`](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html#limit_req_log_level)),
+below the `notice` level of the `nginx:alpine` image's error log
+([its `nginx.conf`](https://github.com/nginx/pkg-oss/blob/master/alpine/alpine/nginx.conf)),
+so the token stays out of that log too.
+
+A link works for two years after its mail, well past the 30 days CAN-SPAM
+asks for ([15 U.S.C. 7704(a)(3)(A)(ii)](https://www.law.cornell.edu/uscode/text/15/7704)).
+Older tokens are dropped when the next mail is sent; the unsubscribe a link
+made never lapses.
 
 ## Before every send
 
-1. The server secret must be the one unsubscribes were stored under. The
-   first send stores a check value of it; if the secret changes later, every
+1. The site address must be valid: `FRONTEND_URL` must be the site's bare
+   origin, `https` in production (no path, query, fragment or credentials),
+   since the site serves the link at its root. Otherwise the send is refused
+   with `503` and nothing is stored or sent.
+2. The server secret must be the one unsubscribes were stored under. The
+   first token stores a check value of it; if the secret changes later, every
    send is refused with `503` until the old one is restored, so stored
-   unsubscribes never stop matching unnoticed. In production a send without
-   any secret is refused the same way. Outside production (`NODE_ENV` other
-   than `production`) a missing secret falls back to a fixed development key,
-   so a server holding real addresses runs with `NODE_ENV=production`, as
-   `docker-compose.yml` and both Dockerfiles set it.
-2. The recipient is checked against `MAIL_DO_NOT_CONTACT` and against the
+   unsubscribes never stop matching unnoticed. A send refused before any
+   token exists stores nothing, so a setup error can still be corrected. In
+   production a send without any secret is refused the same way. Outside
+   production (`NODE_ENV` other than `production`) a missing secret falls
+   back to a fixed development key, so a server holding real addresses runs
+   with `NODE_ENV=production`, as `docker-compose.yml` and both Dockerfiles
+   set it.
+3. The recipient is checked against `MAIL_DO_NOT_CONTACT` and against the
    suppressions for this agent and for every agent. A match refuses the send
    with `409` and "The recipient has turned off this mail. Nothing was sent."
    The words are the same for both, so the owner cannot tell an unsubscribe
    from the do-not-contact list.
-3. The site address must be valid: in production `FRONTEND_URL` must be a
-   plain `https` address (no query, fragment or credentials), or the send is
-   refused with `503` and nothing is stored or sent.
-4. A token is stored, then the mail goes out with its footer and headers.
+4. Tokens older than two years are dropped, a token is stored, then the mail
+   goes out with its footer and headers.
 
 ## Settings
 
 | Variable | Use |
 |---|---|
-| `FRONTEND_URL` | The site's public address. The unsubscribe link is built on it. `https` in production. |
+| `FRONTEND_URL` | The site's public origin, with no path. The unsubscribe link is built on it. `https` in production. |
 | `WUNDERLAND_CREDENTIALS_ENCRYPTION_KEY` | The Credential Vault's key; recipient addresses are keyed with it (with `JWT_SECRET` when it is unset). Set it once: changing it stops agent mail until it is restored. |
 | `MAIL_DO_NOT_CONTACT` | Addresses that never receive agent mail, separated by commas, semicolons or spaces. Read at every send; compared after trimming and lower-casing. Set it on the server from the team's do-not-contact list; never commit the addresses. |
 
 ## Tables
 
-- `wunderland_email_unsubscribe_tokens`: `token_hash` (primary key), `address_key`, `address_hint`, `seed_id`, `agent_name`, `created_at` (`BIGINT`, milliseconds).
+- `wunderland_email_unsubscribe_tokens`: `token_hash` (primary key), `address_key`, `address_hint`, `seed_id`, `agent_name`, `created_at` (`BIGINT`, milliseconds, indexed for the two-year drop).
 - `wunderland_email_suppressions`: `address_key`, `scope` (`agent` or `all`), `seed_id` (empty for `all`), `reason`, `created_at`; primary key `(address_key, scope, seed_id)`.
 - `wunderland_email_settings`: `name`, `value`; holds the check value of the server secret.
 
@@ -120,8 +140,9 @@ as usual. Request logs show the token as `[token]`, and nginx
 
 - `backend/src/modules/wunderland/email/email-unsubscribe.test.ts` sends the
   test mail and an agent mail through the service with only the SMTP
-  connection replaced, reads the message the client writes after `DATA`, and
-  drives the unsubscribe route over HTTP.
+  connection replaced, reads the message the client writes after `DATA`
+  (non-ASCII mail included), and drives the unsubscribe route over HTTP,
+  expired links included.
 - `backend/src/modules/wunderland/email/smtp-client.test.ts` sends through a
   local SMTP server and reads both headers on the wire.
 - `app/src/__tests__/unsubscribe-route.test.ts` checks that the site hands GET
