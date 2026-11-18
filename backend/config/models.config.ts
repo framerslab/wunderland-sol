@@ -52,6 +52,11 @@ export interface ModelConfig {
 // and openrouter.ai/models on 2026-04-16. Costs are per 1K tokens.
 export const MODEL_PRICING: Record<string, ModelConfig> = {
   // OpenAI: GPT-5.4 family (current flagship + mini + nano)
+  // OpenAI: GPT-6.2 Sol, GPT-6.2 Astra and GPT-6 Luna, read on 2026-11-17 at
+  // https://developers.openai.com/api/docs/pricing
+  'gpt-6.2-sol': { inputCostPer1K: 0.002, outputCostPer1K: 0.010, displayName: 'GPT-6.2 Sol', provider: 'openai' },
+  'gpt-6.2-astra': { inputCostPer1K: 0.008, outputCostPer1K: 0.040, displayName: 'GPT-6.2 Astra', provider: 'openai' },
+  'gpt-6-luna': { inputCostPer1K: 0.0001, outputCostPer1K: 0.0005, displayName: 'GPT-6 Luna', provider: 'openai' },
   'gpt-5.4': { inputCostPer1K: 0.0025, outputCostPer1K: 0.015, displayName: 'GPT-5.4', provider: 'openai' },
   'gpt-5.4-mini': { inputCostPer1K: 0.00075, outputCostPer1K: 0.0045, displayName: 'GPT-5.4 Mini', provider: 'openai' },
   'gpt-5.4-nano': { inputCostPer1K: 0.0002, outputCostPer1K: 0.00125, displayName: 'GPT-5.4 Nano', provider: 'openai' },
@@ -76,6 +81,9 @@ export const MODEL_PRICING: Record<string, ModelConfig> = {
   'claude-haiku-4-5-20251001': { inputCostPer1K: 0.001, outputCostPer1K: 0.005, displayName: 'Claude Haiku 4.5', provider: 'openrouter' },
 
   // OpenRouter Models
+  'openai/gpt-6.2-sol': { inputCostPer1K: 0.002, outputCostPer1K: 0.010, displayName: 'OpenRouter: GPT-6.2 Sol', provider: 'openrouter' },
+  'openai/gpt-6.2-astra': { inputCostPer1K: 0.008, outputCostPer1K: 0.040, displayName: 'OpenRouter: GPT-6.2 Astra', provider: 'openrouter' },
+  'openai/gpt-6-luna': { inputCostPer1K: 0.0001, outputCostPer1K: 0.0005, displayName: 'OpenRouter: GPT-6 Luna', provider: 'openrouter' },
   'openai/gpt-5.4': { inputCostPer1K: 0.0025, outputCostPer1K: 0.015, displayName: 'OpenRouter: GPT-5.4', provider: 'openrouter' },
   'openai/gpt-5.4-mini': { inputCostPer1K: 0.00075, outputCostPer1K: 0.0045, displayName: 'OpenRouter: GPT-5.4 Mini', provider: 'openrouter' },
   'openai/gpt-4o-mini': { inputCostPer1K: 0.00015, outputCostPer1K: 0.00060, displayName: 'OpenRouter: GPT-4o Mini', provider: 'openrouter' },

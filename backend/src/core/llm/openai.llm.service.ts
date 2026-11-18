@@ -60,21 +60,32 @@ export class OpenAiLlmService implements ILlmService {
   ): Promise<ILlmResponse> {
     const mappedModelId = this.mapToProviderModelId(modelId);
     try {
-      // gpt-5.x and o-series models require max_completion_tokens instead of max_tokens
+      // gpt-5.x, GPT-6 and o-series models require max_completion_tokens instead of max_tokens.
+      // GPT-6 refuses `stop`, and a GPT-6 model with a reasoning step refuses any
+      // temperature but 1 and `top_p`; gpt-6-luna at reasoning effort `none` has no
+      // reasoning step and takes both, and function tools on Chat Completions.
+      // https://developers.openai.com/api/docs/guides/reasoning
       const maxTokens = params?.max_tokens ?? parseInt(process.env.LLM_DEFAULT_MAX_TOKENS || '2048');
-      const usesMaxCompletionTokens = /^(gpt-5|o[1-9])/.test(mappedModelId);
+      const usesMaxCompletionTokens = /^(gpt-5|gpt-6|o[1-9])/.test(mappedModelId);
+      const isGpt6 = /^gpt-6/.test(mappedModelId);
+      const isGpt6Luna = /^gpt-6-luna/.test(mappedModelId);
+      const refusesSampling = isGpt6 && !isGpt6Luna;
 
       const requestPayload: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
         model: mappedModelId,
         messages: messages as OpenAI.Chat.ChatCompletionMessageParam[],
-        temperature: params?.temperature ?? parseFloat(process.env.LLM_DEFAULT_TEMPERATURE || '0.7'),
+        temperature: refusesSampling ? undefined : params?.temperature ?? parseFloat(process.env.LLM_DEFAULT_TEMPERATURE || '0.7'),
         ...(usesMaxCompletionTokens ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens }),
-        top_p: params?.top_p,
-        stop: params?.stop,
+        top_p: refusesSampling ? undefined : params?.top_p,
+        stop: isGpt6 ? undefined : params?.stop,
         user: params?.user,
         tools: params?.tools as OpenAI.Chat.Completions.ChatCompletionTool[] | undefined,
         tool_choice: params?.tool_choice as OpenAI.Chat.Completions.ChatCompletionToolChoiceOption | undefined,
       };
+
+      if (isGpt6Luna) {
+        (requestPayload as unknown as Record<string, unknown>).reasoning_effort = 'none';
+      }
 
       // Remove undefined optional parameters to avoid API errors
       Object.keys(requestPayload).forEach(key => {
