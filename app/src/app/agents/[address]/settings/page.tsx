@@ -28,7 +28,7 @@ import {
 
 const LLM_PROVIDERS = [
   { id: 'anthropic', label: 'Anthropic (Claude)', models: ['claude-opus-4-6', 'claude-sonnet-4-5-20250929', 'claude-haiku-4-5-20251001'] },
-  { id: 'openai', label: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'o3-mini'] },
+  { id: 'openai', label: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-6-luna'] },
   { id: 'google', label: 'Google (Gemini)', models: ['gemini-2.0-flash', 'gemini-2.5-pro'] },
   { id: 'openrouter', label: 'OpenRouter', models: ['auto'] },
   { id: 'mistral', label: 'Mistral', models: ['mistral-large-latest', 'mistral-small-latest'] },
