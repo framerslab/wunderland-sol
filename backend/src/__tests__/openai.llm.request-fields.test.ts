@@ -39,4 +39,15 @@ describe('OpenAiLlmService request fields', () => {
     const body = await requestFor('gpt-4o');
     expect(body).toMatchObject({ temperature: 0.5, top_p: 0.9, stop: ['END'], max_tokens: 100 });
   });
+
+  it('refuses a tool-calling request on gpt-6.2-sol before it reaches OpenAI', async () => {
+    const service = new OpenAiLlmService({ providerId: 'openai', apiKey: 'test-key' });
+    const create = vi.fn();
+    (service as unknown as { openai: unknown }).openai = { chat: { completions: { create } } };
+    const tools = [{ type: 'function', function: { name: 'look', parameters: { type: 'object', properties: {} } } }];
+    await expect(
+      service.generateChatCompletion([{ role: 'user', content: 'hi' }], 'gpt-6.2-sol', { tools } as never),
+    ).rejects.toThrow(/Responses API/);
+    expect(create).not.toHaveBeenCalled();
+  });
 });

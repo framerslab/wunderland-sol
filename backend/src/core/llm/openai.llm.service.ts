@@ -70,6 +70,11 @@ export class OpenAiLlmService implements ILlmService {
       const isGpt6 = /^gpt-6/.test(mappedModelId);
       const isGpt6Luna = /^gpt-6-luna/.test(mappedModelId);
       const refusesSampling = isGpt6 && !isGpt6Luna;
+      if (refusesSampling && params?.tools?.length) {
+        // Chat Completions refuses function tools on GPT-6 models with a reasoning
+        // step (they take tools on the Responses API only), so say so before the call.
+        throw new Error(`${mappedModelId} takes function tools on the Responses API only; use gpt-6-luna or a GPT-4 model for a tool-calling agent`);
+      }
 
       const requestPayload: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
         model: mappedModelId,
