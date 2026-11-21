@@ -158,7 +158,10 @@ jobs:
             # Only a lockfile with a moved manifest under its folder: resolving
             # another project's lockfile again would put changes that are no part
             # of this bump into the pull request.
-            if ! git diff --name-only -- "$dir" | grep -q -E '(^|/)package\.json$'; then
+            # Read on its own line, so a failing git stops the step instead of
+            # reading as "nothing moved".
+            moved=$(git diff --name-only -- "$dir")
+            if ! printf '%s\n' "$moved" | grep -q -E '(^|/)package\.json$'; then
               echo "no manifest under ${dir} moved; its lockfile is left as it is"
               continue
             fi
