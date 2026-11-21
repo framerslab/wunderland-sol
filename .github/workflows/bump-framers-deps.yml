@@ -161,10 +161,15 @@ jobs:
             [ -n "$manifest" ] || continue
             d=$(dirname "$manifest")
             while :; do
-              if [ "$d" = . ]; then want=package-lock.json; else want="$d/package-lock.json"; fi
+              if [ "$d" = . ]; then want=package-lock.json; man=package.json; else want="$d/package-lock.json"; man="$d/package.json"; fi
               if printf '%s\n' "$locks" | grep -qxF "$want"; then
-                echo "$d"
-                break
+                # A lockfile with no manifest beside it belongs to no project, so
+                # the walk goes on up to the one that does.
+                if [ -f "$man" ]; then
+                  echo "$d"
+                  break
+                fi
+                echo "::warning file=${want}::no package.json beside this lockfile; looking further up for ${manifest}" >&2
               fi
               if [ "$d" = . ]; then break; fi
               d=$(dirname "$d")
