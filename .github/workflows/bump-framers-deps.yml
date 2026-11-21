@@ -120,9 +120,20 @@ jobs:
           fi
 
       - name: Bump @framers/* deps to latest published versions
-        run: python3 .github/scripts/bump-framers-deps.py
+        id: bump
+        run: |
+          python3 .github/scripts/bump-framers-deps.py
+          # The lockfiles are refreshed only when a pin moved. Otherwise a lockfile
+          # that had drifted from its manifest for another reason would be
+          # resolved again and open a pull request with no bump in it.
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Refresh pnpm lockfile (when present)
+        if: steps.bump.outputs.changed == 'true'
         run: |
           if [ -f pnpm-lock.yaml ]; then
             # Refreshing the lockfile needs no package's install script.
@@ -130,6 +141,7 @@ jobs:
           fi
 
       - name: Refresh npm lockfiles (when present)
+        if: steps.bump.outputs.changed == 'true'
         run: |
           # `npm ci` refuses to install when a package-lock.json disagrees with
           # its package.json, so each tracked npm lockfile is resolved again
@@ -137,6 +149,12 @@ jobs:
           # installs nothing and --ignore-scripts runs no package script.
           git ls-files -- 'package-lock.json' '*/package-lock.json' | while IFS= read -r lock; do
             dir=$(dirname "$lock")
+            # Without a manifest beside it, npm would walk up and resolve a parent
+            # project instead of this lockfile.
+            if [ ! -f "$dir/package.json" ]; then
+              echo "::warning file=${lock}::skipped, no package.json beside this lockfile"
+              continue
+            fi
             echo "::group::npm lockfile in ${dir}"
             (cd "$dir" && npm install --package-lock-only --no-audit --no-fund --ignore-scripts)
             echo "::endgroup::"
