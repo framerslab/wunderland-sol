@@ -42,8 +42,15 @@ the same package: npm requires the two to be equal and the peer range is
 never rewritten, so every pin of that package in the file stays. Reports
 are GitHub Actions warning annotations, so they show on the run summary.
 
+The YAML reader is a line scanner, not a YAML parser. A file shape it
+misreads either still moves a pin correctly or leaves a file pnpm cannot
+parse, and pnpm reads the file in the lockfile step or in the pull
+request's own checks, so a broken file stops the run or fails the pull
+request before it can merge.
+
 Only regular files are read; a tracked symbolic link is skipped with a
-warning.
+warning. So is a manifest under a folder named `vendor`, `vendored` or
+`third_party`: a vendored copy is kept byte for byte.
 
 Only files tracked by git are read, so `node_modules`, build output and
 the contents of git submodules are never touched: the pull request this
@@ -63,6 +70,7 @@ beyond the standard library and `npm` on PATH.
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 import subprocess
@@ -152,6 +160,9 @@ def excludes_latest(spec: str, latest: str) -> bool:
     parts the bound names are compared, and a bound on a prerelease of latest
     itself excludes nothing.
     """
+    # `>x` and `>*` admit nothing at all.
+    if re.search(r"(?<!~)>(?!=)\s*v?[xX*]", spec):
+        return True
     top = tuple(int(part) for part in latest.split("."))
     for match in STRICT_LOWER.finditer(spec):
         named = tuple(int(g) for g in match.groups()[:3] if g is not None)
@@ -278,6 +289,76 @@ def yaml_pin_pattern(pkg: str) -> re.Pattern[str]:
     )
 
 
+def spec_of(match: re.Match[str]) -> str:
+    """The pin's value as JSON reads it, escapes decoded (`^0.9.0` is `^0.9.0`)."""
+    return decode_key(f'"{match.group("spec")}"')
+
+
+def yaml_code(line: str) -> str:
+    """One YAML line with every quoted scalar emptied and its comment removed.
+
+    A quote opens a scalar only where one can start: at the start of the
+    content, or after a `:` that ends a key, a `,`, `[` or `{`, or a `-` or
+    `?` indicator, with nothing but spaces between. Once a plain scalar has
+    begun, a quote inside it is text: the apostrophe in `don't`, the quote in
+    `ci ' staging`. An anchor or a tag before the content keeps it at its
+    start. Inside single quotes
+    `''` is a quote; inside double quotes a backslash escapes the next
+    character. A `#` starts a comment only outside a scalar and after
+    whitespace.
+    """
+    out: list[str] = []
+    i, n, prev = 0, len(line), " "
+    at_start = True  # no plain text since the start of the line or the last indicator
+    while i < n:
+        char = line[i]
+        if char in "&!" and at_start:
+            # A node property (an anchor or a tag) comes before the content it
+            # marks, so the content may still open with a quote.
+            while i < n and not line[i].isspace():
+                out.append(line[i])
+                i += 1
+            prev = line[i - 1]
+            continue
+        if char in "'\"" and at_start:
+            i += 1
+            while i < n:
+                if char == "'" and line[i] == "'":
+                    if i + 1 < n and line[i + 1] == "'":
+                        i += 2
+                        continue
+                    break
+                if char == '"' and line[i] == "\\":
+                    i += 2
+                    continue
+                if line[i] == char:
+                    break
+                i += 1
+            out.append(char * 2)
+            prev = char
+            at_start = False
+            i += 1
+            continue
+        if char == "#" and prev.isspace():
+            break
+        if not char.isspace():
+            following = line[i + 1] if i + 1 < n else " "
+            if char in ",[{":
+                at_start = True
+            elif char in ":-?" and following.isspace():
+                at_start = True if char == ":" or at_start else False
+            else:
+                at_start = False
+        out.append(char)
+        prev = char
+        i += 1
+    return "".join(out)
+
+
+# A JSON string key and string value, each with its escapes.
+OVERRIDE_PAIR = re.compile(r'"(?P<key>(?:[^"\\]|\\.)*)"\s*:\s*"(?P<value>(?:[^"\\]|\\.)*)"')
+
+
 def line_of(text: str, offset: int) -> int:
     """1-based line number of `offset` in `text`."""
     return text.count("\n", 0, offset) + 1
@@ -293,7 +374,26 @@ def bump_json_text(text: str, versions: dict[str, str], source: str = "<fixture>
     for each package because an earlier rewrite can shift offsets.
     """
     changes = 0
+    # An override that reads another package's range by reference
+    # (`"other": "$@framers/agentos"`) moves with that package, while the overridden
+    # package's own direct pin is read on its own, and npm requires the two to be
+    # equal. Both packages of such a pair keep every pin in this file. Keys and
+    # values are read as JSON reads them, so `\u0024` is a `$`.
+    frozen: set[str] = set()
+    start_paths = json_key_paths(text)
+    for m in OVERRIDE_PAIR.finditer(text):
+        if not any(field in start_paths.get(m.start(), ()) for field in OVERRIDE_FIELDS):
+            continue
+        key, value = decode_key(f'"{m.group("key")}"'), decode_key(f'"{m.group("value")}"')
+        if not value.startswith("$") or value[1:] == key:
+            continue
+        if value[1:] in versions or key in versions:
+            warn(source, line_of(text, m.start()),
+                 f"override of {key} reads {value[1:]}'s range; the pins of both in this file are left unchanged")
+            frozen.update({value[1:], key})
     for pkg, latest in versions.items():
+        if pkg in frozen:
+            continue
         paths = json_key_paths(text)
         nested = [m for m in json_nested_pattern(pkg).finditer(text)
                   if any(field in paths.get(m.start(), ()) for field in OVERRIDE_FIELDS)]
@@ -305,6 +405,17 @@ def bump_json_text(text: str, versions: dict[str, str], source: str = "<fixture>
                      f"nested override for {pkg} not handled; its pins in this file are left unchanged")
             continue
 
+        # A version-qualified override (`"@framers/agentos@>=0.9"`) still applies to the
+        # release a direct pin moves to, and npm requires the two to be equal; the script
+        # does not rewrite such a key, so every pin of the package here stays.
+        qualified = [m for m in re.finditer(rf'"{re.escape(pkg)}@[^"]*"\s*:', text)
+                     if any(field in paths.get(m.start(), ()) for field in OVERRIDE_FIELDS)]
+        if qualified:
+            for m in qualified:
+                warn(source, line_of(text, m.start()),
+                     f"version-qualified override for {pkg} not handled; its pins in this file are left unchanged")
+            continue
+
         # npm refuses an install whose flat override for a package differs from the
         # root's own range for it (EOVERRIDE). The root's peer range is never
         # rewritten, so beside one the override, and with it every pin of the
@@ -313,7 +424,7 @@ def bump_json_text(text: str, versions: dict[str, str], source: str = "<fixture>
         flat_overrides = [m for m in pins if m.group("prefix") is None
                           and paths.get(m.start(), ()) in (("overrides",), ("", "overrides"))]
         if (flat_overrides and any(in_peer_field(paths.get(m.start(), ())) for m in pins)
-                and any(should_rewrite(m.group("spec"), latest) for m in pins
+                and any(should_rewrite(spec_of(m), latest) for m in pins
                         if not in_peer_field(paths.get(m.start(), ())))):
             for m in flat_overrides:
                 warn(source, line_of(text, m.start()),
@@ -325,11 +436,11 @@ def bump_json_text(text: str, versions: dict[str, str], source: str = "<fixture>
             nonlocal changes
             if in_peer_field(_paths.get(match.start(), ())):
                 return match.group(0)
-            if not should_rewrite(match.group("spec"), _latest):
+            if not should_rewrite(spec_of(match), _latest):
                 return match.group(0)
             if parent_scoped(_paths.get(match.start(), ()), match.group("prefix")):
                 warn(source, line_of(text, match.start()),
-                     f"override pins {_pkg} under a parent ({match.group('spec')}); left for a person to move to ^{_latest}")
+                     f"override pins {_pkg} under a parent ({spec_of(match)}); left for a person to move to ^{_latest}")
                 return match.group(0)
             changes += 1
             return f'{match.group(1)}"^{_latest}"'
@@ -396,15 +507,15 @@ def bump_yaml_text(text: str, versions: dict[str, str], source: str = "<fixture>
             # A nested key whose value opens a flow collection (`shared: {`), or a
             # bare `{` / `[` under such a key: its entries cannot be rewritten line
             # by line, so report and skip them through the closing bracket.
-            if re.match(r"""^\s*(?:\S[^#]*?:\s*)?(?:[&!]\S*\s+)*[{\[]""", line):
+            # Read with quoted scalars emptied and the comment removed, so a bracket,
+            # a `#` or a quote inside a key is not counted.
+            code = yaml_code(line)
+            if re.match(r"""^\s*(?:\S[^#]*?:\s*)?(?:[&!]\S*\s+)*[{\[]""", code):
                 span = [line]
-                # Quoted text first, so a bracket or a `#` inside a key is not counted.
-                code = re.sub(r"""'[^']*'|"[^"]*\"""", "", line)
-                code = re.sub(r"\s#.*$", "", code)
                 depth = code.count("{") + code.count("[") - code.count("}") - code.count("]")
                 if depth > 0:
                     flow_indent = indent
-                    for later in lines[idx + 1:]:
+                    for later in itertools.islice(lines, idx + 1, None):
                         if later.strip().startswith("#"):
                             span.append(later)
                             continue
@@ -424,7 +535,7 @@ def bump_yaml_text(text: str, versions: dict[str, str], source: str = "<fixture>
             nested_override = block == "overrides" and indent > entry_indent
             # A deeper content line after a plain value (comments in between or
             # not) continues it; rewriting only the first line would break the file.
-            following = next((later for later in lines[idx + 1:] if is_content(later)), "")
+            following = next((later for later in itertools.islice(lines, idx + 1, None) if is_content(later)), "")
             continued = bool(following) and indent_of(following) > indent
             matched = False
             for pkg, pattern in patterns.items():
@@ -488,6 +599,8 @@ def self_check() -> None:
         # A strict lower bound at latest admits nothing up to latest.
         '"@framers/agentos": ">0.10.28"',
         '"@framers/agentos": ">0.10"',
+        # `>x` admits nothing at all.
+        '"@framers/agentos": ">x"',
         '"@framers/agentos": "./src/shims/agentos.browser.js"',
         '"@framers/agentos": "../agentos"',
         '"@framers/agentos": "framersai/agentos#feat"',
@@ -514,6 +627,8 @@ def self_check() -> None:
         ('"@framers/agentos": ">= 0.7.0"', '"@framers/agentos": "^0.10.28"'),
         ('"@framers/agentos": ">0.9"', '"@framers/agentos": "^0.10.28"'),
         ('"@framers/agentos": "~>0.10.20"', '"@framers/agentos": "^0.10.28"'),
+        # A JSON escape in the value is read as the character it stands for.
+        ('"@framers/agentos": "\\u005e0.9.135"', '"@framers/agentos": "^0.10.28"'),
         # A release is above its own prereleases, so this bound admits latest.
         ('"@framers/agentos": ">0.10.28-beta.0"', '"@framers/agentos": "^0.10.28"'),
         ('"@framers/agentos": ">=0.9.0 <0.10.0"', '"@framers/agentos": "^0.10.28"'),
@@ -548,6 +663,19 @@ def self_check() -> None:
         ('{"dependencies": {"@framers/agentos": "^0.9.135"}, "peerDependencies": {"@framers/agentos": "^0.9.135"},'
          ' "overrides": {"@framers/agentos": "^0.9.135"}}',
          "1:override for @framers/agentos sits beside a root peer range it must equal"),
+        # A version-qualified override still applies to the release the pin would move to.
+        ('{"dependencies": {"@framers/agentos": "^0.9.135"}, "overrides": {"@framers/agentos@>=0.9.0": "^0.9.135"}}',
+         "1:version-qualified override for @framers/agentos not handled"),
+        # An override that reads this package's range by reference would move with it.
+        ('{"dependencies": {"@framers/agentos": "^0.9.135", "other": "^0.9.135"}, "overrides": {"other": "$@framers/agentos"}}',
+         "1:override of other reads @framers/agentos's range"),
+        # Both packages of a reference keep their pins: the overridden one would move alone.
+        ('{"dependencies": {"@framers/agentos": "^0.9.135", "@framers/sql-storage-adapter": "^0.6.1"},'
+         ' "overrides": {"@framers/sql-storage-adapter": "$@framers/agentos"}}',
+         "1:override of @framers/sql-storage-adapter reads @framers/agentos's range"),
+        # A reference spelled with a JSON escape for its `$` is the same reference.
+        ('{"dependencies": {"@framers/agentos": "^0.9.135", "other": "^0.9.135"}, "overrides": {"other": "\\u0024@framers/agentos"}}',
+         "1:override of other reads @framers/agentos's range"),
         # The key below is `overrides` with its first letter written as a JSON escape.
         ('{"' + chr(92) + 'u006fverrides": {"wunderland": {"@framers/agentos": "0.9.138"}}}',
          "1:override pins @framers/agentos under a parent (0.9.138)"),
@@ -658,6 +786,32 @@ def self_check() -> None:
         ("catalogs:\n  \"ci}\": {\n    '@framers/agentos': ^0.9.135\n  }\n",
          "catalogs:\n  \"ci}\": {\n    '@framers/agentos': ^0.9.135\n  }\n", 0,
          ["2:inline (flow) mapping not handled"]),
+        # An apostrophe inside a plain key opens no quote, so the `#` after it starts a comment.
+        ("catalogs:\n  don't: { # '\n    '@framers/agentos': ^0.9.135\n  }\n",
+         "catalogs:\n  don't: { # '\n    '@framers/agentos': ^0.9.135\n  }\n", 0,
+         ["2:inline (flow) mapping not handled"]),
+        # A `#` inside a quoted key is part of the key.
+        ("catalogs:\n  \"ci # staging\": {\n    '@framers/agentos': ^0.9.135\n  }\n",
+         "catalogs:\n  \"ci # staging\": {\n    '@framers/agentos': ^0.9.135\n  }\n", 0,
+         ["2:inline (flow) mapping not handled"]),
+        # A quote inside a plain key opens nothing, so the brace after it opens a flow mapping.
+        ("catalogs:\n  ci ' staging: {\n    '@framers/agentos': ^0.9.135\n  }\n",
+         "catalogs:\n  ci ' staging: {\n    '@framers/agentos': ^0.9.135\n  }\n", 0,
+         ["2:inline (flow) mapping not handled"]),
+        ("catalogs:\n  ci \"staging: {\n    '@framers/agentos': ^0.9.135\n  }\n",
+         "catalogs:\n  ci \"staging: {\n    '@framers/agentos': ^0.9.135\n  }\n", 0,
+         ["2:inline (flow) mapping not handled"]),
+        # An anchor or a tag before a quoted key leaves the key quoted.
+        ("catalogs:\n  &k \"ci}\": {\n    '@framers/agentos': ^0.9.135\n  }\n",
+         "catalogs:\n  &k \"ci}\": {\n    '@framers/agentos': ^0.9.135\n  }\n", 0,
+         ["2:inline (flow) mapping not handled"]),
+        ("catalogs:\n  !!str \"ci}\": {\n    '@framers/agentos': ^0.9.135\n  }\n",
+         "catalogs:\n  !!str \"ci}\": {\n    '@framers/agentos': ^0.9.135\n  }\n", 0,
+         ["2:inline (flow) mapping not handled"]),
+        # An escaped quote does not close a double-quoted key.
+        ("catalogs:\n  \"ci{\\\"}\": {\n    '@framers/agentos': ^0.9.135\n  }\n",
+         "catalogs:\n  \"ci{\\\"}\": {\n    '@framers/agentos': ^0.9.135\n  }\n", 0,
+         ["2:inline (flow) mapping not handled"]),
         ("overrides:\n  '@framers/sql-storage-adapter': 0.6.1\n  wunderland:\n    '@framers/agentos': 0.9.138\n",
          "overrides:\n  '@framers/sql-storage-adapter': '^0.6.8'\n  wunderland:\n    '@framers/agentos': 0.9.138\n", 1,
          ["4:override pins @framers/agentos under a parent (0.9.138)"]),
@@ -723,6 +877,12 @@ def self_check() -> None:
     if resolved != {"@framers/ok": "1.2.3"} or failed != ["@framers/flaky", "@framers/pre-only", "@framers/stale-tag"]:
         failures.append(f"npm view: resolved {resolved}, failed {failed}; want @framers/ok at 1.2.3, "
                         "@framers/gone skipped, @framers/flaky, @framers/pre-only and @framers/stale-tag failed")
+    for name, want in [("tools/vendor/analytics-consent/package.json", True),
+                       ("third_party/x/pnpm-workspace.yaml", True),
+                       ("packages/vendor-tools/package.json", False),
+                       ("package.json", False)]:
+        if is_vendored(name) != want:
+            failures.append(f"vendored paths: is_vendored({name!r}) is {is_vendored(name)}, want {want}")
     if failures:
         print("self-check failed:\n" + "\n".join(failures), file=sys.stderr)
         sys.exit(1)
@@ -742,6 +902,19 @@ def write_text(path: Path, text: str) -> None:
     """Write UTF-8 without translating line endings."""
     with open(path, "w", encoding="utf-8", newline="") as handle:
         handle.write(text)
+
+
+# Folder names that hold a copy of someone else's files.
+VENDOR_DIRS = ("vendor", "vendored", "third_party")
+
+
+def is_vendored(name: str) -> bool:
+    """True when a tracked path lies under a folder that holds vendored copies.
+
+    A vendored manifest is a copy kept byte for byte, often pinned by a hash;
+    its pins belong to the place it was copied from.
+    """
+    return any(part in VENDOR_DIRS for part in Path(name).parts[:-1])
 
 
 def tracked_files() -> tuple[list[Path], list[Path]]:
@@ -766,6 +939,9 @@ def tracked_files() -> tuple[list[Path], list[Path]]:
         # may be a file the pull request cannot commit.
         if path.is_symlink():
             annotate(name, 1, "skipped, a symbolic link; only regular tracked files are rewritten")
+            continue
+        if is_vendored(name):
+            annotate(name, 1, "skipped, a vendored copy; its pins are set where it was copied from")
             continue
         paths.append(path)
     return ([p for p in paths if p.name == "package.json"],
