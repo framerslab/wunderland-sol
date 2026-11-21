@@ -160,7 +160,9 @@ jobs:
             # of this bump into the pull request.
             # Read on its own line, so a failing git stops the step instead of
             # reading as "nothing moved".
-            moved=$(git diff --name-only -- "$dir")
+            # core.quotePath off: git otherwise quotes a path with non-ASCII bytes,
+            # and the quoted name would not end in package.json.
+            moved=$(git -c core.quotePath=false diff --name-only -- "$dir")
             if ! printf '%s\n' "$moved" | grep -q -E '(^|/)package\.json$'; then
               echo "no manifest under ${dir} moved; its lockfile is left as it is"
               continue
