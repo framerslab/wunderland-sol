@@ -147,24 +147,40 @@ jobs:
           # its package.json, so each tracked npm lockfile is resolved again
           # after the bump and the two move together. --package-lock-only
           # installs nothing and --ignore-scripts runs no package script.
-          git ls-files -- 'package-lock.json' '*/package-lock.json' | while IFS= read -r lock; do
+          #
+          # Each moved manifest refreshes only its nearest tracked lockfile at or
+          # above its folder: a workspace member's is its root's, and a nested
+          # project with a lockfile of its own refreshes only that one. Another
+          # project's lockfile is never resolved again, so no change outside this
+          # bump reaches the pull request. Each git call is on its own line, so a
+          # failing git stops the step; core.quotePath off keeps a path with
+          # non-ASCII bytes unquoted.
+          locks=$(git -c core.quotePath=false ls-files -- 'package-lock.json' '*/package-lock.json')
+          moved=$(git -c core.quotePath=false diff --name-only -- 'package.json' '*/package.json')
+          refresh=$(printf '%s\n' "$moved" | while IFS= read -r manifest; do
+            [ -n "$manifest" ] || continue
+            d=$(dirname "$manifest")
+            while :; do
+              if [ "$d" = . ]; then want=package-lock.json; else want="$d/package-lock.json"; fi
+              if printf '%s\n' "$locks" | grep -qxF "$want"; then
+                echo "$d"
+                break
+              fi
+              if [ "$d" = . ]; then break; fi
+              d=$(dirname "$d")
+            done
+          done | sort -u)
+          printf '%s\n' "$locks" | while IFS= read -r lock; do
+            [ -n "$lock" ] || continue
             dir=$(dirname "$lock")
+            if ! printf '%s\n' "$refresh" | grep -qxF "$dir"; then
+              echo "no manifest that ${lock} covers moved; it is left as it is"
+              continue
+            fi
             # Without a manifest beside it, npm would walk up and resolve a parent
             # project instead of this lockfile.
             if [ ! -f "$dir/package.json" ]; then
               echo "::warning file=${lock}::skipped, no package.json beside this lockfile"
-              continue
-            fi
-            # Only a lockfile with a moved manifest under its folder: resolving
-            # another project's lockfile again would put changes that are no part
-            # of this bump into the pull request.
-            # Read on its own line, so a failing git stops the step instead of
-            # reading as "nothing moved".
-            # core.quotePath off: git otherwise quotes a path with non-ASCII bytes,
-            # and the quoted name would not end in package.json.
-            moved=$(git -c core.quotePath=false diff --name-only -- "$dir")
-            if ! printf '%s\n' "$moved" | grep -q -E '(^|/)package\.json$'; then
-              echo "no manifest under ${dir} moved; its lockfile is left as it is"
               continue
             fi
             echo "::group::npm lockfile in ${dir}"
