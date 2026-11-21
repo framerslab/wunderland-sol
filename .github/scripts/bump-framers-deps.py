@@ -695,9 +695,11 @@ def self_check() -> None:
     def fake_npm(argv: list[str], **_kwargs: object) -> _Proc:
         """npm view against a fixed registry: one package absent, one whose latest tag names a missing version."""
         target = argv[2]
-        if target in ("@framers/gone@latest", "@framers/gone", "@framers/stale-tag@latest"):
+        # An unversioned spec resolves the latest tag too, so it fails like `@latest` does.
+        if target in ("@framers/gone@latest", "@framers/gone", "@framers/gone@*",
+                      "@framers/stale-tag@latest", "@framers/stale-tag"):
             return _Proc(1, stderr="npm error code E404")
-        if target == "@framers/stale-tag":
+        if target == "@framers/stale-tag@*":
             return _Proc(0, stdout="@framers/stale-tag\n")
         return _Proc(0, stdout="1.2.3\n")
 
@@ -797,8 +799,10 @@ def query_latest_versions(pkgs: list[str], run: Callable = subprocess.run,
             # npm answers E404 both for a package the registry does not hold and for
             # one whose `latest` tag names a version it no longer serves. Only the
             # first is skipped; the second fails the run before anything is written.
+            # The probe asks for any version (`@*`): a bare name resolves `latest`
+            # again and would answer E404 for the stale tag too.
             try:
-                probe = run(["npm", "view", pkg, "name"], capture_output=True, text=True, timeout=60)
+                probe = run(["npm", "view", f"{pkg}@*", "name"], capture_output=True, text=True, timeout=60)
                 absent = probe.returncode != 0 and "E404" in probe.stderr
             except (subprocess.TimeoutExpired, OSError):
                 absent = False
