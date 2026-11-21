@@ -700,7 +700,8 @@ def self_check() -> None:
             if argv[3] == "@framers/gone":
                 return _Proc(1, stderr="npm error code E401")
             if argv[3] == "@framers/flaky":
-                return _Proc(1, stderr="npm error code E500")
+                # The registry's own text may name another code; only npm's code line counts.
+                return _Proc(1, stderr="npm error code E500\nnpm error 500 Internal Server Error - upstream answered E404")
             return _Proc(0, stdout="latest: 9.9.9\n")
         target = argv[2]
         # A package with a stale latest tag and only a prerelease left: no view spec matches.
@@ -780,6 +781,20 @@ def find_framers_deps(texts: dict[Path, str]) -> list[str]:
     return sorted(deps)
 
 
+# The line on which npm states an error's primary code (`npm ERR! code` before npm 10).
+_NPM_CODE = re.compile(r"^npm (?:error|ERR!) code (\S+)\s*$", re.MULTILINE)
+
+
+def npm_code(stderr: str) -> str:
+    """The primary error code npm reported, or "" when it reported none.
+
+    Read from npm's own code line, never from the rest of the output, which
+    can quote registry text that names another code.
+    """
+    match = _NPM_CODE.search(stderr)
+    return match.group(1) if match else ""
+
+
 def _say(message: str) -> None:
     print(message, file=sys.stderr)
 
@@ -809,7 +824,7 @@ def query_latest_versions(pkgs: list[str], run: Callable = subprocess.run,
         ver = proc.stdout.strip()
         if proc.returncode == 0 and re.fullmatch(r"\d+\.\d+\.\d+", ver):
             versions[pkg] = ver
-        elif "E404" in proc.stderr:
+        elif npm_code(proc.stderr) == "E404":
             # npm answers E404 both for a package the registry does not hold and for
             # one whose `latest` tag names a version it no longer serves. Only the
             # first is skipped; the second fails the run before anything is written.
@@ -819,7 +834,7 @@ def query_latest_versions(pkgs: list[str], run: Callable = subprocess.run,
             # than `*`) and would answer E404 for the stale tag too.
             try:
                 probe = run(["npm", "view", f"{pkg}@>=0.0.0", "name"], capture_output=True, text=True, timeout=60)
-                absent = probe.returncode != 0 and "E404" in probe.stderr
+                absent = probe.returncode != 0 and npm_code(probe.stderr) == "E404"
                 # A range matches no prerelease, so a package left with prereleases
                 # alone fails that probe too. The tag listing reads no version: when
                 # it answers, the registry holds the package. The registry answers
@@ -827,7 +842,7 @@ def query_latest_versions(pkgs: list[str], run: Callable = subprocess.run,
                 # failure is a registry error and proves nothing, so the run fails.
                 if absent:
                     tags = run(["npm", "dist-tag", "ls", pkg], capture_output=True, text=True, timeout=60)
-                    if tags.returncode == 0 or not ("E401" in tags.stderr or "E404" in tags.stderr):
+                    if tags.returncode == 0 or npm_code(tags.stderr) not in ("E401", "E404"):
                         absent = False
             except (subprocess.TimeoutExpired, OSError):
                 absent = False
