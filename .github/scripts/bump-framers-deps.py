@@ -43,7 +43,8 @@ never rewritten, so every pin of that package in the file stays. Reports
 are GitHub Actions warning annotations, so they show on the run summary.
 
 Only regular files are read; a tracked symbolic link is skipped with a
-warning.
+warning. So is a manifest under a folder named `vendor`, `vendored` or
+`third_party`: a vendored copy is kept byte for byte.
 
 Only files tracked by git are read, so `node_modules`, build output and
 the contents of git submodules are never touched: the pull request this
@@ -723,6 +724,12 @@ def self_check() -> None:
     if resolved != {"@framers/ok": "1.2.3"} or failed != ["@framers/flaky", "@framers/pre-only", "@framers/stale-tag"]:
         failures.append(f"npm view: resolved {resolved}, failed {failed}; want @framers/ok at 1.2.3, "
                         "@framers/gone skipped, @framers/flaky, @framers/pre-only and @framers/stale-tag failed")
+    for name, want in [("tools/vendor/analytics-consent/package.json", True),
+                       ("third_party/x/pnpm-workspace.yaml", True),
+                       ("packages/vendor-tools/package.json", False),
+                       ("package.json", False)]:
+        if is_vendored(name) != want:
+            failures.append(f"vendored paths: is_vendored({name!r}) is {is_vendored(name)}, want {want}")
     if failures:
         print("self-check failed:\n" + "\n".join(failures), file=sys.stderr)
         sys.exit(1)
@@ -742,6 +749,19 @@ def write_text(path: Path, text: str) -> None:
     """Write UTF-8 without translating line endings."""
     with open(path, "w", encoding="utf-8", newline="") as handle:
         handle.write(text)
+
+
+# Folder names that hold a copy of someone else's files.
+VENDOR_DIRS = ("vendor", "vendored", "third_party")
+
+
+def is_vendored(name: str) -> bool:
+    """True when a tracked path lies under a folder that holds vendored copies.
+
+    A vendored manifest is a copy kept byte for byte, often pinned by a hash;
+    its pins belong to the place it was copied from.
+    """
+    return any(part in VENDOR_DIRS for part in Path(name).parts[:-1])
 
 
 def tracked_files() -> tuple[list[Path], list[Path]]:
@@ -766,6 +786,9 @@ def tracked_files() -> tuple[list[Path], list[Path]]:
         # may be a file the pull request cannot commit.
         if path.is_symlink():
             annotate(name, 1, "skipped, a symbolic link; only regular tracked files are rewritten")
+            continue
+        if is_vendored(name):
+            annotate(name, 1, "skipped, a vendored copy; its pins are set where it was copied from")
             continue
         paths.append(path)
     return ([p for p in paths if p.name == "package.json"],
