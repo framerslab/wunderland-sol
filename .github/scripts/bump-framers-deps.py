@@ -694,7 +694,15 @@ def self_check() -> None:
 
     def fake_npm(argv: list[str], **_kwargs: object) -> _Proc:
         """npm view against a fixed registry: one package absent, one whose latest tag names a missing version."""
+        if argv[1] == "dist-tag":
+            # The tag listing reads no version; it answers for any package the registry holds.
+            if argv[3] == "@framers/gone":
+                return _Proc(1, stderr="npm error code E401")
+            return _Proc(0, stdout="latest: 9.9.9\n")
         target = argv[2]
+        # A package with a stale latest tag and only a prerelease left: no view spec matches.
+        if target.startswith("@framers/pre-only"):
+            return _Proc(1, stderr="npm error code E404")
         # npm view resolves the latest tag for a bare name and for `@*` alike, so both
         # fail like `@latest` does; a real range is matched against the versions.
         if target in ("@framers/gone@latest", "@framers/gone", "@framers/gone@*", "@framers/gone@>=0.0.0",
@@ -705,10 +713,11 @@ def self_check() -> None:
         return _Proc(0, stdout="1.2.3\n")
 
     resolved, failed = query_latest_versions(
-        ["@framers/gone", "@framers/ok", "@framers/stale-tag"], run=fake_npm, say=lambda _message: None)
-    if resolved != {"@framers/ok": "1.2.3"} or failed != ["@framers/stale-tag"]:
+        ["@framers/gone", "@framers/ok", "@framers/pre-only", "@framers/stale-tag"],
+        run=fake_npm, say=lambda _message: None)
+    if resolved != {"@framers/ok": "1.2.3"} or failed != ["@framers/pre-only", "@framers/stale-tag"]:
         failures.append(f"npm view: resolved {resolved}, failed {failed}; want @framers/ok at 1.2.3, "
-                        "@framers/gone skipped and @framers/stale-tag failed")
+                        "@framers/gone skipped, @framers/pre-only and @framers/stale-tag failed")
     if failures:
         print("self-check failed:\n" + "\n".join(failures), file=sys.stderr)
         sys.exit(1)
@@ -807,6 +816,12 @@ def query_latest_versions(pkgs: list[str], run: Callable = subprocess.run,
             try:
                 probe = run(["npm", "view", f"{pkg}@>=0.0.0", "name"], capture_output=True, text=True, timeout=60)
                 absent = probe.returncode != 0 and "E404" in probe.stderr
+                # A range matches no prerelease, so a package left with prereleases
+                # alone fails that probe too. The tag listing reads no version: when
+                # it answers, the registry holds the package.
+                if absent and run(["npm", "dist-tag", "ls", pkg], capture_output=True, text=True,
+                                  timeout=60).returncode == 0:
+                    absent = False
             except (subprocess.TimeoutExpired, OSError):
                 absent = False
             if absent:
