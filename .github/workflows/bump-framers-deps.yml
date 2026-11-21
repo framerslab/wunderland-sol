@@ -1,0 +1,193 @@
+name: Bump @framers/* deps
+
+# Weekly cron and manual trigger. Moves every @framers/* version pin in the
+# tracked manifests to the latest npm-published version, refreshes the pnpm
+# lockfile and every tracked npm lockfile when present, and opens one pull
+# request with the diff. With nothing to bump it opens nothing.
+#
+# The branch is pushed and the pull request opened with FRAMERS_BUMP_TOKEN, a
+# personal token held as an Actions secret, never with GITHUB_TOKEN. A pull
+# request that GITHUB_TOKEN opens or pushes to does not get its checks run on
+# its own, while one a personal token opens runs them as any pull request does:
+# https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
+#
+# The pull request's own checks run on dependency updates nobody has read yet.
+# Read its diff for an unexpected major-version jump before merging.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Monday 06:00 UTC
+  workflow_dispatch: {}
+  # A pull request that changes the job or its script runs the script's own
+  # rule check, nothing else: no token, no install, no write.
+  pull_request:
+    paths:
+      - '.github/scripts/bump-framers-deps.py'
+      - '.github/workflows/bump-framers-deps.yml'
+
+# The branch push and the pull request go through FRAMERS_BUMP_TOKEN, so the
+# job's own GITHUB_TOKEN only reads.
+permissions:
+  contents: read
+
+jobs:
+  self-check:
+    name: Bump script rule check
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: The rewrite rules behave as documented
+        run: python3 .github/scripts/bump-framers-deps.py --self-check
+
+  bump:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # A second run waits for the first, so two runs never push the branch over
+    # each other.
+    concurrency:
+      group: bump-framers-deps
+      cancel-in-progress: false
+    # FRAMERS_BUMP_TOKEN reaches past this repository, and a step can change what
+    # a later step of its job runs. So the lockfile refreshes run no package's
+    # install script, and the third-party action is pinned to a commit, with the
+    # release that commit carries named beside it.
+    steps:
+      # First, before anything is installed: with the secret empty,
+      # create-pull-request stops with "Input 'token' not supplied", but only
+      # after the install.
+      - name: FRAMERS_BUMP_TOKEN is available
+        env:
+          FRAMERS_BUMP_TOKEN: ${{ secrets.FRAMERS_BUMP_TOKEN }}
+        run: |
+          if [ -z "$FRAMERS_BUMP_TOKEN" ]; then
+            echo "::error::FRAMERS_BUMP_TOKEN is not available to this repository; a pull request opened with GITHUB_TOKEN gets no checks."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The default branch, whichever branch a manual run names: the pull
+          # request goes into it, and a bump of another branch's manifests is
+          # not its own.
+          ref: master
+          fetch-depth: 0
+
+      # The job's read-only token would otherwise stay in .git/config for the
+      # steps that resolve packages; create-pull-request sets up its own
+      # authentication to push. It is removed here, not with the checkout's
+      # `persist-credentials: false`, because that option walks the submodules
+      # and stops on a repository whose index holds a submodule entry with no URL.
+      - name: Remove the checkout token from the git config
+        run: |
+          git config --local --unset-all 'http.https://github.com/.extraheader' || true
+          if git config --local --get-regexp '^http\..*\.extraheader$' > /dev/null; then
+            echo "::error::a credential is still in .git/config"
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Set up pnpm (when the repository has a pnpm lockfile)
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            # The version package.json names in "packageManager", without its
+            # integrity suffix; pnpm 10 when it names none.
+            spec=$(node -p "((require('./package.json').packageManager) || '').split('+')[0]")
+            case "$spec" in
+              pnpm@*) ;;
+              *) spec="pnpm@10" ;;
+            esac
+            npm install --global --no-audit --no-fund "$spec"
+            pnpm --version
+          fi
+
+      - name: Bump @framers/* deps to latest published versions
+        run: python3 .github/scripts/bump-framers-deps.py
+
+      - name: Refresh pnpm lockfile (when present)
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            # Refreshing the lockfile needs no package's install script.
+            pnpm install --no-frozen-lockfile --ignore-scripts
+          fi
+
+      - name: Refresh npm lockfiles (when present)
+        run: |
+          # `npm ci` refuses to install when a package-lock.json disagrees with
+          # its package.json, so each tracked npm lockfile is resolved again
+          # after the bump and the two move together. --package-lock-only
+          # installs nothing and --ignore-scripts runs no package script.
+          git ls-files -- 'package-lock.json' '*/package-lock.json' | while IFS= read -r lock; do
+            dir=$(dirname "$lock")
+            echo "::group::npm lockfile in ${dir}"
+            (cd "$dir" && npm install --package-lock-only --no-audit --no-fund --ignore-scripts)
+            echo "::endgroup::"
+          done
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7.0.11
+        with:
+          # The personal token, so the pull request's own events start its
+          # checks (see the top of this file). The branch push goes through it
+          # too.
+          token: ${{ secrets.FRAMERS_BUMP_TOKEN }}
+          commit-message: 'chore(deps): bump @framers/* deps to latest published versions'
+          title: 'chore(deps): bump @framers/* deps to latest published versions'
+          body: |
+            ## What changed
+            Automated weekly bump of every `@framers/*` dependency to its latest
+            npm release: the manifest pins (caret of the latest version;
+            `workspace:`, `file:`, git and peer pins are not touched), the pnpm
+            lockfile and every tracked npm lockfile, where present.
+
+            ## Issue
+            No issue
+
+            ## Spec, plan and design
+            None: a dependency bump.
+
+            ## Pictures
+            None: no screen changes.
+
+            ## Docs
+            None.
+
+            ## Tests
+            This pull request's own checks. Read the diff for an unexpected
+            major-version jump before merging.
+          branch: chore/bump-framers-deps
+          base: master
+          delete-branch: true
+          # No add-paths: a pathspec naming a file this repository does not
+          # commit makes the action's `git add` fatal and stages nothing. The
+          # default collection stages every change the bump made.
+
+      - name: Result
+        env:
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+          PR_OPERATION: ${{ steps.cpr.outputs.pull-request-operation }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            echo "Pull request #${PR_NUMBER}: ${PR_OPERATION}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Every @framers/* pin is already at its latest release; no pull request." >> "$GITHUB_STEP_SUMMARY"
+          fi
