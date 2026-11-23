@@ -8,7 +8,7 @@ Get Wunderland installed and verify everything works.
 
 ## Prerequisites
 
-- **Node.js >= 18.0.0** (20+ recommended)
+- **Node.js >= 22**
 - **TypeScript >= 5.4** (for full type support)
 - A package manager: npm, pnpm, or yarn
 

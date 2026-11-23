@@ -20,8 +20,8 @@ ssh root@your-linode-ip
 adduser wunderland
 usermod -aG sudo wunderland
 
-# Install Node.js 20 via NodeSource
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 22 via NodeSource
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # Install pnpm
@@ -223,7 +223,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
 
 jobs:
   test:
@@ -358,7 +358,7 @@ For GitHub Pages, add to your workflow:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: cd apps/wunderland-sh/docs-site && pnpm build
