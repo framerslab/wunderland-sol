@@ -1,13 +1,13 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 // @framers/agentos declares the lowest Node it runs on in engines.node. No CI
-// job builds the Docker images or runs the deployment examples in the docs, so
-// an image or an example pinned below that floor only breaks for whoever
-// builds it. This test reads the floor from the installed package and checks
-// every Node major those files pin.
+// job builds the Docker images or follows the setup steps in the docs, so an
+// image or a page that names an older Node only breaks for whoever follows it.
+// This test reads the floor from the installed package and checks every Node
+// major those files name.
 
 const backendRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const repoRoot = resolve(backendRoot, '..');
@@ -26,33 +26,63 @@ function agentosNodeFloor(): number {
   return Number(match[1]);
 }
 
-const FROM_NODE = /^\s*FROM\s+(?:--\S+\s+)*(?:\S+\/)?node:(\d+)/gim;
-const SETUP_NODE = /(?:node-version|NODE_VERSION):\s*["']?(\d+)/g;
-
-// Each file and the pattern whose first group is a pinned Node major.
-const pinned: Array<{ file: string; pattern: RegExp }> = [
-  { file: 'app/Dockerfile', pattern: FROM_NODE },
-  { file: 'backend/Dockerfile', pattern: FROM_NODE },
-  { file: 'deployment/Dockerfile.frontend', pattern: FROM_NODE },
-  { file: 'docs-site/docs/deployment/self-hosting.md', pattern: FROM_NODE },
-  { file: 'docs-site/docs/deployment/cloud-hosting.md', pattern: SETUP_NODE },
+// Each pattern captures a Node major in its first group.
+const FROM_NODE = /^[ \t]*FROM[ \t]+(?:--\S+[ \t]+)*(?:\S+\/)?node:(\d+)/gim;
+const DOC_PATTERNS = [
+  FROM_NODE,
+  // actions/setup-node in a workflow example
+  /(?:node-version|NODE_VERSION):\s*["']?(\d+)/g,
+  // the NodeSource install script
+  /deb\.nodesource\.com\/setup_(\d+)\.x/g,
+  // prerequisites prose: "Node.js 20+", "**Node.js** 18 or later", "Node.js >= 18.0.0"
+  /Node\.js\W{0,6}(\d+)/g,
 ];
 
-function pinnedMajors(file: string, pattern: RegExp): Array<{ line: string; major: number }> {
-  const text = readFileSync(resolve(repoRoot, file), 'utf8');
-  return [...text.matchAll(new RegExp(pattern.source, pattern.flags))].map((m) => ({
-    line: m[0].trim(),
-    major: Number(m[1]),
-  }));
+type Pin = { where: string; major: number };
+
+function pinsIn(file: string, patterns: RegExp[]): Pin[] {
+  const text = readFileSync(file, 'utf8');
+  const lines = text.split('\n');
+  const pins: Pin[] = [];
+  for (const pattern of patterns) {
+    for (const m of text.matchAll(new RegExp(pattern.source, pattern.flags))) {
+      const lineNo = text.slice(0, m.index ?? 0).split('\n').length;
+      pins.push({
+        where: `${relative(repoRoot, file)}:${lineNo}: ${(lines[lineNo - 1] ?? '').trim()}`,
+        major: Number(m[1]),
+      });
+    }
+  }
+  return pins;
 }
 
-describe('Node pinned by the Docker images and the deployment docs', () => {
+function markdownUnder(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) return markdownUnder(p);
+    return /\.mdx?$/.test(e.name) ? [p] : [];
+  });
+}
+
+describe('Node named by the Docker images and the docs', () => {
   const floor = agentosNodeFloor();
 
-  it.each(pinned)('$file pins Node at or above the @framers/agentos floor', ({ file, pattern }) => {
-    const majors = pinnedMajors(file, pattern);
-    // A file that pins nothing would pass the check below without reading anything.
-    expect(majors.length, `${file} pins no Node major; update this test`).toBeGreaterThan(0);
-    expect(majors.filter((m) => m.major < floor).map((m) => m.line)).toEqual([]);
+  it.each([
+    'app/Dockerfile',
+    'backend/Dockerfile',
+    'deployment/Dockerfile.frontend',
+    'docs-site/docs/deployment/self-hosting.md',
+  ])('%s builds on a Node image at or above the @framers/agentos floor', (file) => {
+    const pins = pinsIn(resolve(repoRoot, file), [FROM_NODE]);
+    // A file with no FROM node line would pass the check below without reading anything.
+    expect(pins.length, `${file} has no FROM node:<major> line; update this test`).toBeGreaterThan(0);
+    expect(pins.filter((p) => p.major < floor).map((p) => p.where)).toEqual([]);
+  });
+
+  it('the README and the docs site name no Node major below the @framers/agentos floor', () => {
+    const files = [resolve(repoRoot, 'README.md'), ...markdownUnder(resolve(repoRoot, 'docs-site/docs'))];
+    const pins = files.flatMap((f) => pinsIn(f, DOC_PATTERNS));
+    expect(pins.length, 'no Node version found in the docs; update this test').toBeGreaterThan(0);
+    expect(pins.filter((p) => p.major < floor).map((p) => p.where)).toEqual([]);
   });
 });
