@@ -27,17 +27,19 @@ function agentosNodeFloor(): number {
   return Number(match[1]);
 }
 
-// Each pattern captures a Node major in its first group.
+// Each pattern captures a Node major in its first group; a match without one
+// is a Node tag the test cannot resolve, and fails the check.
 const FROM_NODE = /^[ \t]*FROM[ \t]+(?:--\S+[ \t]+)*(?:\S+\/)?node:(\d+)/gim;
-const IMAGE_PATTERNS = [FROM_NODE];
+const FROM_NODE_UNRESOLVED = /^[ \t]*FROM[ \t]+(?:--\S+[ \t]+)*(?:\S+\/)?node:\$/gim;
+const IMAGE_PATTERNS = [FROM_NODE, FROM_NODE_UNRESOLVED];
 const DOC_PATTERNS = [
-  FROM_NODE,
+  ...IMAGE_PATTERNS,
   // actions/setup-node in a workflow example
   /(?:node-version|NODE_VERSION):\s*["']?(\d+)/g,
   // the NodeSource install script
   /deb\.nodesource\.com\/setup_(\d+)\.x/g,
-  // prerequisites prose: "Node.js 20+", "**Node.js** 18 or later", "Node.js >= 18.0.0"
-  /Node\.js\W{0,6}(\d+)/g,
+  // prerequisites prose: "Node.js 20+", "**Node.js** 18 or later", "Node.js >= 18.0.0", "Node.js v18"
+  /Node\.js\W{0,6}v?(\d+)/g,
 ];
 
 const KNOWN_IMAGES = ['app/Dockerfile', 'backend/Dockerfile', 'deployment/Dockerfile.frontend'];
@@ -45,13 +47,26 @@ const SELF_HOSTING = 'docs-site/docs/deployment/self-hosting.md';
 
 type Pin = { line: number; text: string; major: number | null };
 
+// Put each `ARG NAME=value` default in place of ${NAME} and $NAME, so a FROM
+// line that takes its Node tag or its whole image from an ARG is read too.
+function withArgDefaults(text: string): string {
+  const defaults = new Map<string, string>();
+  for (const m of text.matchAll(/^[ \t]*ARG[ \t]+(\w+)=["']?([^"'\s]+)/gim)) {
+    defaults.set(m[1], m[2]);
+  }
+  return text.replace(/\$\{(\w+)\}|\$(\w+)/g, (ref, braced?: string, bare?: string) => {
+    return defaults.get((braced ?? bare) as string) ?? ref;
+  });
+}
+
 function pinsInText(text: string, patterns: RegExp[]): Pin[] {
   const lines = text.split('\n');
+  const resolved = withArgDefaults(text);
   const pins: Pin[] = [];
   for (const pattern of patterns) {
-    for (const m of text.matchAll(new RegExp(pattern.source, pattern.flags))) {
-      const line = text.slice(0, m.index ?? 0).split('\n').length;
-      pins.push({ line, text: (lines[line - 1] ?? '').trim(), major: Number(m[1]) });
+    for (const m of resolved.matchAll(new RegExp(pattern.source, pattern.flags))) {
+      const line = resolved.slice(0, m.index ?? 0).split('\n').length;
+      pins.push({ line, text: (lines[line - 1] ?? '').trim(), major: m[1] ? Number(m[1]) : null });
     }
   }
   return pins;
@@ -64,9 +79,15 @@ function pinsIn(file: string, patterns: RegExp[]): Array<{ where: string; major:
   }));
 }
 
-// The Dockerfiles under root, relative to it.
-function dockerfilesUnder(_root: string): string[] {
-  return KNOWN_IMAGES;
+// The Dockerfiles under root, relative to it, outside node_modules and dot
+// directories.
+function dockerfilesUnder(root: string, dir = root): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    if (e.name === 'node_modules' || e.name.startsWith('.')) return [];
+    const p = join(dir, e.name);
+    if (e.isDirectory()) return dockerfilesUnder(root, p);
+    return e.isFile() && /^Dockerfile(\..+)?$|\.Dockerfile$/.test(e.name) ? [relative(root, p)] : [];
+  });
 }
 
 function markdownUnder(dir: string): string[] {
