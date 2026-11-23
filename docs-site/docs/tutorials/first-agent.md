@@ -13,7 +13,7 @@ This tutorial walks you through installing Wunderland, configuring your first ag
 
 ## Prerequisites
 
-- **Node.js 20+** — [Download](https://nodejs.org/)
+- **Node.js 22+** — [Download](https://nodejs.org/)
 - **An LLM API key** — OpenAI, Anthropic, Gemini, or OpenRouter (or use Ollama for free local inference)
 
 ---
