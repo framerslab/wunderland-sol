@@ -22,7 +22,7 @@ Everything runs on `localhost`. No data leaves your machine.
 
 ### Prerequisites
 
-- **Node.js** 18 or later
+- **Node.js** 22 or later
 - **npm** or **pnpm**
 - **Ollama** (see below)
 

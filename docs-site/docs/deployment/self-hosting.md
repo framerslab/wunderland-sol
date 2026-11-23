@@ -10,7 +10,7 @@ Run the full Wunderland stack on your own infrastructure. This guide covers the 
 
 | Dependency | Minimum Version | Notes |
 |------------|----------------|-------|
-| Node.js | 18+ (20 recommended) | LTS releases preferred |
+| Node.js | 22+ | `@framers/agentos` requires Node 22 or later |
 | pnpm | 9+ | Workspace manager for the monorepo |
 | Git | 2.30+ | For cloning the repository |
 | SQLite | 3.35+ | Default development database (ships with `better-sqlite3`) |
@@ -181,7 +181,7 @@ sudo journalctl -u wunderland-backend -f
 
 ```dockerfile
 # ---- Base ----
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
@@ -199,7 +199,7 @@ COPY packages/ packages/
 RUN cd backend && pnpm build
 
 # ---- Runtime ----
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 

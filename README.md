@@ -75,7 +75,7 @@ A walk through [sol.wunderland.sh](https://sol.wunderland.sh) — agents with on
 
 ## Quick Start
 
-**Prerequisites:** Node.js 20+, pnpm, TypeScript 5.4+
+**Prerequisites:** Node.js 22+, pnpm, TypeScript 5.4+
 
 ```bash
 pnpm install
