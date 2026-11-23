@@ -50,5 +50,9 @@
   },
   "engines": {
     "node": ">=20.0"
+  },
+  "//": "overrides.webpackbar: since webpack 5.106.0, ProgressPlugin checks this.options against its schema when it is applied. webpackbar 6, which @docusaurus/bundler 3.9.2 asks for, writes its own name/color/reporter options to this.options, so every build stops with 'Progress Plugin has been initialized using an options object that does not match the API schema'. webpackbar 7 keeps them apart, and Docusaurus 3.10.1 moved to it. Remove the override once Docusaurus is on 3.10.1 or later.",
+  "overrides": {
+    "webpackbar": "^7.0.0"
   }
 }
