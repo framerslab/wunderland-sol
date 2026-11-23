@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -28,6 +29,7 @@ function agentosNodeFloor(): number {
 
 // Each pattern captures a Node major in its first group.
 const FROM_NODE = /^[ \t]*FROM[ \t]+(?:--\S+[ \t]+)*(?:\S+\/)?node:(\d+)/gim;
+const IMAGE_PATTERNS = [FROM_NODE];
 const DOC_PATTERNS = [
   FROM_NODE,
   // actions/setup-node in a workflow example
@@ -38,22 +40,33 @@ const DOC_PATTERNS = [
   /Node\.js\W{0,6}(\d+)/g,
 ];
 
-type Pin = { where: string; major: number };
+const KNOWN_IMAGES = ['app/Dockerfile', 'backend/Dockerfile', 'deployment/Dockerfile.frontend'];
+const SELF_HOSTING = 'docs-site/docs/deployment/self-hosting.md';
 
-function pinsIn(file: string, patterns: RegExp[]): Pin[] {
-  const text = readFileSync(file, 'utf8');
+type Pin = { line: number; text: string; major: number | null };
+
+function pinsInText(text: string, patterns: RegExp[]): Pin[] {
   const lines = text.split('\n');
   const pins: Pin[] = [];
   for (const pattern of patterns) {
     for (const m of text.matchAll(new RegExp(pattern.source, pattern.flags))) {
-      const lineNo = text.slice(0, m.index ?? 0).split('\n').length;
-      pins.push({
-        where: `${relative(repoRoot, file)}:${lineNo}: ${(lines[lineNo - 1] ?? '').trim()}`,
-        major: Number(m[1]),
-      });
+      const line = text.slice(0, m.index ?? 0).split('\n').length;
+      pins.push({ line, text: (lines[line - 1] ?? '').trim(), major: Number(m[1]) });
     }
   }
   return pins;
+}
+
+function pinsIn(file: string, patterns: RegExp[]): Array<{ where: string; major: number | null }> {
+  return pinsInText(readFileSync(file, 'utf8'), patterns).map((p) => ({
+    where: `${relative(repoRoot, file)}:${p.line}: ${p.text}`,
+    major: p.major,
+  }));
+}
+
+// The Dockerfiles under root, relative to it.
+function dockerfilesUnder(_root: string): string[] {
+  return KNOWN_IMAGES;
 }
 
 function markdownUnder(dir: string): string[] {
@@ -64,25 +77,65 @@ function markdownUnder(dir: string): string[] {
   });
 }
 
+const belowFloor = (floor: number) => (p: { major: number | null }) => p.major === null || p.major < floor;
+
+describe('the Node pin finder', () => {
+  const majors = (text: string, patterns: RegExp[]) => pinsInText(text, patterns).map((p) => p.major);
+
+  it('resolves a FROM tag set by an ARG default', () => {
+    expect(majors('ARG NODE_VERSION=18\nFROM node:${NODE_VERSION}-alpine AS base\n', IMAGE_PATTERNS)).toEqual([18]);
+    expect(majors('ARG NODE_VERSION=18\nFROM node:$NODE_VERSION\n', IMAGE_PATTERNS)).toEqual([18]);
+  });
+
+  it('reads a base image named by an ARG default', () => {
+    expect(majors('ARG BASE=node:18-alpine\nFROM ${BASE}\n', IMAGE_PATTERNS)).toEqual([18]);
+  });
+
+  it('reports a Node tag it cannot resolve', () => {
+    expect(majors('FROM node:${NODE_VERSION}\n', IMAGE_PATTERNS)).toEqual([null]);
+  });
+
+  it('reads "Node.js v18"', () => {
+    expect(majors('- **Node.js v18+**\n', DOC_PATTERNS)).toEqual([18]);
+  });
+
+  it('finds every Dockerfile outside node_modules', () => {
+    const root = mkdtempSync(join(tmpdir(), 'node-floor-'));
+    try {
+      for (const f of ['Dockerfile.worker', 'svc/Dockerfile', 'node_modules/pkg/Dockerfile', 'svc/README.md']) {
+        mkdirSync(dirname(join(root, f)), { recursive: true });
+        writeFileSync(join(root, f), 'FROM node:18\n');
+      }
+      expect(dockerfilesUnder(root).sort()).toEqual(['Dockerfile.worker', 'svc/Dockerfile']);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('Node named by the Docker images and the docs', () => {
   const floor = agentosNodeFloor();
 
-  it.each([
-    'app/Dockerfile',
-    'backend/Dockerfile',
-    'deployment/Dockerfile.frontend',
-    'docs-site/docs/deployment/self-hosting.md',
-  ])('%s builds on a Node image at or above the @framers/agentos floor', (file) => {
-    const pins = pinsIn(resolve(repoRoot, file), [FROM_NODE]);
-    // A file with no FROM node line would pass the check below without reading anything.
-    expect(pins.length, `${file} has no FROM node:<major> line; update this test`).toBeGreaterThan(0);
-    expect(pins.filter((p) => p.major < floor).map((p) => p.where)).toEqual([]);
+  it('finds the repository images', () => {
+    expect(dockerfilesUnder(repoRoot)).toEqual(expect.arrayContaining(KNOWN_IMAGES));
   });
+
+  it.each([...dockerfilesUnder(repoRoot), SELF_HOSTING])(
+    '%s builds on a Node image at or above the @framers/agentos floor',
+    (file) => {
+      const pins = pinsIn(resolve(repoRoot, file), IMAGE_PATTERNS);
+      // A known file with no FROM node line would pass the check below without reading anything.
+      if ([...KNOWN_IMAGES, SELF_HOSTING].includes(file)) {
+        expect(pins.length, `${file} has no FROM node:<major> line; update this test`).toBeGreaterThan(0);
+      }
+      expect(pins.filter(belowFloor(floor)).map((p) => p.where)).toEqual([]);
+    }
+  );
 
   it('the README and the docs site name no Node major below the @framers/agentos floor', () => {
     const files = [resolve(repoRoot, 'README.md'), ...markdownUnder(resolve(repoRoot, 'docs-site/docs'))];
     const pins = files.flatMap((f) => pinsIn(f, DOC_PATTERNS));
     expect(pins.length, 'no Node version found in the docs; update this test').toBeGreaterThan(0);
-    expect(pins.filter((p) => p.major < floor).map((p) => p.where)).toEqual([]);
+    expect(pins.filter(belowFloor(floor)).map((p) => p.where)).toEqual([]);
   });
 });
