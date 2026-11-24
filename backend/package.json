@@ -13,7 +13,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@framers/agentos": "^0.20.0",
+    "@framers/agentos": "^0.21.1",
     "@framers/agentos-extensions-registry": "^0.18.22",
     "@framers/sql-storage-adapter": "^0.9.7",
     "@nestjs/common": "^11.1.13",
