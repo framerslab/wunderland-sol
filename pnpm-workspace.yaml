@@ -14,7 +14,7 @@ packages:
 onlyBuiltDependencies:
   - better-sqlite3
 overrides:
-  "@framers/agentos": "^0.20.0"
+  "@framers/agentos": "^0.21.1"
   "@framers/sql-storage-adapter": "^0.9.7"
   "@types/react": "^19.2.0"
   "@types/react-dom": "^19.2.0"
